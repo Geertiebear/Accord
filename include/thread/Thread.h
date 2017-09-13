@@ -1,5 +1,5 @@
-#ifndef AUTH_THREAD_THREAD_H
-#define AUTH_THREAD_THREAD_H
+#ifndef ACCORD_THREAD_THREAD_H
+#define ACCORD_THREAD_THREAD_H
 
 #include <netinet/in.h>
 #include <string>

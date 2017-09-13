@@ -1,5 +1,5 @@
-#ifndef AUTH_SERVER_H
-#define AUTH_SERVER_H
+#ifndef ACCORD_SERVER_H
+#define ACCORD_SERVER_H
 
 #include <netinet/in.h>
 #include <vector>

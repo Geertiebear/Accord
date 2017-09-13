@@ -1,5 +1,5 @@
-#ifndef AUTH_LOG_LOGGER_H
-#define AUTH_LOG_LOGGER_H
+#ifndef ACCORD_LOG_LOGGER_H
+#define ACCORD_LOG_LOGGER_H
 
 #include <string>
 

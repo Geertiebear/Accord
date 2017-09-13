@@ -1,5 +1,5 @@
-#ifndef AUTH_ARGUMENTS_H
-#define AUTH_ARGUMENTS_H
+#ifndef ACCORD_ARGUMENTS_H
+#define ACCORD_ARGUMENTS_H
 
 namespace accord {
 
