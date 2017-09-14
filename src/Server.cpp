@@ -79,11 +79,9 @@ void Server::acceptClients()
 {
     while(running) {
         thread::Work newWork = {};
-        struct sockaddr_storage *clientAddr = &newWork.clientAddr;
-    
+
         Logger::log(INFO, "Listening for clients!");
-        unsigned int clientLen = sizeof(newWork.clientAddr);
-        newWork.clientSocket = accept(serverSocket, (struct sockaddr*) clientAddr, &clientLen);
+        newWork.clientSocket = accept(serverSocket, NULL, NULL);
         if (newWork.clientSocket < 0) {
             Logger::log(ERROR, "Error on accept!");
             throw std::runtime_error("");

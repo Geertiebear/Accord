@@ -1,6 +1,7 @@
 #ifndef ACCORD_THREAD_THREAD_H
 #define ACCORD_THREAD_THREAD_H
 
+#include <event2/util.h>
 #include <netinet/in.h>
 #include <string>
 #include <vector>
@@ -12,8 +13,7 @@ namespace accord {
 namespace thread {
     
 struct Work {
-    struct sockaddr_storage clientAddr;
-    int clientSocket;
+    evutil_socket_t clientSocket;
     char netBuffer[1024];
 };
     
