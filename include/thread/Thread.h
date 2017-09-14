@@ -1,43 +1,35 @@
 #ifndef ACCORD_THREAD_THREAD_H
 #define ACCORD_THREAD_THREAD_H
 
+#include <event2/event.h>
+#include <event2/buffer.h>
+#include <event2/bufferevent.h>
 #include <event2/util.h>
-#include <netinet/in.h>
-#include <string>
-#include <vector>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 
 namespace accord {
 namespace thread {
     
-struct Work {
-    evutil_socket_t clientSocket;
-    char netBuffer[1024];
-};
-    
-using WorkQueue = std::vector<Work>;
-
 class Thread {
 public:
-    Thread(WorkQueue *queue);
+    Thread();
     ~Thread();
     
     void stop();
     void wake();
     void start();
+	void acceptClient(evutil_socket_t clientSocket);
+
+	//callbacks
+	static void readCallback(struct bufferevent *bufferEvent, void *data);
+	static void eventCallback(struct bufferevent *bufferEvent, short events,
+			void *data);
     
-    bool isAwake() { return awake; };
+	struct event_base *eventBase;
 private:
-    WorkQueue* queue;
     std::thread thread;
-    bool running;
-    bool awake;
-    std::mutex awakeMutex;
-    std::condition_variable awakeCondition;
     
-    void work(const Work &work);
+    void work();
     void run();
 };
 

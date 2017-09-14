@@ -1,5 +1,6 @@
 #include <thread/Thread.h>
 
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -10,53 +11,31 @@
 
 namespace accord {
 namespace thread {
-    
-Thread::Thread(WorkQueue *queue) : queue(queue), thread(), running(true)
+
+Thread::Thread() : thread()
 {
+	eventBase = event_base_new();
 }
 
 Thread::~Thread()
 {
-    running = false;
+	struct timeval timeout {
+		.tv_sec = 5,
+		.tv_usec = 0,
+	};
+	event_base_loopexit(eventBase, &timeout);
     if (thread.joinable())
         thread.join();
 }
 
 void Thread::run()
 {
-    while (running) {
-        std::unique_lock<std::mutex> lock(awakeMutex);
-        awakeCondition.wait(lock, [this]{return awake;});
-        
-        Work work = queue->at(queue->size() - 1);
-        int ret = read(work.clientSocket, &work.netBuffer[0], 1023);
-        if (ret == EAGAIN || ret == EWOULDBLOCK)
-            Logger::log(ERROR, "Error reading from socket: " + std::to_string(ret));
-        
-        if (work.netBuffer[0] == '\0') {
-            Logger::log(DEBUG, "Client disconnected, closing socket");
-            close(work.clientSocket);
-            
-            queue->pop_back();
-            if (queue->size() == 0)
-                awake = false;
-            continue;
-        }
-        //do actual work
-        this->work(work);
-    }
+	event_base_loop(eventBase, EVLOOP_NO_EXIT_ON_EMPTY);
 }
 
 void Thread::stop()
 {
     this->~Thread();
-}
-
-void Thread::wake()
-{
-    std::unique_lock<std::mutex> lock(awakeMutex);
-    awake = true;
-    awakeCondition.notify_one();
 }
 
 void Thread::start()
@@ -69,7 +48,36 @@ void Thread::start()
     }
 }
 
-void Thread::work(const Work &work)
+void Thread::acceptClient(evutil_socket_t clientSocket)
+{
+	struct bufferevent *bufferEvent = bufferevent_socket_new(eventBase,
+			clientSocket, BEV_OPT_CLOSE_ON_FREE);
+	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
+			&Thread::eventCallback, NULL);
+	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
+}
+
+void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
+{
+	//for now we copy the client's shit into a buffer and print it out 1024 bytes at a time
+	char buffer[1024];
+	size_t n;
+	int i;
+	while (1) {
+		n = bufferevent_read(bufferEvent, buffer, sizeof(buffer));
+		if (n <= 0)
+			break;
+		Logger::log(DEBUG, "Client's message is: " + std::string(buffer));
+	}
+}
+
+void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
+		void *data)
+{
+	//TODO: Setup timeout
+}
+
+void Thread::work()
 {
     pid_t tid = syscall(SYS_gettid);
     Logger::log(DEBUG, "Work function called from thread tid " + std::to_string(tid));

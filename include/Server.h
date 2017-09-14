@@ -25,13 +25,11 @@ private:
     int serverSocket;
     bool running;
     
-    void setupQueues();
     void setupThreads();
     void setupSocket();
     void acceptClients();
     int selectThread();
     
-    std::vector<std::unique_ptr<thread::WorkQueue>> queues;
     std::vector<std::shared_ptr<thread::Thread>> threads;
 };
 

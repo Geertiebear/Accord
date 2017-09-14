@@ -11,10 +11,8 @@ namespace accord {
     
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
 {
-    queues.reserve(numThreads);
-    //threads.reserve(numThreads);
+    threads.reserve(numThreads);
     
-    setupQueues();
     setupThreads();
     setupSocket();
 
@@ -35,19 +33,10 @@ void Server::stop()
     running = false;
 }
 
-void Server::setupQueues()
-{
-    for (int i = 0; i < numThreads; i++) {
-        std::unique_ptr<thread::WorkQueue> newQueue = std::make_unique<thread::WorkQueue>();
-        queues.push_back(std::move(newQueue));
-    }
-}
-
 void Server::setupThreads()
 {
     for (int i = 0; i < numThreads; i++) {
-        thread::WorkQueue *queue = queues.at(i).get();
-        std::shared_ptr<thread::Thread> newThread = std::make_shared<thread::Thread>(queue);
+        auto newThread = std::make_shared<thread::Thread>();
         newThread->start();
         threads.push_back(newThread);
     }
@@ -78,27 +67,24 @@ void Server::setupSocket()
 void Server::acceptClients()
 {
     while(running) {
-        thread::Work newWork = {};
-
         Logger::log(INFO, "Listening for clients!");
-        newWork.clientSocket = accept(serverSocket, NULL, NULL);
-        if (newWork.clientSocket < 0) {
+        evutil_socket_t clientSocket = accept(serverSocket, NULL, NULL);
+        if (clientSocket < 0) {
             Logger::log(ERROR, "Error on accept!");
             throw std::runtime_error("");
         }
     
-        Logger::log(INFO, "Got client, pushing it to thread's work queue now!");
-        
-        int thread = selectThread();
-        queues.at(thread).get()->push_back(newWork);
-        if (!threads.at(thread).get()->isAwake())
-            threads.at(thread)->wake();
+        Logger::log(INFO, "Got client, pushing it to thread now!");
+		
+        int threadNum = selectThread();
+		thread::Thread *thread = threads.at(threadNum).get();
+		thread->acceptClient(clientSocket);
     }
 }
 
 int Server::selectThread()
 {
-    int lowestNum = queues.at(0).get()->size();
+    /*int lowestNum = queues.at(0).get()->size();
     int lowest = 0;
     
     for (int i = 1; i < numThreads; i++) {
@@ -111,7 +97,8 @@ int Server::selectThread()
     }
     
     Logger::log(DEBUG, std::to_string(lowestNum));
-    return lowest;
+    return lowest; */
+	return 0;
 }
 
 } /* namespace accord */
