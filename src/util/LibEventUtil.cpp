@@ -1,7 +1,11 @@
 #include <util/LibEventUtil.h>
 
+#include <event2/event.h>
 #include <mutex>
 #include <condition_variable>
+#include <thread>
+
+#include <log/Logger.h>
 
 namespace accord {
 namespace util {
@@ -22,6 +26,30 @@ struct evthread_condition_callbacks LibEventUtil::conditionCallbacks = {
     .signal_condition = &LibEventUtil::signalCondition,
     .wait_condition = &LibEventUtil::waitCondition,
 };
+
+void LibEventUtil::init()
+{
+	evthread_set_lock_callbacks(&LibEventUtil::lockCallbacks);
+	evthread_set_condition_callbacks(&LibEventUtil::conditionCallbacks);
+	evthread_set_id_callback(&LibEventUtil::idCallback);
+	event_set_log_callback(&LibEventUtil::logCallback);
+}
+
+void LibEventUtil::logCallback(int severity, const char *message)
+{
+	switch (severity) {
+		case _EVENT_LOG_DEBUG: Logger::log(DEBUG, std::string(message)); break;
+		case _EVENT_LOG_MSG: Logger::log(INFO, std::string(message)); break;
+		case _EVENT_LOG_WARN: Logger::log(WARNING, std::string(message)); break;
+		case _EVENT_LOG_ERR: Logger::log(ERROR, std::string(message)); break;
+		default: Logger::log(ERROR, std::string(message)); break;
+	}
+}
+
+unsigned long LibEventUtil::idCallback()
+{
+	return std::hash<std::thread::id>()(std::this_thread::get_id());
+}
 
 void *LibEventUtil::allocLock(unsigned int lockType)
 {

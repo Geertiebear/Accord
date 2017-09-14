@@ -16,6 +16,7 @@ public:
     static void logCallback(int severity, const char *msg);
 
     //threading stuff
+	 static unsigned long idCallback();
     static void *allocLock(unsigned int lockType);
     static void freeLock(void *lock, unsigned int lockType);
     static int lock(unsigned int mode, void *lock);

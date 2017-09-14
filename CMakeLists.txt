@@ -22,5 +22,6 @@ target_include_directories(accordauthserver
     PUBLIC include/)
 target_include_directories(accordauthserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
 target_link_libraries (accordauthserver ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (accordauthserver ${LIBEVENT_LIBRARIES})
 
 install(TARGETS accordauthserver RUNTIME DESTINATION bin)
