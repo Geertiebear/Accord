@@ -1,3 +1,4 @@
 .kdev4
 build/
 AccordServer.kdev4
+*.swp
