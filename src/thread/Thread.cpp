@@ -1,5 +1,6 @@
 #include <thread/Thread.h>
 
+#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -68,10 +69,12 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	char buffer[1024];
 	size_t n;
 	while (1) {
+		memset(&buffer, '\0', sizeof(buffer));
 		n = bufferevent_read(bufferEvent, buffer, sizeof(buffer));
 		if (n <= 0)
 			break;
 		Logger::log(DEBUG, "Client's message is: " + std::string(buffer));
+		bufferevent_write(bufferEvent, buffer, n);
 	}
 }
 
