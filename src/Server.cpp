@@ -33,10 +33,16 @@ void Server::stop()
     running = false;
 }
 
+void Server::broadcast(const std::string &message)
+{
+	for (int i = 0; i < numThreads; i++)
+		threads.at(i)->broadcast(message);
+}
+
 void Server::setupThreads()
 {
     for (int i = 0; i < numThreads; i++) {
-        auto newThread = std::make_shared<thread::Thread>();
+        auto newThread = std::make_shared<thread::Thread>(*this);
         newThread->start();
         threads.push_back(newThread);
     }
@@ -84,21 +90,10 @@ void Server::acceptClients()
 
 int Server::selectThread()
 {
-    /*int lowestNum = queues.at(0).get()->size();
-    int lowest = 0;
-    
-    for (int i = 1; i < numThreads; i++) {
-        thread::WorkQueue *queue = queues.at(i).get();
-        int queueSize = queue->size();
-        if (queueSize < lowestNum) {
-            lowestNum = queueSize;
-            lowest = i;
-        }
-    }
-    
-    Logger::log(DEBUG, std::to_string(lowestNum));
-    return lowest; */
-	return 0;
+	//round robin approach
+	if (lastThread == 4)
+		lastThread = 0;
+	return lastThread++;
 }
 
 } /* namespace accord */

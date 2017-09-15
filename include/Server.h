@@ -2,6 +2,7 @@
 #define ACCORD_SERVER_H
 
 #include <netinet/in.h>
+#include <string>
 #include <vector>
 #include <memory>
 
@@ -17,12 +18,13 @@ public:
     ~Server();
     
     void stop();
-    
+    void broadcast(const std::string &buffer);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;
     int port;
     int serverSocket;
+	int lastThread = 0;
     bool running;
     
     void setupThreads();

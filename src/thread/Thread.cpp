@@ -8,12 +8,13 @@
 #include <sys/socket.h>
 #include <system_error>
 
+#include <Server.h>
 #include <log/Logger.h>
 
 namespace accord {
 namespace thread {
 
-Thread::Thread() : thread()
+Thread::Thread(Server &server) : server(server), thread()
 {
 	eventBase = event_base_new();
 }
@@ -52,15 +53,25 @@ void Thread::start()
 void Thread::acceptClient(evutil_socket_t clientSocket)
 {
 	struct bufferevent *bufferEvent = bufferevent_socket_new(eventBase,
-			clientSocket, BEV_OPT_CLOSE_ON_FREE);
+			clientSocket, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
 	struct timeval readTimeout = {
 		.tv_sec = 5,
 		.tv_usec = 0,
 	};
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
-			&Thread::eventCallback, NULL);
+			&Thread::eventCallback, this);
 	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
+	bufferEvents.push_back(bufferEvent);
+}
+
+void Thread::broadcast(const std::string &message)
+{
+	for (bufferevent *bufferEvent : bufferEvents) {
+		bufferevent_lock(bufferEvent);
+		bufferevent_write(bufferEvent, message.c_str(), message.size());
+		bufferevent_unlock(bufferEvent);
+	}
 }
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
@@ -73,8 +84,10 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		n = bufferevent_read(bufferEvent, buffer, sizeof(buffer));
 		if (n <= 0)
 			break;
-		Logger::log(DEBUG, "Client's message is: " + std::string(buffer));
-		bufferevent_write(bufferEvent, buffer, n);
+		std::string message(buffer);
+		Logger::log(DEBUG, "Client's message is: " + message);
+		Thread *thread = (Thread*) data;
+		thread->server.broadcast(message); //TODO: wrap this in a struct with more connection info
 	}
 }
 

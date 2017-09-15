@@ -6,19 +6,25 @@
 #include <event2/bufferevent.h>
 #include <event2/util.h>
 #include <thread>
+#include <string>
+#include <vector>
 
 namespace accord {
+
+class Server;
+
 namespace thread {
     
 class Thread {
 public:
-    Thread();
+    Thread(Server &server);
     ~Thread();
     
     void stop();
     void wake();
     void start();
 	void acceptClient(evutil_socket_t clientSocket);
+	void broadcast(const std::string &message);
 
 	//callbacks
 	static void readCallback(struct bufferevent *bufferEvent, void *data);
@@ -27,7 +33,9 @@ public:
     
 	struct event_base *eventBase;
 private:
+	Server &server;
     std::thread thread;
+	std::vector<bufferevent*> bufferEvents; //libevent can't foreach on bufferevents :((
     
     void work();
     void run();
