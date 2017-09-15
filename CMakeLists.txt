@@ -18,6 +18,13 @@ find_package(LibEvent REQUIRED)
 
 add_executable(accordauthserver ${SOURCES})
 
+if (CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
+endif (CMAKE_COMPILER_IS_GNUCC)
+if (MSVC)
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4")
+endif (MSVC)
+
 target_include_directories(accordauthserver 
     PUBLIC include/)
 target_include_directories(accordauthserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
