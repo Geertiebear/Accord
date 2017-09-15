@@ -52,8 +52,13 @@ void Thread::acceptClient(evutil_socket_t clientSocket)
 {
 	struct bufferevent *bufferEvent = bufferevent_socket_new(eventBase,
 			clientSocket, BEV_OPT_CLOSE_ON_FREE);
+	struct timeval readTimeout = {
+		.tv_sec = 5,
+		.tv_usec = 0,
+	};
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
 			&Thread::eventCallback, NULL);
+	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
 }
 
@@ -73,7 +78,10 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 		void *data)
 {
-	//TODO: Setup timeout
+	if (events & BEV_EVENT_TIMEOUT) {
+		Logger::log(DEBUG, "A client has timed out, closing connection!");
+		bufferevent_free(bufferEvent);
+	}
 }
 
 void Thread::work()
