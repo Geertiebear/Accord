@@ -62,7 +62,6 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	//for now we copy the client's shit into a buffer and print it out 1024 bytes at a time
 	char buffer[1024];
 	size_t n;
-	int i;
 	while (1) {
 		n = bufferevent_read(bufferEvent, buffer, sizeof(buffer));
 		if (n <= 0)
