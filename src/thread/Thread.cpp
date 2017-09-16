@@ -55,7 +55,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket)
 	struct bufferevent *bufferEvent = bufferevent_socket_new(eventBase,
 			clientSocket, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
 	struct timeval readTimeout = {
-		.tv_sec = 5,
+		.tv_sec = 30,
 		.tv_usec = 0,
 	};
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
