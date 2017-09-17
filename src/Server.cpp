@@ -28,6 +28,7 @@ Server::~Server()
     if (running) {
         Logger::log(WARNING, "server deconstructor was called while it was still running!");
     }
+	closeSocket();
 }
 
 void Server::stop()
@@ -70,6 +71,11 @@ void Server::setupSocket()
     
     listen(serverSocket, 5);
     Logger::log(INFO, "Opened socket on " + std::to_string(port) + "!");
+}
+
+void Server::closeSocket()
+{
+	close(serverSocket);
 }
 
 void Server::acceptClients()

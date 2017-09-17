@@ -29,6 +29,7 @@ private:
     
     void setupThreads();
     void setupSocket();
+	void closeSocket();
     void acceptClients();
     int selectThread();
     
