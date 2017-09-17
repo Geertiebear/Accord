@@ -13,18 +13,22 @@ set(SOURCES_SERVER
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
-        src/server/network/PacketDecoder.cpp
-        src/server/network/packet/SendMessagePacket.cpp
     )
 set(SOURCES_CLICLIENT
     src/cliclient/main.cpp
     src/cliclient/Commands.cpp
     src/cliclient/CommandParser.cpp
     )
+set(SOURCES_SHARED
+    src/shared/network/PacketDecoder.cpp
+    src/shared/network/packet/SendMessagePacket.cpp
+    )
 #libraries
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
 find_package(Boost REQUIRED)
+
+add_library(libaccordshared SHARED ${SOURCES_SHARED})
 
 #execs
 add_executable(accordserver ${SOURCES_SERVER})
@@ -38,6 +42,9 @@ if (MSVC)
 endif (MSVC)
 
 #linking
+target_include_directories(libaccordshared
+    PUBLIC include/)
+
 target_include_directories(accordserver 
     PUBLIC include/)
 target_include_directories(accordserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
@@ -45,6 +52,7 @@ target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(accordserver ${Boost_LIBRARIES})
 target_link_libraries (accordserver ${LIBEVENT_LIBRARIES})
+target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)

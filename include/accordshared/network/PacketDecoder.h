@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <boost/ptr_container/ptr_map.hpp>
 
-#include <accordserver/network/Packet.h>
+#include <accordshared/network/Packet.h>
 
 namespace accord {
 namespace network {

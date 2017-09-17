@@ -10,7 +10,7 @@
 
 #include <accordserver/Server.h>
 #include <accordserver/log/Logger.h>
-#include <accordserver/network/PacketDecoder.h>
+#include <accordshared/network/PacketDecoder.h>
 
 namespace accord {
 namespace thread {

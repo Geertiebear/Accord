@@ -1,6 +1,6 @@
-#include <accordserver/network/PacketDecoder.h>
+#include <accordshared/network/PacketDecoder.h>
 
-#include <accordserver/network/packet/SendMessagePacket.h>
+#include <accordshared/network/packet/SendMessagePacket.h>
 
 namespace accord {
 namespace network {

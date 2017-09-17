@@ -1,7 +1,7 @@
 #ifndef NETWORK_PACKET_SEND_MESSAGE_PACKET_H
 #define NETWORK_PACKET_SEND_MESSAGE_PACKET_H
 
-#include <accordserver/network/Packet.h>
+#include <accordshared/network/Packet.h>
 
 namespace accord {
 namespace network {

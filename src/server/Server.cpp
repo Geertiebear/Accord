@@ -6,7 +6,7 @@
 
 #include <accordserver/log/Logger.h>
 #include <accordserver/Arguments.h>
-#include <accordserver/network/PacketDecoder.h>
+#include <accordshared/network/PacketDecoder.h>
 
 namespace accord {
     

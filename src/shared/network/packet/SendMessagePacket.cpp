@@ -1,4 +1,4 @@
-#include <accordserver/network/packet/SendMessagePacket.h>
+#include <accordshared/network/packet/SendMessagePacket.h>
 
 #include <accordserver/log/Logger.h>
 
