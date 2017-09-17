@@ -1,4 +1,4 @@
-#include <thread/Thread.h>
+#include <accordserver/thread/Thread.h>
 
 #include <string.h>
 #include <ctype.h>
@@ -8,9 +8,9 @@
 #include <sys/socket.h>
 #include <system_error>
 
-#include <Server.h>
-#include <log/Logger.h>
-#include <network/PacketDecoder.h>
+#include <accordserver/Server.h>
+#include <accordserver/log/Logger.h>
+#include <accordserver/network/PacketDecoder.h>
 
 namespace accord {
 namespace thread {

@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-#include <thread/Thread.h>
+#include <accordserver/thread/Thread.h>
 
 namespace accord {
 

@@ -1,6 +1,6 @@
-#include <network/packet/SendMessagePacket.h>
+#include <accordserver/network/packet/SendMessagePacket.h>
 
-#include <log/Logger.h>
+#include <accordserver/log/Logger.h>
 
 namespace accord {
 namespace network {

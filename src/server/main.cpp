@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include <util/LibEventUtil.h>
-#include <Arguments.h>
-#include <Server.h>
+#include <accordserver/util/LibEventUtil.h>
+#include <accordserver/Arguments.h>
+#include <accordserver/Server.h>
 
 int main(int argc, char **argv) {
     accord::Arguments args = {

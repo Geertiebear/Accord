@@ -1,12 +1,12 @@
-#include <Server.h>
+#include <accordserver/Server.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <memory>
 
-#include <log/Logger.h>
-#include <Arguments.h>
-#include <network/PacketDecoder.h>
+#include <accordserver/log/Logger.h>
+#include <accordserver/Arguments.h>
+#include <accordserver/network/PacketDecoder.h>
 
 namespace accord {
     
