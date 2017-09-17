@@ -6,11 +6,13 @@
 
 #include <log/Logger.h>
 #include <Arguments.h>
+#include <network/PacketDecoder.h>
 
 namespace accord {
     
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
 {
+	network::PacketDecoder::init();
     threads.reserve(numThreads);
     
     setupThreads();

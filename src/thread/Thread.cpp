@@ -10,6 +10,7 @@
 
 #include <Server.h>
 #include <log/Logger.h>
+#include <network/PacketDecoder.h>
 
 namespace accord {
 namespace thread {
@@ -77,18 +78,22 @@ void Thread::broadcast(const std::string &message)
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
 	//for now we copy the client's shit into a buffer and print it out 1024 bytes at a time
-	char buffer[1024];
+	char packetIdBuffer[2];
 	size_t n;
-	while (1) {
-		memset(&buffer, '\0', sizeof(buffer));
-		n = bufferevent_read(bufferEvent, buffer, sizeof(buffer));
-		if (n <= 0)
-			break;
-		std::string message(buffer);
-		Logger::log(DEBUG, "Client's message is: " + message);
-		Thread *thread = (Thread*) data;
-		thread->server.broadcast(message); //TODO: wrap this in a struct with more connection info
-	}
+	memset(&packetIdBuffer, '\0', sizeof(packetIdBuffer));
+	n = bufferevent_read(bufferEvent, packetIdBuffer, sizeof(packetIdBuffer));
+
+	std::string packetIdString(packetIdBuffer);
+	network::PacketId packetId = std::stoi(packetIdString);
+	Logger::log(DEBUG, "Received packet id is: " + std::to_string(packetId));
+
+	const network::Packet &packet = network::PacketDecoder::getPacket(packetId);
+	char bodyBuffer[packet.getBufferSize()];
+	memset(&bodyBuffer, '\0', sizeof(bodyBuffer));
+	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
+	std::vector<std::string> args;
+	args.push_back(std::string(bodyBuffer));
+	packet.receive(args);
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,

@@ -12,9 +12,12 @@ set(SOURCES
         src/log/Logger.cpp
         src/thread/Thread.cpp
         src/util/LibEventUtil.cpp
+        src/network/PacketDecoder.cpp
+        src/network/packet/SendMessagePacket.cpp
     )
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
+find_package(Boost REQUIRED)
 
 add_executable(accordauthserver ${SOURCES})
 
@@ -28,7 +31,9 @@ endif (MSVC)
 target_include_directories(accordauthserver 
     PUBLIC include/)
 target_include_directories(accordauthserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
-target_link_libraries (accordauthserver ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(accordauthserver PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(accordauthserver ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(accordauthserver ${Boost_LIBRARIES})
 target_link_libraries (accordauthserver ${LIBEVENT_LIBRARIES})
 
 install(TARGETS accordauthserver RUNTIME DESTINATION bin)
