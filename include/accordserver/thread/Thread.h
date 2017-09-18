@@ -37,7 +37,6 @@ private:
     std::thread thread;
 	std::vector<bufferevent*> bufferEvents; //libevent can't foreach on bufferevents :((
     
-    void work();
     void run();
 };
 

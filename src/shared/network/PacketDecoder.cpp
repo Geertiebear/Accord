@@ -13,9 +13,13 @@ void PacketDecoder::init()
 	packets.insert(sendMessagePacketId, new SendMessagePacket());
 }
 
-const Packet &PacketDecoder::getPacket(PacketId id)
+const Packet *PacketDecoder::getPacket(PacketId id)
 {
-	return packets.at(id);
+	try {
+		return &packets.at(id);
+	} catch (boost::bad_ptr_container_operation &e) {
+		return nullptr;
+	}
 }
 
 } /* namespace network */

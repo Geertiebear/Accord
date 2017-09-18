@@ -29,6 +29,7 @@ struct evthread_condition_callbacks LibEventUtil::conditionCallbacks = {
 
 void LibEventUtil::init()
 {
+	event_enable_debug_mode();
 	evthread_set_lock_callbacks(&LibEventUtil::lockCallbacks);
 	evthread_set_condition_callbacks(&LibEventUtil::conditionCallbacks);
 	evthread_set_id_callback(&LibEventUtil::idCallback);

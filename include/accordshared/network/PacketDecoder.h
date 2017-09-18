@@ -16,7 +16,7 @@ class PacketDecoder {
 public:
 	static void init();
 
-	static const Packet &getPacket(PacketId id);
+	static const Packet *getPacket(PacketId id);
 private:
 	static boost::ptr_map<PacketId, Packet> packets;
 };

@@ -77,23 +77,43 @@ void Thread::broadcast(const std::string &message)
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
-	//for now we copy the client's shit into a buffer and print it out 1024 bytes at a time
 	char packetIdBuffer[2];
 	size_t n;
 	memset(&packetIdBuffer, '\0', sizeof(packetIdBuffer));
-	n = bufferevent_read(bufferEvent, packetIdBuffer, sizeof(packetIdBuffer));
+	bufferevent_read(bufferEvent, packetIdBuffer, sizeof(packetIdBuffer));
 
+	network::PacketId packetId;
 	std::string packetIdString(packetIdBuffer);
-	network::PacketId packetId = std::stoi(packetIdString);
+	try {
+		packetId = std::stoi(packetIdString);
+	} catch (std::invalid_argument &e) {
+		//TODO: send error packet
+		bufferevent_free(bufferEvent);
+		return;
+	}
 	Logger::log(DEBUG, "Received packet id is: " + std::to_string(packetId));
 
-	const network::Packet &packet = network::PacketDecoder::getPacket(packetId);
-	char bodyBuffer[packet.getBufferSize()];
+	const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
+	if (!packet) {
+		//TODO: send error packet
+		Logger::log(ERROR, "Error getting packet!");
+		bufferevent_free(bufferEvent);
+		return;
+	}
+	char bodyBuffer[packet->getBufferSize()];
 	memset(&bodyBuffer, '\0', sizeof(bodyBuffer));
+	struct evbuffer *readBuffer = bufferevent_get_input(bufferEvent);
+	size_t size = evbuffer_get_length(readBuffer);
+	if (size > packet->getBufferSize()) {
+		//TODO: send error packet
+		Logger::log(ERROR, "Client sent message too long!" + std::to_string(size));
+		bufferevent_free(bufferEvent);
+		return;
+	}
 	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
 	std::vector<std::string> args;
 	args.push_back(std::string(bodyBuffer));
-	packet.receive(args);
+	packet->receive(args);
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
@@ -103,12 +123,6 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 		Logger::log(DEBUG, "A client has timed out, closing connection!");
 		bufferevent_free(bufferEvent);
 	}
-}
-
-void Thread::work()
-{
-    pid_t tid = syscall(SYS_gettid);
-    Logger::log(DEBUG, "Work function called from thread tid " + std::to_string(tid));
 }
 
 } /* namespace thread */
