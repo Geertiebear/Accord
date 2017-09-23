@@ -21,6 +21,7 @@ set(SOURCES_CLICLIENT
     )
 set(SOURCES_SHARED
     src/shared/network/PacketDecoder.cpp
+    src/shared/network/packet/ErrorPacket.cpp
     src/shared/network/packet/SendMessagePacket.cpp
     )
 #libraries

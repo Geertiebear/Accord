@@ -1,0 +1,24 @@
+#include <accordshared/network/packet/ErrorPacket.h>
+
+#include <accordserver/log/Logger.h>
+
+namespace accord {
+namespace network {
+
+
+//in here for consistency's sake
+std::string ErrorPacket::construct(Error error) { 
+	return std::to_string(static_cast<int>(error)); 
+}
+
+bool ErrorPacket::receive(const std::vector<std::string> &args) const {
+	Logger::log(DEBUG, "ErrorPacket: received with args[0]: " + args[0]);
+	return true;
+}
+
+size_t ErrorPacket::getBufferSize() const {
+	return sizeof(uint16_t);
+}
+
+} /* network */
+} /* accord */

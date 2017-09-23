@@ -15,7 +15,6 @@ class Packet {
 public:
 	virtual ~Packet() { }; //base class
 	virtual Packet *clone() const = 0; //polymorphic construction
-	virtual std::string construct() = 0;
 	virtual bool receive(const std::vector<std::string> &args) const = 0;
 	virtual size_t getBufferSize() const = 0;
 };
