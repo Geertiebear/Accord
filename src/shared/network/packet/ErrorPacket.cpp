@@ -5,18 +5,27 @@
 namespace accord {
 namespace network {
 
+int ErrorPacket::dispatch(struct bufferevent *bufferevent, Error error)
+{
+	Logger::log(DEBUG, "Called ErrorPacket::dispatch()");
+	ErrorPacket packet;
+	std::string message = packet.construct(error);
+	return bufferevent_write(bufferevent, message.c_str(), message.size());
+}
 
-//in here for consistency's sake
-std::string ErrorPacket::construct(Error error) { 
+std::string ErrorPacket::construct(Error error)
+{ 
 	return std::to_string(static_cast<int>(error)); 
 }
 
-bool ErrorPacket::receive(const std::vector<std::string> &args) const {
+bool ErrorPacket::receive(const std::vector<std::string> &args) const
+{
 	Logger::log(DEBUG, "ErrorPacket: received with args[0]: " + args[0]);
 	return true;
 }
 
-size_t ErrorPacket::getBufferSize() const {
+size_t ErrorPacket::getBufferSize() const
+{
 	return sizeof(uint16_t);
 }
 

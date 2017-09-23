@@ -10,7 +10,9 @@
 
 #include <accordserver/Server.h>
 #include <accordserver/log/Logger.h>
+#include <accordshared/error/ErrorCodes.h>
 #include <accordshared/network/PacketDecoder.h>
+#include <accordshared/network/packet/ErrorPacket.h>
 
 namespace accord {
 namespace thread {
@@ -87,17 +89,14 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	try {
 		packetId = std::stoi(packetIdString);
 	} catch (std::invalid_argument &e) {
-		//TODO: send error packet
-		bufferevent_free(bufferEvent);
+		network::ErrorPacket::dispatch(bufferEvent, Error::NAN);
 		return;
 	}
 	Logger::log(DEBUG, "Received packet id is: " + std::to_string(packetId));
 
 	const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
 	if (!packet) {
-		//TODO: send error packet
-		Logger::log(ERROR, "Error getting packet!");
-		bufferevent_free(bufferEvent);
+		network::ErrorPacket::dispatch(bufferEvent, Error::NOT_FOUND);
 		return;
 	}
 	char bodyBuffer[packet->getBufferSize()];
@@ -105,9 +104,8 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	struct evbuffer *readBuffer = bufferevent_get_input(bufferEvent);
 	size_t size = evbuffer_get_length(readBuffer);
 	if (size > packet->getBufferSize()) {
-		//TODO: send error packet
+		network::ErrorPacket::dispatch(bufferEvent, Error::TOO_LONG);
 		Logger::log(ERROR, "Client sent message too long!" + std::to_string(size));
-		bufferevent_free(bufferEvent);
 		return;
 	}
 	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
