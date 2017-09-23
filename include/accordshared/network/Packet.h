@@ -7,6 +7,10 @@
 namespace accord {
 namespace network {
 
+enum PacketIds {
+	SEND_MESSAGE_PACKET = 0,
+};
+
 class Packet {
 public:
 	virtual ~Packet() { }; //base class

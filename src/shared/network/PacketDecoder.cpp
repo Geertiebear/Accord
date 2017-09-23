@@ -9,7 +9,7 @@ boost::ptr_map<PacketId, Packet> PacketDecoder::packets;
 
 void PacketDecoder::init()
 {
-	PacketId sendMessagePacketId = 0;
+	PacketId sendMessagePacketId = SEND_MESSAGE_PACKET;
 	packets.insert(sendMessagePacketId, new SendMessagePacket());
 }
 
