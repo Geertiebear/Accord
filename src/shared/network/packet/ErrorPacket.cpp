@@ -18,9 +18,9 @@ std::string ErrorPacket::construct(Error error)
 	return std::to_string(static_cast<int>(error)); 
 }
 
-bool ErrorPacket::receive(const std::vector<std::string> &args) const
+bool ErrorPacket::receive(std::string body) const
 {
-	Logger::log(DEBUG, "ErrorPacket: received with args[0]: " + args[0]);
+	Logger::log(DEBUG, "ErrorPacket: received with body: " + body);
 	return true;
 }
 

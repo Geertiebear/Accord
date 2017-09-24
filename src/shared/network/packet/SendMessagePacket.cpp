@@ -8,8 +8,8 @@ namespace network {
 //in here for consistency's sake
 std::string SendMessagePacket::construct() { return ""; }
 
-bool SendMessagePacket::receive(const std::vector<std::string> &args) const {
-	Logger::log(DEBUG, "SendMessagePacket: received with args[0]: " + args[0]);
+bool SendMessagePacket::receive(std::string body) const {
+	Logger::log(DEBUG, "SendMessagePacket: received with body: " + body);
 	return true;
 }
 

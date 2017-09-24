@@ -13,7 +13,7 @@ public:
 	}
 
 	std::string construct();
-	bool receive(const std::vector<std::string> &args) const;
+	bool receive(std::string body) const;
 	size_t getBufferSize() const;
 };
 

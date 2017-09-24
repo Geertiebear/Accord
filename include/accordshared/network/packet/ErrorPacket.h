@@ -18,7 +18,7 @@ public:
 	static int dispatch(struct bufferevent *bufferEvent, Error error);
 
 	std::string construct(Error error);
-	bool receive(const std::vector<std::string> &args) const;
+	bool receive(std::string body) const;
 	size_t getBufferSize() const;
 };
 

@@ -109,9 +109,7 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		return;
 	}
 	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
-	std::vector<std::string> args;
-	args.push_back(std::string(bodyBuffer));
-	packet->receive(args);
+	packet->receive(std::string(bodyBuffer));
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
