@@ -7,11 +7,12 @@
 #include <memory>
 
 #include <accordserver/thread/Thread.h>
+#include <accordshared/network/PacketHandler.h>
 
 namespace accord {
 
 struct Arguments;
-    
+
 class Server {
 public:
     Server(Arguments args);
@@ -34,6 +35,8 @@ private:
     int selectThread();
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
+
+	static std::vector<network::ReceiveHandler> handlers;
 };
 
 } /* namespace auth */

@@ -18,12 +18,6 @@ std::string ErrorPacket::construct(Error error)
 	return std::to_string(static_cast<int>(error)); 
 }
 
-bool ErrorPacket::receive(std::string body) const
-{
-	Logger::log(DEBUG, "ErrorPacket: received with body: " + body);
-	return true;
-}
-
 size_t ErrorPacket::getBufferSize() const
 {
 	return sizeof(uint16_t);

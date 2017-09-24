@@ -13,6 +13,7 @@ set(SOURCES_SERVER
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
+        src/server/network/PacketHandlers.cpp
     )
 set(SOURCES_CLICLIENT
     src/cliclient/main.cpp
@@ -21,6 +22,7 @@ set(SOURCES_CLICLIENT
     )
 set(SOURCES_SHARED
     src/shared/network/PacketDecoder.cpp
+    src/shared/network/PacketHandler.cpp
     src/shared/network/packet/ErrorPacket.cpp
     src/shared/network/packet/SendMessagePacket.cpp
     )

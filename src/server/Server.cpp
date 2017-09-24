@@ -6,13 +6,20 @@
 
 #include <accordserver/log/Logger.h>
 #include <accordserver/Arguments.h>
+#include <accordserver/network/PacketHandlers.h>
 #include <accordshared/network/PacketDecoder.h>
 
 namespace accord {
     
+std::vector<network::ReceiveHandler> Server::handlers = {
+	&network::PacketHandlers::receiveSendMessagePacket,
+	&network::PacketHandlers::receiveErrorPacket
+};
+
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
 {
 	network::PacketDecoder::init();
+	network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
     
     setupThreads();

@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <accordshared/network/PacketHandler.h>
+
 namespace accord {
 namespace network {
 
@@ -15,8 +17,15 @@ class Packet {
 public:
 	virtual ~Packet() { }; //base class
 	virtual Packet *clone() const = 0; //polymorphic construction
-	virtual bool receive(std::string body) const = 0;
 	virtual size_t getBufferSize() const = 0;
+	virtual int getId() const {
+		return -1;
+	}
+
+	bool receive(std::string body) const
+	{
+		return PacketHandler::handle(getId(), body);
+	}
 };
 
 } /* namespace network */

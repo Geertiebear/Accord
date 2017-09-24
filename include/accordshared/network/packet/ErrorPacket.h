@@ -14,11 +14,14 @@ public:
 	virtual ErrorPacket *clone() const {
 		return new ErrorPacket();
 	}
+
+	int getId() const {
+		return ERROR_PACKET;
+	}
 	
 	static int dispatch(struct bufferevent *bufferEvent, Error error);
 
 	std::string construct(Error error);
-	bool receive(std::string body) const;
 	size_t getBufferSize() const;
 };
 

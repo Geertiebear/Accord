@@ -12,8 +12,11 @@ public:
 		return new SendMessagePacket();
 	}
 
+	int getId() const {
+		return SEND_MESSAGE_PACKET;
+	};
+
 	std::string construct();
-	bool receive(std::string body) const;
 	size_t getBufferSize() const;
 };
 
