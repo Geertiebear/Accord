@@ -9,6 +9,7 @@ namespace network {
 
 enum PacketIds {
 	SEND_MESSAGE_PACKET = 0,
+	ERROR_PACKET = 1,
 };
 
 class Packet {

@@ -9,7 +9,7 @@ int ErrorPacket::dispatch(struct bufferevent *bufferevent, Error error)
 {
 	Logger::log(DEBUG, "Called ErrorPacket::dispatch()");
 	ErrorPacket packet;
-	std::string message = packet.construct(error);
+	std::string message = std::to_string(ERROR_PACKET) + " " + packet.construct(error);
 	return bufferevent_write(bufferevent, message.c_str(), message.size());
 }
 
