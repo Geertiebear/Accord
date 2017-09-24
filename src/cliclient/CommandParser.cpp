@@ -8,9 +8,10 @@
 CommandParser::CommandParser()
 {
     commandMap.insert(std::make_pair("quit", &Commands::quit));
+	commandMap.insert(std::make_pair("send", &Commands::sendMessage));
 }
 
-std::string CommandParser::parseCommand(const std::string &command)
+std::string CommandParser::parseCommand(const std::string &command, int socket)
 {
     std::stringstream stringStream(command);
     std::string temp;
@@ -19,11 +20,11 @@ std::string CommandParser::parseCommand(const std::string &command)
     while (std::getline(stringStream, temp, ' '))
         tokens.push_back(temp);
     
-    std::function<std::string(std::vector<std::string>)> commandFunction;
+    std::function<std::string(std::vector<std::string>, int)> commandFunction;
     auto it = commandMap.find(tokens[0]);
     if (it != commandMap.end()) {
         commandFunction = it->second;
-        return commandFunction(tokens);
+        return commandFunction(tokens, socket);
     }
     
     return "Command not found!";

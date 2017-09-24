@@ -12,10 +12,10 @@ public:
     CommandParser();
     ~CommandParser() {}
 
-    std::string parseCommand(const std::string &command);
+    std::string parseCommand(const std::string &command, int socket);
 private:
     std::map<std::string, std::function<std::string(
-            std::vector<std::string>)>> commandMap;
+            std::vector<std::string>, int)>> commandMap;
 };
 
 #endif

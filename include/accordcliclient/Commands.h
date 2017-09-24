@@ -6,7 +6,8 @@
 
 class Commands {
 public:
-    static std::string quit(std::vector<std::string>);
+    static std::string quit(std::vector<std::string>, int socket);
+	static std::string sendMessage(std::vector<std::string>, int socket);
 };
 
 #endif
