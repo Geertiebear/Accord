@@ -16,7 +16,7 @@ public:
 		return SEND_MESSAGE_PACKET;
 	};
 
-	std::string construct();
+	std::string construct(const std::string &message);
 	size_t getBufferSize() const;
 };
 

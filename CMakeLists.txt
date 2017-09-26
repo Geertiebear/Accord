@@ -47,6 +47,7 @@ endif (MSVC)
 #linking
 target_include_directories(libaccordshared
     PUBLIC include/)
+target_link_libraries(libaccordshared ${LIBEVENT_LIBRARIES})
 
 target_include_directories(accordserver 
     PUBLIC include/)
@@ -59,6 +60,7 @@ target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)
+target_link_libraries(accordcliclient libaccordshared)
 
 #install
 install(TARGETS accordserver accordcliclient RUNTIME DESTINATION bin)

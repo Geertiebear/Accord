@@ -6,7 +6,10 @@ namespace accord {
 namespace network {
 
 //in here for consistency's sake
-std::string SendMessagePacket::construct() { return ""; }
+std::string SendMessagePacket::construct(const std::string &message)
+{ 
+	return std::to_string(SEND_MESSAGE_PACKET) + " " + message;
+}
 
 size_t SendMessagePacket::getBufferSize() const {
 	return 2000;
