@@ -13,6 +13,7 @@ set(SOURCES_SERVER
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
+        src/server/util/OpenSSLUtil.cpp
         src/server/network/PacketHandlers.cpp
     )
 set(SOURCES_CLICLIENT
@@ -30,6 +31,7 @@ set(SOURCES_SHARED
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
 find_package(Boost REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})
 
@@ -53,9 +55,11 @@ target_include_directories(accordserver
     PUBLIC include/)
 target_include_directories(accordserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
 target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
+target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(accordserver ${Boost_LIBRARIES})
-target_link_libraries (accordserver ${LIBEVENT_LIBRARIES})
+target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
+target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
 target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient
