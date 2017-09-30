@@ -117,7 +117,7 @@ void Server::acceptClients()
 int Server::selectThread()
 {
     //round robin approach
-    if (lastThread == 4)
+    if (lastThread == numThreads)
     	lastThread = 0;
     return lastThread++;
 }
