@@ -7,9 +7,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <system_error>
+#include <event2/bufferevent_ssl.h>
 
 #include <accordserver/Server.h>
 #include <accordserver/log/Logger.h>
+#include <accordserver/util/LibEventUtil.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/packet/ErrorPacket.h>
@@ -25,8 +27,8 @@ Thread::Thread(Server &server) : server(server), thread()
 Thread::~Thread()
 {
 	struct timeval timeout {
-		.tv_sec = 5,
-		.tv_usec = 0,
+	    .tv_sec = 5,
+	    .tv_usec = 0,
 	};
 	event_base_loopexit(eventBase, &timeout);
     if (thread.joinable())
@@ -53,10 +55,10 @@ void Thread::start()
     }
 }
 
-void Thread::acceptClient(evutil_socket_t clientSocket)
+void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 {
-	struct bufferevent *bufferEvent = bufferevent_socket_new(eventBase,
-			clientSocket, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
+	struct bufferevent *bufferEvent = bufferevent_openssl_socket_new(eventBase,
+			clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE);
 	struct timeval readTimeout = {
 		.tv_sec = 30,
 		.tv_usec = 0,
@@ -117,7 +119,7 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 {
 	if (events & BEV_EVENT_TIMEOUT) {
 		Logger::log(DEBUG, "A client has timed out, closing connection!");
-		bufferevent_free(bufferEvent);
+		util::LibEventUtil::freeBufferEvent(bufferEvent);
 	}
 }
 

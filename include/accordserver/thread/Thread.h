@@ -5,6 +5,7 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 #include <event2/util.h>
+#include <openssl/ssl.h>
 #include <thread>
 #include <string>
 #include <vector>
@@ -23,19 +24,19 @@ public:
     void stop();
     void wake();
     void start();
-	void acceptClient(evutil_socket_t clientSocket);
-	void broadcast(const std::string &message);
+    void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
+    void broadcast(const std::string &message);
 
-	//callbacks
-	static void readCallback(struct bufferevent *bufferEvent, void *data);
-	static void eventCallback(struct bufferevent *bufferEvent, short events,
-			void *data);
+    //callbacks
+    static void readCallback(struct bufferevent *bufferEvent, void *data);
+    static void eventCallback(struct bufferevent *bufferEvent, short events,
+    		void *data);
     
-	struct event_base *eventBase;
+    struct event_base *eventBase;
 private:
-	Server &server;
+    Server &server;
     std::thread thread;
-	std::vector<bufferevent*> bufferEvents; //libevent can't foreach on bufferevents :((
+    std::vector<bufferevent*> bufferEvents; //libevent can't foreach on bufferevents :((
     
     void run();
 };

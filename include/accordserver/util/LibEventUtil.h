@@ -2,6 +2,7 @@
 #define ACCORD_UTIL_LIB_EVENT_UTIL_H
 
 #include <event2/thread.h>
+#include <event2/bufferevent.h>
 
 namespace accord {
 namespace util {
@@ -26,6 +27,10 @@ public:
     static void freeCondition(void *condition);
     static int signalCondition(void *condition, int broadcast);
     static int waitCondition(void *condition, void *lock, const struct timeval *timeout);
+
+    /* since bufferevent_free() doesn't close SSL connections properly,
+     * we will have to do it ourselves */
+    static void freeBufferEvent(struct bufferevent *bufferEvent);
 };
 
 } /* namespace util */

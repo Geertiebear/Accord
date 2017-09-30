@@ -4,6 +4,7 @@
 # Usage: 
 # LIBEVENT_INCLUDE_DIRS, where to find LibEvent headers
 # LIBEVENT_LIBRARIES, LibEvent libraries
+# LIBEVENT_OPENSSL, LibEvent openssl lib
 # Libevent_FOUND, If false, do not try to use libevent
 
 set(LIBEVENT_ROOT CACHE PATH "Root directory of libevent installation")
@@ -20,12 +21,20 @@ find_path(LIBEVENT_INCLUDE_DIRS evhttp.h event.h PATHS ${LibEvent_INCLUDE_PATHS}
 # "lib" prefix is needed on Windows in some cases
 # newer versions of libevent use three libraries
 find_library(LIBEVENT_LIBRARIES NAMES event event_core event_extra libevent PATHS ${LibEvent_LIBRARIES_PATHS})
+find_library(LIBEVENT_OPENSSL NAMES event_openssl libevent_openssl PATHS ${LibEvent_LIBRARIES_PATHS})
 
 if (LIBEVENT_LIBRARIES AND LIBEVENT_INCLUDE_DIRS)
   set(Libevent_FOUND TRUE)
   set(LIBEVENT_LIBRARIES ${LIBEVENT_LIBRARIES})
 else ()
   set(Libevent_FOUND FALSE)
+endif ()
+
+if (LIBEVENT_OPENSSL AND LIBEVENT_INCLUDE_DIRS)
+  set(Libevent_openssl_FOUND TRUE)
+  set(LIBEVENT_OPENSSL_LIBRARY ${LIBEVENT_OPENSSL})
+else ()
+  set(Libevent_openssl_FOUND FALSE)
 endif ()
 
 if (Libevent_FOUND)
@@ -41,5 +50,6 @@ endif ()
 
 mark_as_advanced(
     LIBEVENT_LIBRARIES
+    LIBEVENT_OPENSSL_LIBRARY
     LIBEVENT_INCLUDE_DIRS
 )

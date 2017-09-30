@@ -1,6 +1,10 @@
 #include <accordserver/util/LibEventUtil.h>
 
 #include <event2/event.h>
+#include <event2/bufferevent_struct.h>
+#include <event2/bufferevent_ssl.h>
+#include <openssl/ssl.h>
+#include <unistd.h>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -107,5 +111,14 @@ int LibEventUtil::waitCondition(void *condition, void *lock, const struct timeva
     return 0;
 }
 
+void LibEventUtil::freeBufferEvent(struct bufferevent *bufferEvent)
+{
+   evutil_socket_t socket = event_get_fd(&bufferEvent->ev_read);
+   SSL *ssl = bufferevent_openssl_get_ssl(bufferEvent);
+   SSL_free(ssl);
+   close(socket);
+   bufferevent_free(bufferEvent);
+}
+
 } /* namespace util */
-} /* namespace util */
+} /* namespace accord */

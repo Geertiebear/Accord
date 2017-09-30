@@ -6,16 +6,16 @@
 
 #include <accordshared/network/packet/SendMessagePacket.h>
 
-std::string Commands::quit(std::vector<std::string> args, int socket)
+std::string Commands::quit(std::vector<std::string> args, SSL *ssl)
 {
-	close(socket);
+    SSL_free(ssl);
     exit(0);
 }
 
-std::string Commands::sendMessage(std::vector<std::string> args, int socket)
+std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 {
 	accord::network::SendMessagePacket packet;
 	std::string message = packet.construct("Hello");;
-	send(socket, message.c_str(), message.size(), 0);
+	SSL_write(ssl, message.c_str(), message.size());
 	return "Message sent successfully";
 }

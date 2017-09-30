@@ -59,12 +59,15 @@ target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(accordserver ${Boost_LIBRARIES})
 target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
+target_link_libraries(accordserver ${LIBEVENT_OPENSSL})
 target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
 target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)
+target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordcliclient libaccordshared)
+target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 
 #install
 install(TARGETS accordserver accordcliclient RUNTIME DESTINATION bin)

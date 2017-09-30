@@ -21,7 +21,7 @@ void OpenSSLUtil::opensslInit()
 SSL_CTX *OpenSSLUtil::getContext()
 {
 	SSL_CTX *ctx = SSL_CTX_new(SSLv23_server_method());
-	if (!SSL_CTX_use_certificate_chain_file(ctx, "cert") ||
+	if (!SSL_CTX_use_certificate_chain_file(ctx, "cert.pem") ||
 			!SSL_CTX_use_PrivateKey_file(ctx, "pkey.pem", SSL_FILETYPE_PEM)) {
 		Logger::log(ERROR, "Could not find private key or certificate!");
 		throw std::runtime_error("");

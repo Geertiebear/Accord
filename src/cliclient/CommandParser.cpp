@@ -8,10 +8,10 @@
 CommandParser::CommandParser()
 {
     commandMap.insert(std::make_pair("quit", &Commands::quit));
-	commandMap.insert(std::make_pair("send", &Commands::sendMessage));
+    commandMap.insert(std::make_pair("send", &Commands::sendMessage));
 }
 
-std::string CommandParser::parseCommand(const std::string &command, int socket)
+std::string CommandParser::parseCommand(const std::string &command, SSL *ssl)
 {
     std::stringstream stringStream(command);
     std::string temp;
@@ -20,11 +20,11 @@ std::string CommandParser::parseCommand(const std::string &command, int socket)
     while (std::getline(stringStream, temp, ' '))
         tokens.push_back(temp);
     
-    std::function<std::string(std::vector<std::string>, int)> commandFunction;
+    std::function<std::string(std::vector<std::string>, SSL*)> commandFunction;
     auto it = commandMap.find(tokens[0]);
     if (it != commandMap.end()) {
         commandFunction = it->second;
-        return commandFunction(tokens, socket);
+        return commandFunction(tokens, ssl);
     }
     
     return "Command not found!";

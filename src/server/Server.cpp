@@ -6,6 +6,7 @@
 
 #include <accordserver/log/Logger.h>
 #include <accordserver/Arguments.h>
+#include <accordserver/util/OpenSSLUtil.h>
 #include <accordserver/network/PacketHandlers.h>
 #include <accordshared/network/PacketDecoder.h>
 
@@ -16,10 +17,11 @@ std::vector<network::ReceiveHandler> Server::handlers = {
 	&network::PacketHandlers::receiveErrorPacket
 };
 
-Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
+Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
+    ctx(util::OpenSSLUtil::getContext())
 {
-	network::PacketDecoder::init();
-	network::PacketHandler::init(handlers);
+    network::PacketDecoder::init();
+    network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
     
     setupThreads();
@@ -35,7 +37,8 @@ Server::~Server()
     if (running) {
         Logger::log(WARNING, "server deconstructor was called while it was still running!");
     }
-	closeSocket();
+    closeSocket();
+    SSL_CTX_free(ctx);
 }
 
 void Server::stop()
@@ -46,7 +49,7 @@ void Server::stop()
 void Server::broadcast(const std::string &message)
 {
 	for (int i = 0; i < numThreads; i++)
-		threads.at(i)->broadcast(message);
+	    threads.at(i)->broadcast(message);
 }
 
 void Server::setupThreads()
@@ -82,33 +85,41 @@ void Server::setupSocket()
 
 void Server::closeSocket()
 {
-	close(serverSocket);
+    close(serverSocket);
 }
 
 void Server::acceptClients()
 {
+
     while(running) {
         Logger::log(INFO, "Listening for clients!");
+        
+        SSL *ssl;
+
         evutil_socket_t clientSocket = accept(serverSocket, NULL, NULL);
         if (clientSocket < 0) {
             Logger::log(ERROR, "Error on accept!");
             throw std::runtime_error("");
         }
-    
+        
+        ssl = SSL_new(ctx);
+        SSL_set_fd(ssl, clientSocket);
+        SSL_accept(ssl);
+
         Logger::log(INFO, "Got client, pushing it to thread now!");
 		
         int threadNum = selectThread();
-		thread::Thread *thread = threads.at(threadNum).get();
-		thread->acceptClient(clientSocket);
+	thread::Thread *thread = threads.at(threadNum).get();
+	thread->acceptClient(clientSocket, ssl);
     }
 }
 
 int Server::selectThread()
 {
-	//round robin approach
-	if (lastThread == 4)
-		lastThread = 0;
-	return lastThread++;
+    //round robin approach
+    if (lastThread == 4)
+    	lastThread = 0;
+    return lastThread++;
 }
 
 } /* namespace accord */
