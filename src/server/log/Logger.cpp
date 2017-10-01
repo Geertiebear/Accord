@@ -3,14 +3,28 @@
 #include <iostream>
 
 namespace accord {
-    
-void Logger::log(LogLevel level, std::string message)
+namespace log {
+
+bool Logger::isInit = false;
+int Logger::level;
+
+void Logger::init(int plevel)
 {
-    std::string levelString = logLeveLString(level);
-    std::cout << levelString << ": " << message << std::endl;
+    if (isInit)
+        return;
+    level = plevel;
+    isInit = true;
 }
 
-std::string Logger::logLeveLString(accord::LogLevel level)
+void Logger::log(LogLevel plevel, const std::string &message)
+{
+    if (plevel <= level) {
+        std::string levelString = logLeveLString(plevel);
+        std::cout << levelString << ": " << message << std::endl;
+    }
+}
+
+std::string Logger::logLeveLString(LogLevel level)
 {
     switch(level) {
         case ERROR:
@@ -25,5 +39,6 @@ std::string Logger::logLeveLString(accord::LogLevel level)
             return "";
     }
 }
-    
+
+} /* namespace log */
 } /* namespace accord */

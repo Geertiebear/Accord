@@ -4,21 +4,27 @@
 #include <string>
 
 namespace accord {
-    
+namespace log {
+
 enum LogLevel {
-    ERROR,
-    WARNING,
-    INFO,
-    DEBUG,
+    ERROR = 0,
+    WARNING = 1,
+    INFO = 2,
+    DEBUG = 3,
 };
     
 class Logger {
 public:
-    static void log(LogLevel level, std::string message);
+    static void init(int plevel);
+    static void log(LogLevel plevel,const std::string &message);
 private:
     static std::string logLeveLString(LogLevel level);
+
+    static bool isInit;
+    static int level;
 };
 
+} /* namespace log */
 } /* namespace auth */
 
 #endif

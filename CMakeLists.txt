@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(SOURCES_SERVER
         src/server/main.cpp
         src/server/Server.cpp
+        src/server/Arguments.cpp
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
@@ -30,7 +31,7 @@ set(SOURCES_SHARED
 #libraries
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})

@@ -51,7 +51,7 @@ void Thread::start()
     try {
         thread.detach();
     } catch (std::system_error &e) {
-        Logger::log(ERROR, "Error detatching thread!");
+	log::Logger::log(log::ERROR, "Error detatching thread!");
     }
 }
 
@@ -94,7 +94,7 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		network::ErrorPacket::dispatch(bufferEvent, Error::NAN);
 		return;
 	}
-	Logger::log(DEBUG, "Received packet id is: " + std::to_string(packetId));
+	log::Logger::log(log::DEBUG, "Received packet id is: " + std::to_string(packetId));
 
 	const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
 	if (!packet) {
@@ -107,7 +107,7 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	size_t size = evbuffer_get_length(readBuffer);
 	if (size > packet->getBufferSize()) {
 		network::ErrorPacket::dispatch(bufferEvent, Error::TOO_LONG);
-		Logger::log(ERROR, "Client sent message too long!" + std::to_string(size));
+		log::Logger::log(log::ERROR, "Client sent message too long!" + std::to_string(size));
 		return;
 	}
 	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
@@ -118,7 +118,7 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 		void *data)
 {
 	if (events & BEV_EVENT_TIMEOUT) {
-		Logger::log(DEBUG, "A client has timed out, closing connection!");
+	    log::Logger::log(log::DEBUG, "A client has timed out, closing connection!");
 		util::LibEventUtil::freeBufferEvent(bufferEvent);
 	}
 }

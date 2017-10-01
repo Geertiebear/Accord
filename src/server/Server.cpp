@@ -35,7 +35,7 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
 Server::~Server()
 {
     if (running) {
-        Logger::log(WARNING, "server deconstructor was called while it was still running!");
+        log::Logger::log(log::WARNING, "server deconstructor was called while it was still running!");
     }
     closeSocket();
     SSL_CTX_free(ctx);
@@ -54,6 +54,7 @@ void Server::broadcast(const std::string &message)
 
 void Server::setupThreads()
 {
+    log::Logger::log(log::INFO, "Initializing server with " + std::to_string(numThreads) + " threads!");
     for (int i = 0; i < numThreads; i++) {
         auto newThread = std::make_shared<thread::Thread>(*this);
         newThread->start();
@@ -65,7 +66,7 @@ void Server::setupSocket()
 {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
-        Logger::log(ERROR, "Error opening server socket!");
+        log::Logger::log(log::ERROR, "Error opening server socket!");
         throw std::runtime_error("");
     }
     
@@ -75,12 +76,12 @@ void Server::setupSocket()
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     
     if (bind(serverSocket, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) < 0 ) {
-        Logger::log(ERROR, "Error binding to socket!");
+        log::Logger::log(log::ERROR, "Error binding to socket!");
         throw std::runtime_error("");
     }
     
     listen(serverSocket, 5);
-    Logger::log(INFO, "Opened socket on " + std::to_string(port) + "!");
+    log::Logger::log(log::INFO, "Opened socket on " + std::to_string(port) + "!");
 }
 
 void Server::closeSocket()
@@ -90,15 +91,14 @@ void Server::closeSocket()
 
 void Server::acceptClients()
 {
-
     while(running) {
-        Logger::log(INFO, "Listening for clients!");
+        log::Logger::log(log::INFO, "Listening for clients!");
         
         SSL *ssl;
 
         evutil_socket_t clientSocket = accept(serverSocket, NULL, NULL);
         if (clientSocket < 0) {
-            Logger::log(ERROR, "Error on accept!");
+            log::Logger::log(log::ERROR, "Error on accept!");
             throw std::runtime_error("");
         }
         
@@ -106,7 +106,7 @@ void Server::acceptClients()
         SSL_set_fd(ssl, clientSocket);
         SSL_accept(ssl);
 
-        Logger::log(INFO, "Got client, pushing it to thread now!");
+        log::Logger::log(log::INFO, "Got client, pushing it to thread now!");
 		
         int threadNum = selectThread();
 	thread::Thread *thread = threads.at(threadNum).get();

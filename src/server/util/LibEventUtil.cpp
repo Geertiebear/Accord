@@ -42,13 +42,13 @@ void LibEventUtil::init()
 
 void LibEventUtil::logCallback(int severity, const char *message)
 {
-	switch (severity) {
-		case _EVENT_LOG_DEBUG: Logger::log(DEBUG, std::string(message)); break;
-		case _EVENT_LOG_MSG: Logger::log(INFO, std::string(message)); break;
-		case _EVENT_LOG_WARN: Logger::log(WARNING, std::string(message)); break;
-		case _EVENT_LOG_ERR: Logger::log(ERROR, std::string(message)); break;
-		default: Logger::log(ERROR, std::string(message)); break;
-	}
+   switch (severity) {
+      case _EVENT_LOG_DEBUG: log::Logger::log(log::DEBUG, std::string(message)); break;
+      case _EVENT_LOG_MSG: log::Logger::log(log::INFO, std::string(message)); break;
+      case _EVENT_LOG_WARN: log::Logger::log(log::WARNING, std::string(message)); break;
+      case _EVENT_LOG_ERR: log::Logger::log(log::ERROR, std::string(message)); break;
+      default: log::Logger::log(log::ERROR, std::string(message)); break;
+   }
 }
 
 unsigned long LibEventUtil::idCallback()
