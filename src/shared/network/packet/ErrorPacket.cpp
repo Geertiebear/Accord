@@ -1,6 +1,6 @@
 #include <accordshared/network/packet/ErrorPacket.h>
 
-#include <accordserver/log/Logger.h>
+#include <accordshared/util/BinUtil.h>
 
 namespace accord {
 namespace network {
@@ -8,18 +8,32 @@ namespace network {
 int ErrorPacket::dispatch(struct bufferevent *bufferevent, Error error)
 {
 	ErrorPacket packet;
-	std::string message = std::to_string(ERROR_PACKET) + " " + packet.construct(error);
-	return bufferevent_write(bufferevent, message.c_str(), message.size());
+	std::vector<char> result;
+	std::vector<char> constructed = packet.construct(error);
+	result.reserve(constructed.size() + HEADER_SIZE);
+	uint8_t low = 0;
+	uint8_t high = 0;
+	util::BinUtil::splitUint16((uint16_t) ERROR_PACKET, &low, &high);
+	result.push_back(high);
+	result.push_back(low);
+	std::copy(constructed.begin(), constructed.end(), std::back_inserter(result));
+
+	return bufferevent_write(bufferevent, &result[0], result.size());
 }
 
-std::string ErrorPacket::construct(Error error)
-{ 
-	return std::to_string(static_cast<int>(error)); 
+std::vector<char> ErrorPacket::construct(Error error)
+{
+	std::vector<char> result;
+	result.reserve(sizeof(Error));
+	uint8_t low = 0;
+	uint8_t high = 0;
+	util::BinUtil::splitUint16((uint16_t) error, &low, &high);
+	return result;
 }
 
 size_t ErrorPacket::getBufferSize() const
 {
-	return sizeof(uint16_t);
+	return sizeof(uint16_t) + sizeof(Error);
 }
 
 } /* network */

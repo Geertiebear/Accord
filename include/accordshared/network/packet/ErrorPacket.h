@@ -3,6 +3,8 @@
 
 #include <event2/bufferevent.h>
 
+#include <vector>
+
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/network/Packet.h>
 
@@ -21,7 +23,7 @@ public:
 	
 	static int dispatch(struct bufferevent *bufferEvent, Error error);
 
-	std::string construct(Error error);
+	std::vector<char> construct(Error error);
 	size_t getBufferSize() const;
 };
 

@@ -3,6 +3,8 @@
 
 #include <accordshared/network/Packet.h>
 
+#include <vector>
+
 namespace accord {
 namespace network {
 
@@ -16,7 +18,7 @@ public:
 		return SEND_MESSAGE_PACKET;
 	};
 
-	std::string construct(const std::string &message);
+	std::vector<char> construct(const std::string &message);
 	size_t getBufferSize() const;
 };
 

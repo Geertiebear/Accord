@@ -8,6 +8,8 @@
 namespace accord {
 namespace network {
 
+#define HEADER_SIZE 2
+
 enum PacketIds {
 	SEND_MESSAGE_PACKET = 0,
 	ERROR_PACKET = 1,

@@ -15,6 +15,7 @@
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/packet/ErrorPacket.h>
+#include <accordshared/util/BinUtil.h>
 
 namespace accord {
 namespace thread {
@@ -85,17 +86,13 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 	size_t n;
 	memset(packetIdBuffer, '\0', 2);
 	bufferevent_read(bufferEvent, packetIdBuffer, 2);
+	
+	uint8_t low = (uint8_t) packetIdBuffer[0];
+	uint8_t high = (uint8_t) packetIdBuffer[1];
 
-	network::PacketId packetId;
-	std::string packetIdString(packetIdBuffer);
-	free(packetIdBuffer);
-	try {
-		packetId = std::stoi(packetIdString);
-	} catch (std::invalid_argument &e) {
-		network::ErrorPacket::dispatch(bufferEvent, Error::NAN);
-		return;
-	}
+	network::PacketId packetId = util::BinUtil::assembleUint16(low, high);
 	log::Logger::log(log::DEBUG, "Received packet id is: " + std::to_string(packetId));
+	free(packetIdBuffer);
 
 	const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
 	if (!packet) {

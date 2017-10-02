@@ -27,6 +27,7 @@ set(SOURCES_SHARED
     src/shared/network/PacketHandler.cpp
     src/shared/network/packet/ErrorPacket.cpp
     src/shared/network/packet/SendMessagePacket.cpp
+    src/shared/util/BinUtil.cpp
     )
 #libraries
 find_package(Threads REQUIRED)
