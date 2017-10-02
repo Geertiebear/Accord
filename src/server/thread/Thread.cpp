@@ -81,13 +81,14 @@ void Thread::broadcast(const std::string &message)
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
-	char packetIdBuffer[2];
+	char *packetIdBuffer = (char*) malloc(2);
 	size_t n;
-	memset(&packetIdBuffer, '\0', sizeof(packetIdBuffer));
-	bufferevent_read(bufferEvent, packetIdBuffer, sizeof(packetIdBuffer));
+	memset(packetIdBuffer, '\0', 2);
+	bufferevent_read(bufferEvent, packetIdBuffer, 2);
 
 	network::PacketId packetId;
 	std::string packetIdString(packetIdBuffer);
+	free(packetIdBuffer);
 	try {
 		packetId = std::stoi(packetIdString);
 	} catch (std::invalid_argument &e) {
@@ -101,8 +102,9 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		network::ErrorPacket::dispatch(bufferEvent, Error::NOT_FOUND);
 		return;
 	}
-	char bodyBuffer[packet->getBufferSize()];
-	memset(&bodyBuffer, '\0', sizeof(bodyBuffer));
+	const int bufferSize = packet->getBufferSize();
+	char *bodyBuffer = (char*) malloc(bufferSize);
+	memset(bodyBuffer, '\0', bufferSize);
 	struct evbuffer *readBuffer = bufferevent_get_input(bufferEvent);
 	size_t size = evbuffer_get_length(readBuffer);
 	if (size > packet->getBufferSize()) {
@@ -110,8 +112,9 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		log::Logger::log(log::ERROR, "Client sent message too long!" + std::to_string(size));
 		return;
 	}
-	n = bufferevent_read(bufferEvent, bodyBuffer, sizeof(bodyBuffer));
+	n = bufferevent_read(bufferEvent, bodyBuffer, bufferSize);
 	packet->receive(std::string(bodyBuffer));
+	free(bodyBuffer);
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
