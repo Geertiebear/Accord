@@ -20,7 +20,7 @@ public:
     ~Server();
     
     void stop();
-    void broadcast(const std::string &buffer);
+    void broadcast(const std::string &buffer, int channel);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;

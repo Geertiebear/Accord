@@ -10,12 +10,21 @@
 #include <string>
 #include <vector>
 
+#include <accordshared/network/PacketData.h>
+
 namespace accord {
 
 class Server;
 
 namespace thread {
     
+struct Client : public PacketData{
+	Client(Server &server) : server(server) { };
+	Server &server;
+	struct bufferevent* bufferEvent;
+	int channel;
+};
+
 class Thread {
 public:
     Thread(Server &server);
@@ -25,7 +34,7 @@ public:
     void wake();
     void start();
     void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
-    void broadcast(const std::string &message);
+    void broadcast(const std::string &message, int channel);
 
     //callbacks
     static void readCallback(struct bufferevent *bufferEvent, void *data);
@@ -36,7 +45,7 @@ public:
 private:
     Server &server;
     std::thread thread;
-    std::vector<bufferevent*> bufferEvents; //libevent can't foreach on bufferevents :((
+    std::vector<Client*> clients; //libevent can't foreach on bufferevents :((
     
     void run();
 };

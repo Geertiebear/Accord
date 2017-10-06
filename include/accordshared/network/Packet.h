@@ -4,6 +4,7 @@
 #include <string>
 
 #include <accordshared/network/PacketHandler.h>
+#include <accordshared/network/PacketData.h>
 
 namespace accord {
 namespace network {
@@ -24,9 +25,9 @@ public:
 		return -1;
 	}
 
-	bool receive(std::string body) const
+	bool receive(std::string body, PacketData *data) const
 	{
-		return PacketHandler::handle(getId(), body);
+		return PacketHandler::handle(getId(), body, data);
 	}
 };
 

@@ -10,10 +10,10 @@ void PacketHandler::init(const std::vector<ReceiveHandler> &handlers)
 	lookupTable = handlers;
 }	
 
-bool PacketHandler::handle(int packetId, std::string body)
+bool PacketHandler::handle(int packetId, std::string body, PacketData *data)
 {
 	ReceiveHandler handler = lookupTable[packetId];
-	return handler(body);
+	return handler(body, data);
 }
 
 } /* namespace network */

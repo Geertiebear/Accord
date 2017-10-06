@@ -3,13 +3,15 @@
 
 #include <string>
 
+#include <accordshared/network/PacketData.h>
+
 namespace accord {
 namespace network {
 
 class PacketHandlers {
 public:
-	static bool receiveSendMessagePacket(const std::string &body);
-	static bool receiveErrorPacket(const std::string &body);
+	static bool receiveSendMessagePacket(const std::string &body, PacketData *data);
+	static bool receiveErrorPacket(const std::string &body, PacketData *data);
 };
 
 } /* namespace network */

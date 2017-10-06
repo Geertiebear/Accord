@@ -41,7 +41,12 @@ int main(int argc, char **argv)
     while (1) {
         std::cout << "> ";
         std::getline(std::cin, input);
-        std::cout << parser.parseCommand(input, ssl) << std::endl;
+		if (input.size())
+			std::cout << parser.parseCommand(input, ssl) << std::endl;
+
+		char buffer[256];
+		SSL_read(ssl, &buffer, sizeof(buffer));
+		std::cout << buffer << std::endl;
     }
     return 0;
 }

@@ -52,7 +52,7 @@ void Thread::start()
     try {
         thread.detach();
     } catch (std::system_error &e) {
-	log::Logger::log(log::ERROR, "Error detatching thread!");
+		log::Logger::log(log::ERROR, "Error detatching thread!");
     }
 }
 
@@ -64,19 +64,26 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 		.tv_sec = 30,
 		.tv_usec = 0,
 	};
+
+	Client *client = new Client(server);
+	client->channel = 0;
+	client->bufferEvent = bufferEvent;
+
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
-			&Thread::eventCallback, this);
+			&Thread::eventCallback, client);
 	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
-	bufferEvents.push_back(bufferEvent);
+	clients.push_back(client);
 }
 
-void Thread::broadcast(const std::string &message)
+void Thread::broadcast(const std::string &message, int channel)
 {
-	for (bufferevent *bufferEvent : bufferEvents) {
-		bufferevent_lock(bufferEvent);
-		bufferevent_write(bufferEvent, message.c_str(), message.size());
-		bufferevent_unlock(bufferEvent);
+	for (Client *client : clients) {
+		if (client->channel == channel) {
+			bufferevent_lock(client->bufferEvent);
+			bufferevent_write(client->bufferEvent, message.c_str(), message.size());
+			bufferevent_unlock(client->bufferEvent);
+		}
 	}
 }
 
@@ -110,7 +117,8 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 		return;
 	}
 	n = bufferevent_read(bufferEvent, bodyBuffer, bufferSize);
-	packet->receive(std::string(bodyBuffer));
+	Client *client = reinterpret_cast<Client*>(data);
+	packet->receive(std::string(bodyBuffer), client);
 	free(bodyBuffer);
 }
 

@@ -4,15 +4,17 @@
 #include <vector>
 #include <functional>
 
+#include <accordshared/network/PacketData.h>
+
 namespace accord {
 namespace network {
 
-using ReceiveHandler = std::function<bool(const std::string&)>;
+using ReceiveHandler = std::function<bool(const std::string&, PacketData*)>;
 
 class PacketHandler {
 public:
 	static void init(const std::vector<ReceiveHandler> &handlers);
-	static bool handle(int packetId, std::string body);
+	static bool handle(int packetId, std::string body, PacketData *data);
 private:
 	static std::vector<ReceiveHandler> lookupTable;
 };

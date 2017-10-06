@@ -46,10 +46,10 @@ void Server::stop()
     running = false;
 }
 
-void Server::broadcast(const std::string &message)
+void Server::broadcast(const std::string &message, int channel)
 {
 	for (int i = 0; i < numThreads; i++)
-	    threads.at(i)->broadcast(message);
+	    threads.at(i)->broadcast(message, channel);
 }
 
 void Server::setupThreads()
