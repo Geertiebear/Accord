@@ -24,7 +24,9 @@ std::string CommandParser::parseCommand(const std::string &command, SSL *ssl)
     auto it = commandMap.find(tokens[0]);
     if (it != commandMap.end()) {
         commandFunction = it->second;
-        return commandFunction(tokens, ssl);
+		std::vector<std::string> args;
+		std::copy(tokens.begin() + 1, tokens.end(), std::back_inserter(args));
+        return commandFunction(args, ssl);
     }
     
     return "Command not found!";

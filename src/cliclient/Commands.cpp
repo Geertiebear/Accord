@@ -15,7 +15,14 @@ std::string Commands::quit(std::vector<std::string> args, SSL *ssl)
 std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 {
 	accord::network::SendMessagePacket packet;
-	std::vector<char> message = packet.construct("Hello");;
+	std::string msg;
+	for (size_t i = 0; i < args.size(); i++) {
+		std::string token = args[i];
+		if (i)
+			msg += " ";
+		msg += token;
+	}
+	std::vector<char> message = packet.construct(msg);
 	SSL_write(ssl, &message[0], message.size());
 	return "Message sent successfully";
 }
