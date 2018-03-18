@@ -21,5 +21,13 @@ bool PacketHandlers::receiveErrorPacket(const std::string &body, PacketData *dat
 	return true;
 }
 
+bool PacketHandlers::receiveDisconnectPacket(const std::string &body, PacketData *data)
+{
+	thread::Client *client = (thread::Client*) data;
+	client->thread.removeClient(client);
+	log::Logger::log(log::DEBUG, "Removed client");
+	return true;
+}
+
 } /* namespace network */
 } /* namespace accord */

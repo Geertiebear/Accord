@@ -5,9 +5,13 @@
 #include <sys/socket.h>
 
 #include <accordshared/network/packet/SendMessagePacket.h>
+#include <accordshared/network/packet/DisconnectPacket.h>
 
 std::string Commands::quit(std::vector<std::string> args, SSL *ssl)
 {
+	accord::network::DisconnectPacket packet;
+	std::vector<char> message = packet.construct();
+	SSL_write(ssl, &message[0], message.size());
     SSL_free(ssl);
     exit(0);
 }

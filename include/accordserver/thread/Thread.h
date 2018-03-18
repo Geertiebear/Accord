@@ -18,9 +18,12 @@ class Server;
 
 namespace thread {
     
+class Thread;
+
 struct Client : public PacketData{
-	Client(Server &server) : server(server) { };
+	Client(Server &server, Thread &thread) : server(server), thread(thread) { };
 	Server &server;
+	Thread &thread;
 	struct bufferevent* bufferEvent;
 	int channel;
 };
@@ -34,6 +37,7 @@ public:
     void wake();
     void start();
     void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
+	void removeClient(Client *client);
     void broadcast(const std::string &message, int channel);
 
     //callbacks

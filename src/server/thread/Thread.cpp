@@ -65,7 +65,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 		.tv_usec = 0,
 	};
 
-	Client *client = new Client(server);
+	Client *client = new Client(server, *this);
 	client->channel = 0;
 	client->bufferEvent = bufferEvent;
 
@@ -74,6 +74,14 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
 	clients.push_back(client);
+}
+
+void Thread::removeClient(Client *client)
+{
+	auto it = std::find(clients.begin(), clients.end(), client);
+	clients.erase(it);
+	util::LibEventUtil::freeBufferEvent(client->bufferEvent);
+	delete client;
 }
 
 void Thread::broadcast(const std::string &message, int channel)
@@ -127,7 +135,8 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 {
 	if (events & BEV_EVENT_TIMEOUT) {
 	    log::Logger::log(log::DEBUG, "A client has timed out, closing connection!");
-		util::LibEventUtil::freeBufferEvent(bufferEvent);
+		Client *client = (Client*) data;
+		client->thread.removeClient(client);
 	}
 }
 

@@ -12,6 +12,7 @@ class PacketHandlers {
 public:
 	static bool receiveSendMessagePacket(const std::string &body, PacketData *data);
 	static bool receiveErrorPacket(const std::string &body, PacketData *data);
+	static bool receiveDisconnectPacket(const std::string &body, PacketData *data);
 };
 
 } /* namespace network */

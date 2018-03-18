@@ -14,6 +14,7 @@ namespace network {
 enum PacketIds {
 	SEND_MESSAGE_PACKET = 0,
 	ERROR_PACKET = 1,
+	DISCONNECT_PACKET = 2,
 };
 
 class Packet {
