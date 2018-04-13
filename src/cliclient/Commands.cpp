@@ -30,3 +30,12 @@ std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 	SSL_write(ssl, &message[0], message.size());
 	return "Message sent successfully";
 }
+
+std::string Commands::recv(std::vector<std::string> args, SSL *ssl)
+{
+		char buffer[256];
+		int n = SSL_read(ssl, &buffer, sizeof(buffer));
+		if (n)
+			return std::string(buffer);
+		return "No message to be read!";
+}

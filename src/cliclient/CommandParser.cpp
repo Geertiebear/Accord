@@ -9,6 +9,7 @@ CommandParser::CommandParser()
 {
     commandMap.insert(std::make_pair("quit", &Commands::quit));
     commandMap.insert(std::make_pair("send", &Commands::sendMessage));
+	commandMap.insert(std::make_pair("recv", &Commands::recv));
 }
 
 std::string CommandParser::parseCommand(const std::string &command, SSL *ssl)
