@@ -36,11 +36,11 @@ std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 
 std::string Commands::recv(std::vector<std::string> args, SSL *ssl)
 {
-		char buffer[256];
-        int n;
-        ioctl(SSL_get_fd(ssl), FIONREAD, &n);
-        if (!n)
-			return "No message to be read!";
-		SSL_read(ssl, &buffer, sizeof(buffer));
-        return std::string(buffer);
+    char buffer[256];
+    int n;
+    ioctl(SSL_get_fd(ssl), FIONREAD, &n);
+    if (!n)
+        return "No message to be read!";
+    SSL_read(ssl, &buffer, sizeof(buffer));
+    return std::string(buffer);
 }
