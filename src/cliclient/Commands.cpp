@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
@@ -27,15 +28,19 @@ std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 		msg += token;
 	}
 	std::vector<char> message = packet.construct(msg);
-	SSL_write(ssl, &message[0], message.size());
-	return "Message sent successfully";
+	if (SSL_write(ssl, &message[0], message.size()) <= 0)
+      return "Error when sending message!";
+    else
+      return "Message sent successfully";
 }
 
 std::string Commands::recv(std::vector<std::string> args, SSL *ssl)
 {
 		char buffer[256];
-		int n = SSL_read(ssl, &buffer, sizeof(buffer));
-		if (n)
-			return std::string(buffer);
-		return "No message to be read!";
+        int n;
+        ioctl(SSL_get_fd(ssl), FIONREAD, &n);
+        if (!n)
+			return "No message to be read!";
+		SSL_read(ssl, &buffer, sizeof(buffer));
+        return std::string(buffer);
 }

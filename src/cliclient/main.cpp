@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -27,6 +28,8 @@ int main(int argc, char **argv)
     struct sockaddr_in serverAddress;
     SSL_CTX *ctx = initCTX();
 
+    signal(SIGPIPE, SIG_IGN);
+    
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     memset((char*) &serverAddress, '\0', sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
