@@ -10,6 +10,7 @@ struct Arguments {
     int port;
     int logLevel;
     std::string config;
+    bool initdatabase;
 };
 
 class ArgumentParser {

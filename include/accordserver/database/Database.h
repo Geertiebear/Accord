@@ -23,6 +23,9 @@ public:
     ~Database();
 
     int connect();
+    void disconnect();
+    bool verify();
+    bool initDatabase();
 private:
     const DatabaseOptions &options;
     mysqlpp::Connection connection;

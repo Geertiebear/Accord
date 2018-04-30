@@ -6,6 +6,7 @@
 
 #include <accordserver/log/Logger.h>
 #include <accordserver/Arguments.h>
+#include <accordserver/database/Database.h>
 #include <accordserver/util/OpenSSLUtil.h>
 #include <accordserver/network/PacketHandlers.h>
 #include <accordshared/network/PacketDecoder.h>
@@ -26,6 +27,17 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
     network::PacketDecoder::init();
     network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
+
+    database::Database database(config.database);
+    database.connect();
+    if (!database.verify() && args.initdatabase) {
+        log::Logger::log(log::INFO, "Initializing database!");
+        database.initDatabase();
+    } else if (!database.verify()) {
+        log::Logger::log(log::ERROR, "Database is not complete!");
+        throw std::runtime_error("");
+    }
+    database.disconnect();
     
     setupThreads();
     setupSocket();
