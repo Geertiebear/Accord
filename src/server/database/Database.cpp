@@ -17,6 +17,7 @@ Database::~Database()
 
 int Database::connect()
 {
+    connection.set_option(new mysqlpp::ReconnectOption(true));
     return connection.connect(options.name.c_str(), options.address.c_str(),
                               options.user.c_str(),
                        options.password.c_str(), options.port);
