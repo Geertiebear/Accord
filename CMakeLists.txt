@@ -16,6 +16,7 @@ set(SOURCES_SERVER
         src/server/util/LibEventUtil.cpp
         src/server/util/OpenSSLUtil.cpp
         src/server/network/PacketHandlers.cpp
+        src/server/database/Database.cpp
     )
 set(SOURCES_CLICLIENT
     src/cliclient/main.cpp
@@ -37,6 +38,7 @@ find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui)
 find_package(Qt5Qml REQUIRED)
 find_package(Qt5Quick REQUIRED)
 find_package(Qt5Gui REQUIRED)
+find_package(MySQL++ REQUIRED)
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
@@ -69,6 +71,9 @@ target_include_directories(accordserver
 target_include_directories(accordserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
 target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
 target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
+target_include_directories(accordserver PUBLIC ${MYSQLPP_INCLUDE_DIR})
+target_include_directories(accordserver PUBLIC ${MYSQL_INCLUDE_DIR})
+target_link_libraries(accordserver ${MYSQLPP_LIBRARIES})
 target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(accordserver ${Boost_LIBRARIES})
 target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})

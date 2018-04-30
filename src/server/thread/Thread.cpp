@@ -20,7 +20,8 @@
 namespace accord {
 namespace thread {
 
-Thread::Thread(Server &server) : server(server), thread()
+Thread::Thread(Server &server) : server(server), thread(),
+    database("accord", "localhost", "user", "password", 0)
 {
 	eventBase = event_base_new();
 }
@@ -48,6 +49,7 @@ void Thread::stop()
 
 void Thread::start()
 {
+    database.connect();
     thread = std::thread(&Thread::run, this);
     try {
         thread.detach();
