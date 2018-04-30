@@ -1,5 +1,6 @@
 .kdev4
 build/
-AccordServer.kdev4
+Accord.kdev4
+CMakeLists.txt.user
 *.swp
 Session.vim
