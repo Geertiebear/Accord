@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <accordserver/thread/Thread.h>
+#include <accordserver/Config.h>
 #include <accordshared/network/PacketHandler.h>
 
 namespace accord {
@@ -29,6 +30,7 @@ private:
     int lastThread = 0;
     bool running;
     SSL_CTX *ctx;
+    Config config;
 
     void setupThreads();
     void setupSocket();

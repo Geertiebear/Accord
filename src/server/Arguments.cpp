@@ -22,7 +22,8 @@ Arguments ArgumentParser::parse(int argc, char **argv)
 		 "0 - errors only\n"
 		 "1 - warning and error\n"
 		 "2 - warning, info and error\n"
-		 "3 - warning, info, debug and error");
+         "3 - warning, info, debug and error")
+        ("config", po::value<std::string>(), "path of the config file\n");
 	po::variables_map varMap;
 	po::store(po::parse_command_line(argc, argv, desc), varMap);
 	po::notify(varMap);
@@ -46,6 +47,11 @@ Arguments ArgumentParser::parse(int argc, char **argv)
 		arguments.logLevel = varMap["loglevel"].as<int>();
 	else
 		arguments.logLevel = 2;
+
+    if (varMap.count("config"))
+        arguments.config = varMap["config"].as<std::string>();
+    else
+        arguments.config = "config.yml";
 
 	return arguments;
 }

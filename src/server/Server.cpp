@@ -21,6 +21,8 @@ std::vector<network::ReceiveHandler> Server::handlers = {
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
     ctx(util::OpenSSLUtil::getContext())
 {
+    ConfigLoader configLoader(args.config);
+    config = configLoader.load();
     network::PacketDecoder::init();
     network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
@@ -57,7 +59,7 @@ void Server::setupThreads()
 {
     log::Logger::log(log::INFO, "Initializing server with " + std::to_string(numThreads) + " threads!");
     for (int i = 0; i < numThreads; i++) {
-        auto newThread = std::make_shared<thread::Thread>(*this);
+        auto newThread = std::make_shared<thread::Thread>(*this, config);
         newThread->start();
         threads.push_back(newThread);
     }

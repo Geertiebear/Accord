@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <accordserver/database/Database.h>
+#include <accordserver/Config.h>
 #include <accordshared/network/PacketData.h>
 
 namespace accord {
@@ -21,7 +22,7 @@ namespace thread {
     
 class Thread;
 
-struct Client : public PacketData{
+struct Client : public PacketData {
     Client(Server &server, Thread &thread) : server(server), thread(thread) { }
 	Server &server;
 	Thread &thread;
@@ -31,7 +32,7 @@ struct Client : public PacketData{
 
 class Thread {
 public:
-    Thread(Server &server);
+    Thread(Server &server, const Config &config);
     ~Thread();
     
     void stop();
@@ -49,6 +50,7 @@ public:
     struct event_base *eventBase;
 private:
     Server &server;
+    const Config &config;
     std::thread thread;
     std::vector<Client*> clients; //libevent can't foreach on bufferevents :((
     database::Database database;

@@ -3,13 +3,8 @@
 namespace accord {
 namespace database {
 
-Database::Database(std::string name, std::string address, std::string user,
-                   std::string password, int port)
-    : name(name),
-      address(address),
-      user(user),
-      password(password),
-      port(port)
+Database::Database(const DatabaseOptions &options)
+    : options(options)
 {
 
 }
@@ -21,8 +16,9 @@ Database::~Database()
 
 int Database::connect()
 {
-    return connection.connect(name.c_str(), address.c_str(), user.c_str(),
-                       password.c_str(), port);
+    return connection.connect(options.name.c_str(), options.address.c_str(),
+                              options.user.c_str(),
+                       options.password.c_str(), options.port);
 }
 
 } /* namespace database */

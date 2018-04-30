@@ -11,6 +11,7 @@ set(SOURCES_SERVER
         src/server/main.cpp
         src/server/Server.cpp
         src/server/Arguments.cpp
+        src/server/Config.cpp
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
@@ -43,6 +44,7 @@ find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})
 
@@ -79,6 +81,7 @@ target_link_libraries(accordserver ${Boost_LIBRARIES})
 target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
 target_link_libraries(accordserver ${LIBEVENT_OPENSSL})
 target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
+target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
 target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient
