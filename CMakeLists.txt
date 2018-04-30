@@ -22,6 +22,8 @@ set(SOURCES_CLICLIENT
     src/cliclient/Commands.cpp
     src/cliclient/CommandParser.cpp
     )
+set(SOURCES_CLIENT
+    src/client/main.cpp)
 set(SOURCES_SHARED
     src/shared/network/PacketDecoder.cpp
     src/shared/network/PacketHandler.cpp
@@ -31,6 +33,10 @@ set(SOURCES_SHARED
     src/shared/util/BinUtil.cpp
     )
 #libraries
+find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui)
+find_package(Qt5Qml REQUIRED)
+find_package(Qt5Quick REQUIRED)
+find_package(Qt5Gui REQUIRED)
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
@@ -38,9 +44,13 @@ find_package(OpenSSL REQUIRED)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})
 
+#QT specifics
+qt5_add_resources(qml_QRC src/client/client.qrc)
+
 #execs
 add_executable(accordserver ${SOURCES_SERVER})
 add_executable(accordcliclient ${SOURCES_CLICLIENT})
+add_executable(accordclient ${SOURCES_CLIENT} ${qml_QRC})
 
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
@@ -72,5 +82,13 @@ target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordcliclient libaccordshared)
 target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 
+target_include_directories(accordclient
+    PUBLIC include/)
+target_include_directories(accordclient PUBLIC ${OPENSSL_INCLUDE_DIR})
+target_link_libraries(accordclient libaccordshared)
+target_link_libraries(accordclient ${OPENSSL_LIBRARIES})
+target_link_libraries(accordclient Qt5::Qml)
+target_link_libraries(accordclient Qt5::Quick)
+
 #install
-install(TARGETS accordserver accordcliclient RUNTIME DESTINATION bin)
+install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)
