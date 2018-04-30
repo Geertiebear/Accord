@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import QtQuick.Window 2.3
+import QtQuick.Controls 2.2
 
 Window {
     visible: true
@@ -8,18 +9,17 @@ Window {
 
     ClientForm {
         anchors.fill: parent
-        button.onClicked: {
+        button2.onClicked: {
             listView.model.append({});
         }
     }
 
     Component {
         id: communityDelegate
-        Rectangle {
+        RoundButton {
             radius: 50
-            width: 75
-            height: 75
-            color: "black"
+            width: 65
+            height: 65
         }
     }
 }
