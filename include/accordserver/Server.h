@@ -32,7 +32,7 @@ private:
     SSL_CTX *ctx;
     Config config;
 
-    void verifyDatabase();
+    void verifyDatabase(const Arguments &args);
     void setupThreads();
     void setupSocket();
     void closeSocket();

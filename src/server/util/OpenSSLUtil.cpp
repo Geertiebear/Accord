@@ -18,11 +18,12 @@ void OpenSSLUtil::opensslInit()
 	CRYPTO_set_locking_callback(&OpenSSLUtil::lockCallback);
 }
 
-SSL_CTX *OpenSSLUtil::getContext()
+SSL_CTX *OpenSSLUtil::getContext(const Config &config)
 {
 	SSL_CTX *ctx = SSL_CTX_new(SSLv23_server_method());
-	if (!SSL_CTX_use_certificate_chain_file(ctx, "cert.pem") ||
-			!SSL_CTX_use_PrivateKey_file(ctx, "pkey.pem", SSL_FILETYPE_PEM)) {
+    if (!SSL_CTX_use_certificate_chain_file(ctx, config.openssl.cert.c_str())
+            || !SSL_CTX_use_PrivateKey_file(ctx, config.openssl.pkey.c_str(),
+                                         SSL_FILETYPE_PEM)) {
 		log::Logger::log(log::ERROR, "Could not find private key or certificate!");
 		throw std::runtime_error("");
 	}

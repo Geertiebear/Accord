@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <openssl/ssl.h>
+#include <accordserver/Config.h>
 
 namespace accord {
 namespace util {
@@ -11,7 +12,7 @@ namespace util {
 class OpenSSLUtil {
 public:
 	static void opensslInit();
-	static SSL_CTX *getContext();
+    static SSL_CTX *getContext(const Config &config);
 	static void lockCallback(int mode, int n, const char *file, int line);
 	static unsigned long idCallback();
 private:

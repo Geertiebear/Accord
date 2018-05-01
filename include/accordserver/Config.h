@@ -9,6 +9,10 @@ namespace accord {
 
 struct Config {
     database::DatabaseOptions database;
+    struct {
+        std::string cert;
+        std::string pkey;
+    } openssl;
 };
 
 class ConfigLoader {

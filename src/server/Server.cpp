@@ -19,16 +19,16 @@ std::vector<network::ReceiveHandler> Server::handlers = {
 	&network::PacketHandlers::receiveDisconnectPacket
 };
 
-Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
-    ctx(util::OpenSSLUtil::getContext())
+Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
 {
     ConfigLoader configLoader(args.config);
     config = configLoader.load();
+    ctx = util::OpenSSLUtil::getContext(config);
     network::PacketDecoder::init();
     network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
 
-    verifyDatabase();
+    verifyDatabase(args);
     
     setupThreads();
     setupSocket();
@@ -58,7 +58,7 @@ void Server::broadcast(const std::string &message, int channel)
 	    threads.at(i)->broadcast(message, channel);
 }
 
-void Server::verifyDatabase()
+void Server::verifyDatabase(const Arguments &args)
 {
     database::Database database(config.database);
     database.connect();
