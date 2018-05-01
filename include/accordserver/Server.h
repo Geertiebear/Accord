@@ -32,6 +32,7 @@ private:
     SSL_CTX *ctx;
     Config config;
 
+    void verifyDatabase();
     void setupThreads();
     void setupSocket();
     void closeSocket();

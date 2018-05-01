@@ -28,16 +28,7 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port),
     network::PacketHandler::init(handlers);
     threads.reserve(numThreads);
 
-    database::Database database(config.database);
-    database.connect();
-    if (!database.verify() && args.initdatabase) {
-        log::Logger::log(log::INFO, "Initializing database!");
-        database.initDatabase();
-    } else if (!database.verify()) {
-        log::Logger::log(log::ERROR, "Database is not complete!");
-        throw std::runtime_error("");
-    }
-    database.disconnect();
+    verifyDatabase();
     
     setupThreads();
     setupSocket();
@@ -65,6 +56,20 @@ void Server::broadcast(const std::string &message, int channel)
 {
 	for (int i = 0; i < numThreads; i++)
 	    threads.at(i)->broadcast(message, channel);
+}
+
+void Server::verifyDatabase()
+{
+    database::Database database(config.database);
+    database.connect();
+    if (!database.verify() && args.initdatabase) {
+        log::Logger::log(log::INFO, "Initializing database!");
+        database.initDatabase();
+    } else if (!database.verify()) {
+        log::Logger::log(log::ERROR, "Database is not complete!");
+        throw std::runtime_error("");
+    }
+    database.disconnect();
 }
 
 void Server::setupThreads()
