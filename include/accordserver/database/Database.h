@@ -1,7 +1,7 @@
 #ifndef ACCORD_DATABASE_DATABASE_H
 #define ACCORD_DATABASE_DATABASE_H
 
-#include <string>'
+#include <string>
 #include <mysql++.h>
 
 namespace accord {
