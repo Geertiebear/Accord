@@ -12,10 +12,12 @@ set(SOURCES_SERVER
         src/server/Server.cpp
         src/server/Arguments.cpp
         src/server/Config.cpp
+        src/server/Authentication.cpp
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp
         src/server/util/OpenSSLUtil.cpp
+        src/server/util/CryptoUtil.cpp
         src/server/network/PacketHandlers.cpp
         src/server/database/Database.cpp
     )
@@ -45,6 +47,8 @@ find_package(LibEvent REQUIRED)
 find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(argon2 libargon2)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})
 
@@ -82,6 +86,8 @@ target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
 target_link_libraries(accordserver ${LIBEVENT_OPENSSL})
 target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
 target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
+target_link_libraries(accordserver ${argon2_LIBRARIES})
+target_link_libraries(accordserver mysqlclient)
 target_link_libraries(accordserver libaccordshared)
 
 target_include_directories(accordcliclient

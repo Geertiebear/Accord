@@ -33,6 +33,7 @@ private:
     Config config;
 
     void verifyDatabase(const Arguments &args);
+    void runTests();
     void setupThreads();
     void setupSocket();
     void closeSocket();

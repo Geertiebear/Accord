@@ -6,6 +6,7 @@ Window {
     visible: true
     visibility: "Maximized"
     title: qsTr("Hello World")
+    color: "#5d5959"
 
     ClientForm {
         anchors.fill: parent

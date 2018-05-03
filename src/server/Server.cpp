@@ -8,6 +8,7 @@
 #include <accordserver/Arguments.h>
 #include <accordserver/database/Database.h>
 #include <accordserver/util/OpenSSLUtil.h>
+#include <accordserver/util/CryptoUtil.h>
 #include <accordserver/network/PacketHandlers.h>
 #include <accordshared/network/PacketDecoder.h>
 
@@ -29,6 +30,7 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
     threads.reserve(numThreads);
 
     verifyDatabase(args);
+    runTests();
     
     setupThreads();
     setupSocket();
@@ -70,6 +72,15 @@ void Server::verifyDatabase(const Arguments &args)
         throw std::runtime_error("");
     }
     database.disconnect();
+}
+
+void Server::runTests()
+{
+    log::Logger::log(log::INFO, "Running tests...");
+    std::string random = util::CryptoUtil::getRandomString(32);
+    if (random.empty())
+        exit(1);
+    log::Logger::log(log::INFO, "Passed all tests!");
 }
 
 void Server::setupThreads()

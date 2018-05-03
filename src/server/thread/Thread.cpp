@@ -10,6 +10,7 @@
 #include <event2/bufferevent_ssl.h>
 
 #include <accordserver/Server.h>
+#include <accordserver/Authenticaion.h>
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/LibEventUtil.h>
 #include <accordshared/error/ErrorCodes.h>

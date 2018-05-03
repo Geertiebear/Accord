@@ -4,7 +4,7 @@
 namespace accord {
 
 enum Error {
-	NAN = 0,
+    ERR_NAN = 0,
 	NOT_FOUND = 1,
 	TOO_LONG = 2,
 };

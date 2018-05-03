@@ -3,9 +3,31 @@
 
 #include <string>
 #include <mysql++.h>
+#include <ssqls.h>
+#include <memory>
 
 namespace accord {
 namespace database {
+
+/*
+ * mysql++ has an annoying fucking bug where you can't include generated
+ * structures twice. So I create my own wrapper which circumvents this...
+ */
+
+struct users;
+
+struct table_users {
+    table_users(std::shared_ptr<users> table);
+    std::shared_ptr<users> table;
+    mysqlpp::sql_bigint_unsigned id();
+    mysqlpp::sql_varchar name();
+    mysqlpp::sql_blob_null profilepic();
+    mysqlpp::sql_int friends();
+    mysqlpp::sql_int communities();
+    mysqlpp::sql_varchar email();
+    mysqlpp::sql_varchar password();
+    mysqlpp::sql_varchar salt();
+};
 
 struct DatabaseOptions {
     DatabaseOptions() {}
@@ -26,6 +48,12 @@ public:
     void disconnect();
     bool verify();
     bool initDatabase();
+    bool initUser(uint64_t id, const std::string &name,
+                  const std::string &email,
+                  const std::string &password,
+                  const std::string &salt);
+    table_users getUser(const std::string &login, const std::string &password);
+    mysqlpp::Query query(std::string statement);
 private:
     const DatabaseOptions &options;
     mysqlpp::Connection connection;
