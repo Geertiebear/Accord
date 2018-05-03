@@ -27,10 +27,11 @@ bool Authentication::registerUser(database::Database &database,
     uint64_t id = util::CryptoUtil::getRandomUINT64();
     std::string salt = util::CryptoUtil::getRandomString(SALT_LEN);
 
-    char buffer[32];
+    std::vector<char> buffer;
+    buffer.resize(32);
     argon2i_hash_raw(2, (1 << 16), 1, password.c_str(), password.length(),
-                     salt.c_str(), salt.length(), buffer, 32);
-    std::string hash(buffer);
+                     salt.c_str(), salt.length(), &buffer[0], 32);
+    std::string hash = util::CryptoUtil::charToHex(buffer);
 
     return database.initUser(id, name, email, hash, salt);
 }
@@ -58,11 +59,12 @@ std::string Authentication::authUser(database::Database &database,
         log::Logger::log(log::ERROR, "Login " + login + " has invalid salt!");
         return std::string("");
     }
-    char hash[32];
+    std::vector<char> buffer;
+    buffer.resize(32);
     argon2i_hash_raw(2, (1 << 16), 1, password.c_str(), password.length(),
-                     salt.c_str(), salt.length(), hash, 32);
-    std::string hashString(hash);
-    if (hashString != storedHash)
+                     salt.c_str(), salt.length(), &buffer[0], 32);
+    std::string hash = util::CryptoUtil::charToHex(buffer);
+    if (hash != storedHash)
         return std::string("invalid");
 
     std::string token = util::CryptoUtil::getRandomString(32);

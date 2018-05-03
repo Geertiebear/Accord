@@ -2,6 +2,7 @@
 
 #include <accordserver/log/Logger.h>
 #include <openssl/rand.h>
+#include <stdlib.h>
 #include <vector>
 
 namespace accord {
@@ -17,6 +18,34 @@ std::vector<unsigned char> CryptoUtil::getRandomBytes(int length)
         return std::vector<unsigned char>();
     }
     return buffer;
+}
+
+std::vector<char> CryptoUtil::hexToChar(std::string hex)
+{
+    std::vector<char> buffer;
+    buffer.resize(hex.length() / 2);
+    int count = 0;
+    for (unsigned int i = 0; i < (hex.length() / 2); i++) {
+        std::string substr = hex.substr(count, count + 2);
+        int value = strtol(substr.c_str(), NULL, 16);
+        buffer[i] = (char) value;
+        count += 2;
+    }
+
+    return buffer;
+}
+
+std::string CryptoUtil::charToHex(std::vector<char> array)
+{
+    std::vector<char> buffer;
+    buffer.resize(array.size() * 2);
+    int count = 0;
+    for (unsigned int i = 0; i < (array.size()); i++) {
+        int value = (int) array[i];
+        sprintf(&buffer[count], "%02X", value);
+        count += 2;
+    }
+    return std::string(buffer.begin(), buffer.end());
 }
 
 std::string CryptoUtil::getRandomString(int length)

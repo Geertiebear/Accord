@@ -11,6 +11,8 @@ namespace util {
 class CryptoUtil {
 public:
     static std::vector<unsigned char> getRandomBytes(int length);
+    static std::vector<char> hexToChar(std::string hex);
+    static std::string charToHex(std::vector<char> array);
     static std::string getRandomString(int length);
     static uint64_t getRandomUINT64();
 };
