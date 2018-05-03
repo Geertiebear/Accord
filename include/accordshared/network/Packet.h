@@ -21,7 +21,7 @@ class Packet {
 public:
 	virtual ~Packet() { }; //base class
 	virtual Packet *clone() const = 0; //polymorphic construction
-	virtual size_t getBufferSize() const = 0;
+    virtual size_t getMaxSize() const = 0;
 	virtual int getId() const {
 		return -1;
 	}

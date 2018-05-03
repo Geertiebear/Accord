@@ -14,7 +14,7 @@ std::vector<char> DisconnectPacket::construct() {
 	return result;
 }
 
-size_t DisconnectPacket::getBufferSize() const {
+size_t DisconnectPacket::getMaxSize() const {
 	return sizeof(uint16_t);
 }
 

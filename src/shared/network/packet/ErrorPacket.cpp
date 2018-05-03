@@ -31,7 +31,7 @@ std::vector<char> ErrorPacket::construct(Error error)
 	return result;
 }
 
-size_t ErrorPacket::getBufferSize() const
+size_t ErrorPacket::getMaxSize() const
 {
 	return sizeof(uint16_t) + sizeof(Error);
 }

@@ -17,7 +17,7 @@ public:
 	}
 
 	std::vector<char> construct();
-	size_t getBufferSize() const;
+    size_t getMaxSize() const;
 };
 
 } /* network */

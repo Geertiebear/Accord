@@ -101,37 +101,13 @@ void Thread::broadcast(const std::string &message, int channel)
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
-	char *packetIdBuffer = (char*) malloc(2);
-	size_t n;
-	memset(packetIdBuffer, '\0', 2);
-	bufferevent_read(bufferEvent, packetIdBuffer, 2);
-	
-	uint8_t low = (uint8_t) packetIdBuffer[0];
-	uint8_t high = (uint8_t) packetIdBuffer[1];
-
-	network::PacketId packetId = util::BinUtil::assembleUint16(low, high);
-	log::Logger::log(log::DEBUG, "Received packet id is: " + std::to_string(packetId));
-	free(packetIdBuffer);
-
-	const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
-	if (!packet) {
-		network::ErrorPacket::dispatch(bufferEvent, Error::NOT_FOUND);
-		return;
-	}
-	const int bufferSize = packet->getBufferSize();
-	char *bodyBuffer = (char*) malloc(bufferSize);
-	memset(bodyBuffer, '\0', bufferSize);
-	struct evbuffer *readBuffer = bufferevent_get_input(bufferEvent);
-	size_t size = evbuffer_get_length(readBuffer);
-	if (size > packet->getBufferSize()) {
-		network::ErrorPacket::dispatch(bufferEvent, Error::TOO_LONG);
-		log::Logger::log(log::ERROR, "Client sent message too long!" + std::to_string(size));
-		return;
-	}
-	n = bufferevent_read(bufferEvent, bodyBuffer, bufferSize);
-	Client *client = reinterpret_cast<Client*>(data);
-	packet->receive(std::string(bodyBuffer), client);
-	free(bodyBuffer);
+    std::vector<char> buffer;
+    int n = evbuffer_get_length(bufferevent_get_input(bufferEvent));
+    buffer.resize(n);
+    bufferevent_read(bufferEvent, &buffer[0], n);
+    int ret = network::PacketDecoder::receivePacket(buffer, (PacketData*) data);
+    if (ret != 1)
+        network::ErrorPacket::dispatch(bufferEvent, (Error) ret);
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,

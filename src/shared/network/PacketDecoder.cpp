@@ -3,6 +3,7 @@
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
+#include <accordshared/util/BinUtil.h>
 
 namespace accord {
 namespace network {
@@ -26,6 +27,22 @@ const Packet *PacketDecoder::getPacket(PacketId id)
 	} catch (boost::bad_ptr_container_operation &e) {
 		return nullptr;
 	}
+}
+
+int PacketDecoder::receivePacket(std::vector<char> &buffer, PacketData *data)
+{
+    uint8_t low = (uint8_t) buffer[0];
+    uint8_t high = (uint8_t) buffer[1];
+
+    network::PacketId packetId = util::BinUtil::assembleUint16(low, high);
+    const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
+    if (!packet)
+        return Error::NOT_FOUND;
+    buffer.erase(buffer.begin(), buffer.begin() + HEADER_SIZE);
+    if (buffer.size() > packet->getMaxSize()) {
+        return Error::TOO_LONG;
+    }
+    return packet->receive(std::string(buffer.begin(), buffer.end()), data);
 }
 
 } /* namespace network */

@@ -24,7 +24,7 @@ public:
 	static int dispatch(struct bufferevent *bufferEvent, Error error);
 
 	std::vector<char> construct(Error error);
-	size_t getBufferSize() const;
+    size_t getMaxSize() const;
 };
 
 } /* namespace network */

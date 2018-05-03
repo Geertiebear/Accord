@@ -20,7 +20,7 @@ std::vector<char> SendMessagePacket::construct(const std::string &message)
 	return result;
 }
 
-size_t SendMessagePacket::getBufferSize() const {
+size_t SendMessagePacket::getMaxSize() const {
 	return 2000;
 }
 

@@ -19,7 +19,7 @@ public:
 	};
 
 	std::vector<char> construct(const std::string &message);
-	size_t getBufferSize() const;
+    size_t getMaxSize() const;
 };
 
 } /* namespace network */
