@@ -1,7 +1,7 @@
 #ifndef NETWORK_PACKET_HANDLERS_H
 #define NETWORK_PACKET_HANDLERS_H
 
-#include <string>
+#include <vector>
 
 #include <accordshared/network/PacketData.h>
 
@@ -10,9 +10,9 @@ namespace network {
 
 class PacketHandlers {
 public:
-	static bool receiveSendMessagePacket(const std::string &body, PacketData *data);
-	static bool receiveErrorPacket(const std::string &body, PacketData *data);
-	static bool receiveDisconnectPacket(const std::string &body, PacketData *data);
+    static bool receiveSendMessagePacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveDisconnectPacket(const std::vector<char> &body, PacketData *data);
 };
 
 } /* namespace network */

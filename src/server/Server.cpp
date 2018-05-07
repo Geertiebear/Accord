@@ -140,8 +140,8 @@ void Server::acceptClients()
         log::Logger::log(log::INFO, "Got client, pushing it to thread now!");
 		
         int threadNum = selectThread();
-	thread::Thread *thread = threads.at(threadNum).get();
-	thread->acceptClient(clientSocket, ssl);
+        thread::Thread *thread = threads.at(threadNum).get();
+        thread->acceptClient(clientSocket, ssl);
     }
 }
 

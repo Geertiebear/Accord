@@ -42,7 +42,7 @@ int PacketDecoder::receivePacket(std::vector<char> &buffer, PacketData *data)
     if (buffer.size() > packet->getMaxSize()) {
         return Error::TOO_LONG;
     }
-    return packet->receive(std::string(buffer.begin(), buffer.end()), data);
+    return packet->receive(buffer, data);
 }
 
 } /* namespace network */

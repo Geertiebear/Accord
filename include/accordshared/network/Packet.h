@@ -1,7 +1,7 @@
 #ifndef NETWORK_PACKET_H
 #define NETWORK_PACKET_H
 
-#include <string>
+#include <vector>
 
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/network/PacketData.h>
@@ -26,7 +26,7 @@ public:
 		return -1;
 	}
 
-	bool receive(std::string body, PacketData *data) const
+    bool receive(const std::vector<char> &body, PacketData *data) const
 	{
 		return PacketHandler::handle(getId(), body, data);
 	}
