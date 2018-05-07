@@ -11,7 +11,7 @@ namespace util {
 std::vector<unsigned char> CryptoUtil::getRandomBytes(int length)
 {
     std::vector<unsigned char> buffer;
-    buffer.reserve(length);
+    buffer.resize(length);
     int n = RAND_bytes(&buffer[0], length);
     if (n != 1) {
         log::Logger::log(log::ERROR, "Error getting random bytes!");
@@ -69,9 +69,11 @@ std::string CryptoUtil::getRandomString(int length)
 
 uint64_t CryptoUtil::getRandomUINT64()
 {
-    std::vector<unsigned char> buffer = getRandomBytes(sizeof(uint64_t));
-    std::string string(buffer.begin(), buffer.end());
-    return strtoull(string.c_str(), NULL, 0);
+    uint64_t ret;
+    std::vector<unsigned char> buffer = getRandomBytes(1);
+    for (unsigned int i = 0; i < buffer.size(); i++)
+        ret += (int) buffer[i];
+    return ret;
 }
 
 } /* namespace util */

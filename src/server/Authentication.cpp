@@ -25,6 +25,7 @@ bool Authentication::registerUser(database::Database &database,
     if (user.table != NULL)
         return false;
     uint64_t id = util::CryptoUtil::getRandomUINT64();
+    log::Logger::log(log::INFO, std::to_string(id));
     std::string salt = util::CryptoUtil::getRandomString(SALT_LEN);
 
     std::vector<char> buffer;
