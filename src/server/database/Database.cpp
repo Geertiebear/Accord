@@ -4,15 +4,6 @@
 namespace accord {
 namespace database {
 
-/*
- * Database is organized in the following way. There are two basic tables that
- * need to be present all the time, users and communities. These hosue the
- * basics for all users and communities such as metadata and statistics. Then
- * for each user and community we create various tables to describe their
- * friends and channels. Each user/community specific table will be prefixed
- * by with community_[id]_[table] or user_[id]_[table].
- */
-
 sql_create_8(users, 1, 8,
              mysqlpp::sql_bigint_unsigned, id,
              mysqlpp::sql_varchar, name,
@@ -107,6 +98,10 @@ bool Database::verify()
     if (res = query.store())
         if (res.empty())
             return false;
+    query = connection.query("SHOW TABLES LIKE 'community_members'");
+    if (res = query.store())
+        if (res.empty())
+            return false;
     return true;
 }
 
@@ -131,6 +126,11 @@ bool Database::initDatabase()
                 "CREATE TABLE friends (id BIGINT UNSIGNED, "
                 "user1 BIGINT UNSIGNED, user2 BIGINT UNSIGNED,"
                 "status ENUM('pending', 'accepted'))");
+        if (!query.execute())
+            return false;
+        query = connection.query(
+                "CREATE TABLE community_members (id BIGINT UNSIGNED, "
+                "user BIGINT UNSIGNED)");
         if (!query.execute())
             return false;
     } catch (mysqlpp::BadQuery &e) {
@@ -161,8 +161,7 @@ bool Database::initUser(uint64_t id, const std::string &name,
 table_users Database::getUser(const std::string &login,
                               const std::string &password)
 {
-    mysqlpp::Query query = connection.query("SELECT id, password,"
-                                          " salt FROM users WHERE"
+    mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
                                           " name='" + login + "' OR"
                                           " email='" + login + "'");
     std::vector<users> res;
