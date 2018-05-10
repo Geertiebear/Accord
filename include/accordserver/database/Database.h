@@ -15,18 +15,37 @@ namespace database {
  */
 
 struct users;
+struct communities;
+struct community_members;
 
 struct table_users {
     table_users(std::shared_ptr<users> table);
     std::shared_ptr<users> table;
-    mysqlpp::sql_bigint_unsigned id();
-    mysqlpp::sql_varchar name();
-    mysqlpp::sql_blob_null profilepic();
-    mysqlpp::sql_int friends();
-    mysqlpp::sql_int communities();
-    mysqlpp::sql_varchar email();
-    mysqlpp::sql_varchar password();
-    mysqlpp::sql_varchar salt();
+    mysqlpp::sql_bigint_unsigned &id();
+    mysqlpp::sql_varchar &name();
+    mysqlpp::sql_blob_null &profilepic();
+    mysqlpp::sql_int &friends();
+    mysqlpp::sql_int &communities();
+    mysqlpp::sql_varchar &email();
+    mysqlpp::sql_varchar &password();
+    mysqlpp::sql_varchar &salt();
+};
+
+struct table_communities {
+    table_communities(std::shared_ptr<communities> table);
+    std::shared_ptr<communities> table;
+    mysqlpp::sql_bigint_unsigned &id();
+    mysqlpp::sql_varchar &name();
+    mysqlpp::sql_blob_null &profilepic();
+    mysqlpp::sql_int &members();
+    mysqlpp::sql_int &channels();
+};
+
+struct table_community_members {
+    table_community_members(std::shared_ptr<community_members> table);
+    std::shared_ptr<community_members> table;
+    mysqlpp::sql_bigint_unsigned &id();
+    mysqlpp::sql_bigint_unsigned &user();
 };
 
 struct DatabaseOptions {
@@ -52,8 +71,11 @@ public:
                   const std::string &email,
                   const std::string &password,
                   const std::string &salt);
+    bool initCommunity(uint64_t id, uint64_t user, const std::string &name);
+    bool addMember(uint64_t id, uint64_t user);
     table_users getUser(const std::string &login, const std::string &password);
     table_users getUser(uint64_t id);
+    table_communities getCommunity(uint64_t id);
     mysqlpp::Query query(std::string statement);
 private:
     const DatabaseOptions &options;
@@ -62,4 +84,5 @@ private:
 
 } /* namespace database */
 } /* namespace accord */
+
 #endif
