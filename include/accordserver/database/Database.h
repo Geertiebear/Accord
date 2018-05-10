@@ -53,6 +53,7 @@ public:
                   const std::string &password,
                   const std::string &salt);
     table_users getUser(const std::string &login, const std::string &password);
+    table_users getUser(uint64_t id);
     mysqlpp::Query query(std::string statement);
 private:
     const DatabaseOptions &options;

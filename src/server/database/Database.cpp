@@ -176,5 +176,21 @@ table_users Database::getUser(const std::string &login,
     return table;
 }
 
+table_users Database::getUser(uint64_t id)
+{
+    mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
+                                          " id='" + std::to_string(id) + '"');
+    std::vector<users> res;
+    query.storein(res);
+    if (res.size() != 1) {
+        log::Logger::log(log::WARNING, "Id " + std::to_string(id) +
+                         " has multiple entries!");
+        return table_users(NULL);
+    }
+    auto user = std::make_shared<users>(res[0]);
+    table_users table(user);
+    return table;
+}
+
 } /* namespace database */
 } /* namespace accord */
