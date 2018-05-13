@@ -19,6 +19,7 @@ struct communities;
 struct community_members;
 
 struct table_users {
+    table_users() {}
     table_users(std::shared_ptr<users> table);
     std::shared_ptr<users> table;
     mysqlpp::sql_bigint_unsigned &id();
@@ -32,6 +33,7 @@ struct table_users {
 };
 
 struct table_communities {
+    table_communities() {}
     table_communities(std::shared_ptr<communities> table);
     std::shared_ptr<communities> table;
     mysqlpp::sql_bigint_unsigned &id();
@@ -42,6 +44,7 @@ struct table_communities {
 };
 
 struct table_community_members {
+    table_community_members() {}
     table_community_members(std::shared_ptr<community_members> table);
     std::shared_ptr<community_members> table;
     mysqlpp::sql_bigint_unsigned &id();

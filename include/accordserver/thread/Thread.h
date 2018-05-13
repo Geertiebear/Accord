@@ -28,6 +28,8 @@ struct Client : public PacketData {
 	Thread &thread;
 	struct bufferevent* bufferEvent;
 	int channel;
+    database::table_users user;
+    std::string token;
 };
 
 class Thread {
@@ -48,13 +50,13 @@ public:
     		void *data);
     
     struct event_base *eventBase;
+    database::Database database;
 private:
     Server &server;
     const Config &config;
     std::thread thread;
     std::vector<Client*> clients; //libevent can't foreach on bufferevents :((
-    database::Database database;
-    
+
     void run();
 };
 

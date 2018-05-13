@@ -13,6 +13,7 @@ public:
     static bool receiveSendMessagePacket(const std::vector<char> &body, PacketData *data);
     static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveDisconnectPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveAuthPacket(const std::vector<char> &body, PacketData *data);
 };
 
 } /* namespace network */

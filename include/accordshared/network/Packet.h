@@ -15,6 +15,7 @@ enum PacketIds {
 	SEND_MESSAGE_PACKET = 0,
 	ERROR_PACKET = 1,
 	DISCONNECT_PACKET = 2,
+    AUTH_PACKET = 3,
 };
 
 class Packet {

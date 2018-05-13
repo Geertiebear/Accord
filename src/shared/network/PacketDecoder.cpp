@@ -3,7 +3,10 @@
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
+#include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/util/BinUtil.h>
+
+#include <iostream>
 
 namespace accord {
 namespace network {
@@ -18,6 +21,8 @@ void PacketDecoder::init()
 	packets.insert(errorPacketId, new ErrorPacket());
 	PacketId disconnectPacketId = DISCONNECT_PACKET;
 	packets.insert(disconnectPacketId, new DisconnectPacket());
+    PacketId authPacketId = AUTH_PACKET;
+    packets.insert(authPacketId, new AuthPacket());
 }
 
 const Packet *PacketDecoder::getPacket(PacketId id)

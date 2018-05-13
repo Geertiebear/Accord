@@ -17,7 +17,8 @@ namespace accord {
 std::vector<network::ReceiveHandler> Server::handlers = {
 	&network::PacketHandlers::receiveSendMessagePacket,
 	&network::PacketHandlers::receiveErrorPacket,
-	&network::PacketHandlers::receiveDisconnectPacket
+    &network::PacketHandlers::receiveDisconnectPacket,
+    &network::PacketHandlers::receiveAuthPacket
 };
 
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)

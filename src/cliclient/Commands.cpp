@@ -7,6 +7,7 @@
 
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
+#include <accordshared/network/packet/AuthPacket.h>
 
 std::string Commands::quit(std::vector<std::string> args, SSL *ssl)
 {
@@ -43,4 +44,12 @@ std::string Commands::recv(std::vector<std::string> args, SSL *ssl)
         return "No message to be read!";
     SSL_read(ssl, &buffer, sizeof(buffer));
     return std::string(buffer);
+}
+
+std::string Commands::auth(std::vector<std::string> args, SSL *ssl)
+{
+    accord::network::AuthPacket packet;
+    std::vector<char> message = packet.construct(args[0], args[1]);
+    SSL_write(ssl, &message[0], message.size());
+    return "Auth successful!"; // for now
 }
