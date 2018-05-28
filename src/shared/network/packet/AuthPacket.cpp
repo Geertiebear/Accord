@@ -21,7 +21,7 @@ std::vector<char> AuthPacket::construct(const std::string &login,
 
 size_t AuthPacket::getMaxSize() const
 {
-    return 255*2;
+    return HEADER_SIZE + (255*2);
 }
 
 } /* namespace nework */

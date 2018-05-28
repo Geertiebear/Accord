@@ -4,6 +4,7 @@
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/packet/RegisterPacket.h>
 #include <accordshared/util/BinUtil.h>
 
 #include <iostream>
@@ -23,6 +24,8 @@ void PacketDecoder::init()
 	packets.insert(disconnectPacketId, new DisconnectPacket());
     PacketId authPacketId = AUTH_PACKET;
     packets.insert(authPacketId, new AuthPacket());
+    PacketId registerPacketId = REGISTER_PACKET;
+    packets.insert(registerPacketId, new RegisterPacket());
 }
 
 const Packet *PacketDecoder::getPacket(PacketId id)

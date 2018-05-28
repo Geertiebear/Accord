@@ -8,6 +8,7 @@
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/packet/RegisterPacket.h>
 
 std::string Commands::quit(std::vector<std::string> args, SSL *ssl)
 {
@@ -52,4 +53,12 @@ std::string Commands::auth(std::vector<std::string> args, SSL *ssl)
     std::vector<char> message = packet.construct(args[0], args[1]);
     SSL_write(ssl, &message[0], message.size());
     return "Auth successful!"; // for now
+}
+
+std::string Commands::regist(std::vector<std::string> args, SSL *ssl)
+{
+    accord::network::RegisterPacket packet;
+    std::vector<char> message = packet.construct(args[0], args[1], args[2]);
+    SSL_write(ssl, &message[0], message.size());
+    return "Register successful!"; // for now
 }

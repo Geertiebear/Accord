@@ -11,6 +11,7 @@ CommandParser::CommandParser()
     commandMap.insert(std::make_pair("send", &Commands::sendMessage));
 	commandMap.insert(std::make_pair("recv", &Commands::recv));
     commandMap.insert(std::make_pair("auth", &Commands::auth));
+    commandMap.insert(std::make_pair("register", &Commands::regist));
 }
 
 std::string CommandParser::parseCommand(const std::string &command, SSL *ssl)

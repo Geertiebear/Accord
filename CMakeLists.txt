@@ -35,6 +35,7 @@ set(SOURCES_SHARED
     src/shared/network/packet/SendMessagePacket.cpp
     src/shared/network/packet/DisconnectPacket.cpp
     src/shared/network/packet/AuthPacket.cpp
+    src/shared/network/packet/RegisterPacket.cpp
     src/shared/util/BinUtil.cpp
     )
 #libraries

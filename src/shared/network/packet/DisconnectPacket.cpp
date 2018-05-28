@@ -15,7 +15,7 @@ std::vector<char> DisconnectPacket::construct() {
 }
 
 size_t DisconnectPacket::getMaxSize() const {
-	return sizeof(uint16_t);
+    return HEADER_SIZE;
 }
 
 } /* network */

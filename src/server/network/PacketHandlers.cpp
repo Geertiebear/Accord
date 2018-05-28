@@ -54,5 +54,20 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     return true;
 }
 
+bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, PacketData *data)
+{
+    thread::Client *client = (thread::Client*) data;
+    std::string bodyString(body.begin(), body.end());
+    std::vector<std::string> strings;
+    boost::split(strings, bodyString, boost::is_any_of(
+                 std::string(1, (char)0x3)),
+                 boost::token_compress_on);
+    if (strings.size() != 3)
+        return false;
+    return Authentication::registerUser(client->thread.database, strings[0],
+                                 strings[1], strings[2]);
+}
+
+
 } /* namespace network */
 } /* namespace accord */
