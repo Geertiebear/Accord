@@ -15,6 +15,7 @@ namespace database {
  */
 
 struct users;
+struct friends;
 struct communities;
 struct community_members;
 
@@ -30,6 +31,16 @@ struct table_users {
     mysqlpp::sql_varchar &email();
     mysqlpp::sql_varchar &password();
     mysqlpp::sql_varchar &salt();
+};
+
+struct table_friends {
+    table_friends() {}
+    table_friends(std::shared_ptr<friends> table);
+    std::shared_ptr<friends> table;
+    mysqlpp::sql_bigint_unsigned &id();
+    mysqlpp::sql_bigint_unsigned &user1();
+    mysqlpp::sql_bigint_unsigned &user2();
+    mysqlpp::sql_enum &status();
 };
 
 struct table_communities {
@@ -76,6 +87,8 @@ public:
                   const std::string &salt);
     bool initCommunity(uint64_t id, uint64_t user, const std::string &name);
     bool addMember(uint64_t id, uint64_t user);
+    bool sendFriendRequest(uint64_t from, uint64_t to);
+    bool acceptFriendRequest(uint64_t id);
     table_users getUser(const std::string &login, const std::string &password);
     table_users getUser(uint64_t id);
     table_communities getCommunity(uint64_t id);

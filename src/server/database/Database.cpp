@@ -1,5 +1,6 @@
 #include <accordserver/database/Database.h>
 #include <accordserver/log/Logger.h>
+#include <accordserver/util/CryptoUtil.h>
 
 namespace accord {
 namespace database {
@@ -13,6 +14,12 @@ sql_create_8(users, 1, 8,
              mysqlpp::sql_varchar, email,
              mysqlpp::sql_varchar, password,
              mysqlpp::sql_varchar, salt);
+
+sql_create_4(friends, 1, 4,
+             mysqlpp::sql_bigint_unsigned, id,
+             mysqlpp::sql_bigint_unsigned, user1,
+             mysqlpp::sql_bigint_unsigned, user2,
+             mysqlpp::sql_enum, status);
 
 sql_create_5(communities, 1, 5,
              mysqlpp::sql_bigint_unsigned, id,
@@ -65,6 +72,28 @@ mysqlpp::sql_varchar& table_users::password()
 mysqlpp::sql_varchar& table_users::salt()
 {
     return table->salt;
+}
+
+table_friends::table_friends(std::shared_ptr<friends> table) : table(table) { }
+
+mysqlpp::sql_bigint_unsigned& table_friends::id()
+{
+    return table->id;
+}
+
+mysqlpp::sql_bigint_unsigned& table_friends::user1()
+{
+    return table->user1;
+}
+
+mysqlpp::sql_bigint_unsigned& table_friends::user2()
+{
+    return table->user2;
+}
+
+mysqlpp::sql_enum& table_friends::status()
+{
+    return table->status;
 }
 
 table_communities::table_communities(std::shared_ptr<communities> table)
@@ -245,6 +274,35 @@ bool Database::addMember(uint64_t id, uint64_t user)
     community_members community_member(id, user);
     query.insert(community_member);
 
+    return query.execute();
+}
+
+bool Database::sendFriendRequest(uint64_t from, uint64_t to)
+{
+    mysqlpp::Query query = connection.query();
+
+    uint64_t id = util::CryptoUtil::getRandomUINT64();
+    friends request(id, from, to, "pending");
+    query.insert(request);
+    return query.execute();
+}
+
+bool Database::acceptFriendRequest(uint64_t id)
+{
+    mysqlpp::Query query = connection.query("SELECT * FROM friends WHERE"
+                                            " id=" + std::to_string(id));
+    std::vector<friends> res;
+    query.storein(res);
+    if (res.size() != 1) {
+        //what
+        log::Logger::log(log::WARNING, "Friend request id " +
+                         std::to_string(id) + " has multiple entries..?");
+        return false;
+    }
+    friends request = res[0];
+    friends original = res[0];
+    request.status = "accepted";
+    query.update(original, request);
     return query.execute();
 }
 
