@@ -1,5 +1,7 @@
 #include <QGuiApplication>
+#include <QQmlContext>
 #include <QQmlApplicationEngine>
+#include "backend.h"
 
 int main(int argc, char **argv)
 {
@@ -8,6 +10,8 @@ int main(int argc, char **argv)
     QCoreApplication::addLibraryPath("./");
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/Client.qml")));
+    BackEnd *backend = new BackEnd;
+    engine.rootContext()->setContextProperty("backend", backend);
+    engine.load(QUrl(QStringLiteral("qrc:/Login.qml")));
     return app.exec();
 }

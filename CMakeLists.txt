@@ -3,6 +3,7 @@ project(accord)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -27,7 +28,9 @@ set(SOURCES_CLICLIENT
     src/cliclient/CommandParser.cpp
     )
 set(SOURCES_CLIENT
-    src/client/main.cpp)
+    src/client/main.cpp
+    src/client/backend.cpp
+    src/client/util.cpp)
 set(SOURCES_SHARED
     src/shared/network/PacketDecoder.cpp
     src/shared/network/PacketHandler.cpp
@@ -39,10 +42,12 @@ set(SOURCES_SHARED
     src/shared/util/BinUtil.cpp
     )
 #libraries
-find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui)
+find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui QuickWidgets Network)
 find_package(Qt5Qml REQUIRED)
 find_package(Qt5Quick REQUIRED)
 find_package(Qt5Gui REQUIRED)
+find_package(Qt5QuickWidgets REQUIRED)
+find_package(Qt5Network REQUIRED)
 find_package(MySQL++ REQUIRED)
 find_package(Threads REQUIRED)
 find_package(LibEvent REQUIRED)
@@ -105,6 +110,8 @@ target_link_libraries(accordclient libaccordshared)
 target_link_libraries(accordclient ${OPENSSL_LIBRARIES})
 target_link_libraries(accordclient Qt5::Qml)
 target_link_libraries(accordclient Qt5::Quick)
+target_link_libraries(accordclient Qt5::QuickWidgets)
+target_link_libraries(accordclient Qt5::Network)
 
 #install
 install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)

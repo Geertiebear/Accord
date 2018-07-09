@@ -14,8 +14,8 @@ std::vector<char> SendMessagePacket::construct(const std::string &message)
 	uint8_t low = 0;
 	uint8_t high = 0;
 	util::BinUtil::splitUint16((uint16_t) SEND_MESSAGE_PACKET, &low, &high);
-	result.push_back((char) high);
 	result.push_back((char) low);
+    result.push_back((char) high);
 	std::copy(message.begin(), message.end(), std::back_inserter(result));
 	return result;
 }

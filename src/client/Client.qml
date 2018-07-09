@@ -5,7 +5,7 @@ import QtQuick.Controls 2.2
 Window {
     visible: true
     visibility: "Maximized"
-    title: qsTr("Hello World")
+    title: qsTr("Accord")
     color: "#5d5959"
 
     ClientForm {

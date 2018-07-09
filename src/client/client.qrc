@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>Client.qml</file>
         <file>ClientForm.ui.qml</file>
+        <file>Login.qml</file>
+        <file>LoginForm.ui.qml</file>
     </qresource>
 </RCC>

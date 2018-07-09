@@ -51,6 +51,7 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     if (token.empty())
         return false;
     client->user = client->thread.database.getUser(strings[0], strings[1]);
+    log::Logger::log(log::DEBUG, "Successfully authenticated client!");
     return true;
 }
 

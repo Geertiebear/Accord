@@ -45,7 +45,7 @@ bool Authentication::registerUser(database::Database &database,
 std::string Authentication::authUser(database::Database &database,
                               std::string login, std::string password)
 {
-
+    log::Logger::log(log::DEBUG, "Authenticating user!");
     database::table_users user = database.getUser(login, password);
 
     std::unique_lock<std::mutex> lock(tokensMutex);
@@ -74,6 +74,7 @@ std::string Authentication::authUser(database::Database &database,
 
     lock.lock();
     tokens.insert(std::make_pair(user.id(), token));
+    log::Logger::log(log::DEBUG, "Successfly authenticated user!");
     return token;
 }
 
