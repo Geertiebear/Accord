@@ -9,10 +9,7 @@ std::vector<char> AuthPacket::construct(const std::string &login,
 {
     std::vector<char> result;
     result.reserve(HEADER_SIZE + login.length() + password.length());
-    uint8_t low = 0, high = 0;
-    util::BinUtil::splitUint16((uint16_t) AUTH_PACKET, &low, &high);
-    result.push_back((char)low);
-    result.push_back((char)high);
+    writeHeader(&result, AUTH_PACKET);
     std::copy(login.begin(), login.end(), std::back_inserter(result));
     result.push_back(0x3);
     std::copy(password.begin(), password.end(), std::back_inserter(result));

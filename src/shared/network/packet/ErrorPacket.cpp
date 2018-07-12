@@ -11,11 +11,7 @@ int ErrorPacket::dispatch(struct bufferevent *bufferevent, Error error)
 	std::vector<char> result;
 	std::vector<char> constructed = packet.construct(error);
     result.reserve(constructed.size() + HEADER_SIZE);
-    uint8_t low = 0;
-	uint8_t high = 0;
-	util::BinUtil::splitUint16((uint16_t) ERROR_PACKET, &low, &high);
-	result.push_back(low);
-    result.push_back(high);
+    writeHeader(&result, ERROR_PACKET);
 	std::copy(constructed.begin(), constructed.end(), std::back_inserter(result));
 
 	return bufferevent_write(bufferevent, &result[0], result.size());

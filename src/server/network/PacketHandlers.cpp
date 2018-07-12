@@ -5,6 +5,8 @@
 #include <accordserver/Authentication.h>
 #include <accordserver/thread/Thread.h>
 
+#include <accordshared/network/packet/TokenPacket.h>
+
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
@@ -37,6 +39,7 @@ bool PacketHandlers::receiveDisconnectPacket(const std::vector<char> &body, Pack
 
 bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData *data)
 {
+    //get arguments
     thread::Client *client = (thread::Client*) data;
     std::string bodyString(body.begin(), body.end());
     std::vector<std::string> strings;
@@ -47,11 +50,18 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         return false;
     std::string token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[1]);
+    //authenticate the user
     client->token = token;
     if (token.empty())
         return false;
     client->user = client->thread.database.getUser(strings[0], strings[1]);
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
+
+    //send token to client
+    network::TokenPacket packet;
+    std::vector<char> message = packet.construct(token);
+    bufferevent_write(client->bufferEvent, &message[0], message.size());
+
     return true;
 }
 

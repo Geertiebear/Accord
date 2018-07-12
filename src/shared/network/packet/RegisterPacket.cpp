@@ -11,10 +11,7 @@ std::vector<char> RegisterPacket::construct(const std::string &name,
 {
     std::vector<char> result;
     result.reserve(HEADER_SIZE + name.length() + email.length() + password.length());
-    uint8_t low = 0, high = 0;
-    util::BinUtil::splitUint16((uint16_t) REGISTER_PACKET, &low, &high);
-    result.push_back((char)low);
-    result.push_back((char)high);
+    writeHeader(&result, REGISTER_PACKET);
     std::copy(name.begin(), name.end(), std::back_inserter(result));
     result.push_back(0x3);
     std::copy(email.begin(), email.end(), std::back_inserter(result));

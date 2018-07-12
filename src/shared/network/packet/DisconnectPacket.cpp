@@ -7,10 +7,7 @@ namespace network {
 
 std::vector<char> DisconnectPacket::construct() {
 	std::vector<char> result;
-	uint8_t low = 0, high = 0;
-	util::BinUtil::splitUint16((uint16_t) DISCONNECT_PACKET, &low, &high);
-	result.push_back((char)low);
-	result.push_back((char)high);
+    writeHeader(&result, DISCONNECT_PACKET);
 	return result;
 }
 

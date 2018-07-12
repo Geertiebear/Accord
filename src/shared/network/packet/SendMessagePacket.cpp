@@ -11,11 +11,7 @@ std::vector<char> SendMessagePacket::construct(const std::string &message)
 {
 	std::vector<char> result;
 	result.reserve(HEADER_SIZE + message.size());
-	uint8_t low = 0;
-	uint8_t high = 0;
-	util::BinUtil::splitUint16((uint16_t) SEND_MESSAGE_PACKET, &low, &high);
-	result.push_back((char) low);
-    result.push_back((char) high);
+    writeHeader(&result, SEND_MESSAGE_PACKET);
 	std::copy(message.begin(), message.end(), std::back_inserter(result));
 	return result;
 }

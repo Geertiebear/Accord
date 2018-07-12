@@ -17,6 +17,7 @@ enum PacketIds {
 	DISCONNECT_PACKET = 2,
     AUTH_PACKET = 3,
     REGISTER_PACKET = 4,
+    TOKEN_PACKET = 5,
 };
 
 class Packet {
@@ -32,6 +33,8 @@ public:
 	{
 		return PacketHandler::handle(getId(), body, data);
 	}
+
+    static void writeHeader(std::vector<char> *msg, int id);
 };
 
 } /* namespace network */

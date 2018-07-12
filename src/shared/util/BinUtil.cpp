@@ -9,7 +9,6 @@ void BinUtil::splitUint16(uint16_t toSplit, uint8_t *low, uint8_t *high)
 {
 	*low = toSplit & 0xFF;
 	*high = toSplit >> 8;
-	std::cout << toSplit << " " << *high << " " << *low << std::endl;
 }
 
 uint16_t BinUtil::assembleUint16(uint8_t low, uint8_t high)
