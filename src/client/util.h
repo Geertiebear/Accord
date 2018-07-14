@@ -6,7 +6,8 @@
 
 class Util {
 public:
-    static QByteArray convertCharVectorToQt(std::vector<char> &data);
+    static QByteArray convertCharVectorToQt(const std::vector<char> &data);
+    static std::vector<char> convertQtToVectorChar(const QByteArray &data);
 };
 
 #endif // UTIL_H

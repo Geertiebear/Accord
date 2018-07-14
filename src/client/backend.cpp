@@ -5,18 +5,31 @@
 #include <iostream>
 
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/PacketDecoder.h>
+
+std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
+    &BackEnd::noopPacket,
+    &BackEnd::noopPacket,
+    &BackEnd::noopPacket,
+    &BackEnd::noopPacket,
+    &BackEnd::noopPacket,
+    &BackEnd::receiveTokenPacket
+};
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent)
 {
     socket.setPeerVerifyMode(QSslSocket::QueryPeer);
-    connect();
+    accord::network::PacketDecoder::init();
+    accord::network::PacketHandler::init(handlers);
+    QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    doConnect();
 }
 
 QByteArray BackEnd::read(qint64 maxSize)
 {
     QByteArray res;
     if (!connected)
-        connect();
+        doConnect();
     char *buffer = new char[maxSize];
     int ret = socket.read(buffer, maxSize);
     if (ret < 0)
@@ -29,11 +42,11 @@ QByteArray BackEnd::read(qint64 maxSize)
 qint64 BackEnd::write(const QByteArray &data)
 {
     if (!connected)
-        connect();
+        doConnect();
     return socket.write(data);
 }
 
-void BackEnd::connect()
+void BackEnd::doConnect()
 {
     socket.connectToHostEncrypted("localhost", 6524);
     if (!socket.waitForEncrypted()) {
@@ -50,4 +63,23 @@ bool BackEnd::authenticate(QString email, QString password)
                                                password.toStdString());
     QByteArray msg = Util::convertCharVectorToQt(data);
     return write(msg);
+}
+
+void BackEnd::readyRead()
+{
+    QByteArray received = socket.readAll();
+    std::vector<char> data = Util::convertQtToVectorChar(received);
+    accord::network::PacketDecoder::receivePacket(data, &state);
+}
+
+bool BackEnd::noopPacket(const std::vector<char> &body, PacketData *data)
+{
+    return true;
+}
+
+bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data)
+{
+    Server *server = (Server*) data;
+    server->token = Util::convertCharVectorToQt(body);
+    return true;
 }
