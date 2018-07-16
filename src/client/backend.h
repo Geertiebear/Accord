@@ -8,8 +8,12 @@
 #include <accordshared/network/PacketData.h>
 #include <accordshared/network/PacketHandler.h>
 
+class BackEnd;
+
 struct Server : public PacketData {
-    QString token;
+    Server(BackEnd &backend) : backend(backend) { }
+    QByteArray token;
+    BackEnd &backend;
 };
 
 class BackEnd : public QObject {
@@ -19,9 +23,10 @@ public:
     explicit BackEnd(QObject *parent = nullptr);
 
     static bool noopPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
 signals:
-
+    void authenticated();
 public slots:
     bool authenticate(QString email, QString password);
     void readyRead();

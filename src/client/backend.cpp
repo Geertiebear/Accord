@@ -16,7 +16,7 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::receiveTokenPacket
 };
 
-BackEnd::BackEnd(QObject *parent) : QObject(parent)
+BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
 {
     socket.setPeerVerifyMode(QSslSocket::QueryPeer);
     accord::network::PacketDecoder::init();
@@ -77,9 +77,17 @@ bool BackEnd::noopPacket(const std::vector<char> &body, PacketData *data)
     return true;
 }
 
+bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data)
+{
+    QByteArray qtBody = Util::convertCharVectorToQt(body);
+    qDebug() << "Received error with body " << qtBody;
+    return false;
+}
+
 bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data)
 {
     Server *server = (Server*) data;
     server->token = Util::convertCharVectorToQt(body);
+    server->backend.authenticated();
     return true;
 }

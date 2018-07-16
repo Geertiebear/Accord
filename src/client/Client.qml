@@ -2,12 +2,8 @@ import QtQuick 2.4
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.2
 
-Window {
-    visible: true
-    visibility: "Maximized"
-    title: qsTr("Accord")
-    color: "#5d5959"
-
+Item {
+    id: client
     ClientForm {
         anchors.fill: parent
         button2.onClicked: {

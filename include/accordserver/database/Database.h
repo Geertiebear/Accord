@@ -89,7 +89,7 @@ public:
     bool addMember(uint64_t id, uint64_t user);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
-    table_users getUser(const std::string &login, const std::string &password);
+    table_users getUser(const std::string &login);
     table_users getUser(uint64_t id);
     table_communities getCommunity(uint64_t id);
     mysqlpp::Query query(std::string statement);

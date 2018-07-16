@@ -230,7 +230,6 @@ bool Database::initUser(uint64_t id, const std::string &name,
                         const std::string &salt)
 {
 
-
     mysqlpp::Query query = connection.query();
     users user(id, name, mysqlpp::null, 0, 0, email, password, salt);
     query.insert(user);
@@ -306,8 +305,7 @@ bool Database::acceptFriendRequest(uint64_t id)
     return query.execute();
 }
 
-table_users Database::getUser(const std::string &login,
-                              const std::string &password)
+table_users Database::getUser(const std::string &login)
 {
     mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
                                           " name='" + login + "' OR"

@@ -6,6 +6,8 @@
 #include <accordserver/thread/Thread.h>
 
 #include <accordshared/network/packet/TokenPacket.h>
+#include <accordshared/network/packet/ErrorPacket.h>
+#include <accordshared/error/ErrorCodes.h>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -46,15 +48,21 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     boost::split(strings, bodyString, boost::is_any_of(
                  std::string(1, (char)0x3)),
                  boost::token_compress_on);
-    if (strings.size() != 2)
+    if (strings.size() != 2) {
+        network::ErrorPacket packet;
+        packet.dispatch(client->bufferEvent, ARGS_ERR);
         return false;
+    }
     std::string token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[1]);
     //authenticate the user
     client->token = token;
-    if (token.empty())
+    if (token.length() != TOKEN_LEN) {
+        network::ErrorPacket packet;
+        packet.dispatch(client->bufferEvent, AUTH_ERR);
         return false;
-    client->user = client->thread.database.getUser(strings[0], strings[1]);
+    }
+    client->user = client->thread.database.getUser(strings[0]);
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
     //send token to client

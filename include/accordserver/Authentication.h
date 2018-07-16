@@ -9,6 +9,7 @@
 namespace accord {
 
 #define SALT_LEN 32
+#define TOKEN_LEN 32
 
 class Authentication {
 public:

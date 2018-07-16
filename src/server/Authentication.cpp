@@ -21,7 +21,7 @@ bool Authentication::registerUser(database::Database &database,
      * 4. gen hash
      * 5. store all in database
      */
-    database::table_users user = database.getUser(email, password);
+    database::table_users user = database.getUser(email);
     if (user.table != NULL)
         return false;
     uint64_t id = util::CryptoUtil::getRandomUINT64();
@@ -46,7 +46,9 @@ std::string Authentication::authUser(database::Database &database,
                               std::string login, std::string password)
 {
     log::Logger::log(log::DEBUG, "Authenticating user!");
-    database::table_users user = database.getUser(login, password);
+    database::table_users user = database.getUser(login);
+    if (user.table == NULL)
+        return std::string("");
 
     std::unique_lock<std::mutex> lock(tokensMutex);
     auto it = tokens.find(user.id());
@@ -68,7 +70,7 @@ std::string Authentication::authUser(database::Database &database,
     if (hash != storedHash)
         return std::string("invalid");
 
-    std::string token = util::CryptoUtil::getRandomString(32);
+    std::string token = util::CryptoUtil::getRandomString(TOKEN_LEN);
     if (token.empty())
         return std::string("");
 

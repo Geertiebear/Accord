@@ -1,16 +1,12 @@
 import QtQuick 2.4
-import QtQuick.Window 2.3
+import QtQuick.Controls 2.2
 
-Window {
-    id: loginWindow
-    visible: true
-    visibility: "Maximized"
+Item {
+    id: login
     LoginForm {
         anchors.fill: parent
         login.onClicked: {
             backend.authenticate(email.text, password.text);
-            mainLoader.source = "Client.qml";
-            loginWindow.visible = false;
         }
     }
 }
