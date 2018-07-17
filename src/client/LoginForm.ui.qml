@@ -3,16 +3,12 @@ import QtQuick.Window 2.3
 import QtQuick.Controls 2.3
 
 Item {
-    property alias mainLoader: mainLoader
     width: 1920
     height: Screen.desktopAvailableHeight
+    property alias text1: text1
     property alias email: email
     property alias password: password
     property alias login: login
-
-    Loader {
-        id: mainLoader
-    }
 
     Rectangle {
         id: rectangle
@@ -42,11 +38,23 @@ Item {
             font.pixelSize: 12
         }
 
+        Text {
+            id: text1
+            x: 134
+            y: 32
+            color: "#f70808"
+            text: qsTr("Authentication Error!")
+            visible: false
+            horizontalAlignment: Text.AlignHCenter
+            font.pixelSize: 12
+        }
+
         Button {
             id: login
             x: 139
             y: 255
             text: qsTr("Login")
         }
+
     }
 }

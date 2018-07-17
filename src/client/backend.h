@@ -27,6 +27,7 @@ public:
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
 signals:
     void authenticated();
+    void failedAuthenticated();
 public slots:
     bool authenticate(QString email, QString password);
     void readyRead();

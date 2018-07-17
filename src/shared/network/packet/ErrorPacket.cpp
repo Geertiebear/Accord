@@ -24,6 +24,8 @@ std::vector<char> ErrorPacket::construct(Error error)
     uint8_t low = 0;
 	uint8_t high = 0;
 	util::BinUtil::splitUint16((uint16_t) error, &low, &high);
+    result.push_back(low);
+    result.push_back(high);
 	return result;
 }
 

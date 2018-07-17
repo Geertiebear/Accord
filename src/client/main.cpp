@@ -17,5 +17,6 @@ int main(int argc, char **argv)
 
     QObject *top = engine.rootObjects().first();
     QObject::connect(backend, SIGNAL(authenticated()), top, SLOT(onAuthenticated()));
+    QObject::connect(backend, SIGNAL(failedAuthenticated()), top, SLOT(onFailedAuthenticated()));
     return app.exec();
 }

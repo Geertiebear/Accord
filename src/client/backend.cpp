@@ -6,10 +6,12 @@
 
 #include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/network/PacketDecoder.h>
+#include <accordshared/error/ErrorCodes.h>
+#include <accordshared/util/BinUtil.h>
 
 std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::noopPacket,
-    &BackEnd::noopPacket,
+    &BackEnd::receiveErrorPacket,
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
@@ -79,8 +81,12 @@ bool BackEnd::noopPacket(const std::vector<char> &body, PacketData *data)
 
 bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data)
 {
-    QByteArray qtBody = Util::convertCharVectorToQt(body);
-    qDebug() << "Received error with body " << qtBody;
+    Server *server = (Server*) data;
+    uint8_t low = body[0];
+    uint8_t high = body[1];
+    uint16_t error = accord::util::BinUtil::assembleUint16(low, high);
+    if (error == accord::AUTH_ERR)
+        server->backend.failedAuthenticated();
     return false;
 }
 

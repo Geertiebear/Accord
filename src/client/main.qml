@@ -14,6 +14,10 @@ Window {
         stack.push(client, {}, StackView.Immediate);
     }
 
+    function onFailedAuthenticated() {
+       stack.replace(login, {"failed": "true"}, StackView.Immediate)
+    }
+
     StackView {
         id: stack
         initialItem: login
