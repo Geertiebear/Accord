@@ -12,6 +12,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
+#include <iostream>
+
 namespace accord {
 namespace network {
 
@@ -81,7 +83,7 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
     boost::split(strings, bodyString, boost::is_any_of(
                  std::string(1, (char)0x3)),
                  boost::token_compress_on);
-    if (strings.size() != 3)
+     if (strings.size() != 3)
         return false;
     return Authentication::registerUser(client->thread.database, strings[0],
                                  strings[1], strings[2]);

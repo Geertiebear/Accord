@@ -3,10 +3,12 @@ import QtQuick.Window 2.3
 import QtQuick.Controls 2.3
 
 Item {
+    property alias name: name
     width: 1920
     height: Screen.desktopAvailableHeight
-    property alias text1: text1
     property alias email: email
+    property alias register: register
+    property alias text1: text1
     property alias password: password
     property alias login: login
 
@@ -19,7 +21,7 @@ Item {
         color: "#ffffff"
 
         TextInput {
-            id: email
+            id: name
             x: parent.width / 2 - width / 2
             y: 63
             width: 80
@@ -56,5 +58,25 @@ Item {
             text: qsTr("Login")
         }
 
+        Button {
+            id: register
+            x: 8
+            y: 20
+            width: 77
+            height: 18
+            text: qsTr("Register")
+            wheelEnabled: false
+        }
+
+        TextInput {
+            id: email
+            x: 149
+            y: 112
+            width: 80
+            height: 20
+            visible: false
+            text: qsTr("Text Input")
+            font.pixelSize: 12
+        }
     }
 }

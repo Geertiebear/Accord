@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/packet/RegisterPacket.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/util/BinUtil.h>
@@ -96,4 +97,14 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     server->token = Util::convertCharVectorToQt(body);
     server->backend.authenticated();
     return true;
+}
+
+bool BackEnd::regist(QString name, QString email, QString password)
+{
+    accord::network::RegisterPacket packet;
+    std::vector<char> data = packet.construct(name.toStdString(),
+                                              email.toStdString(),
+                                              password.toStdString());
+    QByteArray msg = Util::convertCharVectorToQt(data);
+    return write(msg);
 }

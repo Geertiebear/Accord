@@ -30,6 +30,7 @@ signals:
     void failedAuthenticated();
 public slots:
     bool authenticate(QString email, QString password);
+    bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
     void readyRead();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;
