@@ -18,6 +18,10 @@ Window {
        stack.replace(login, {"failed": "true"}, StackView.Immediate)
     }
 
+    function onFailedRegistered() {
+        stack.replace(login, {"failed": "true", "registering": "true"}, StackView.Immediate);
+    }
+
     StackView {
         id: stack
         initialItem: login

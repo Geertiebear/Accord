@@ -28,6 +28,7 @@ public:
 signals:
     void authenticated();
     void failedAuthenticated();
+    void failedRegistered();
 public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>

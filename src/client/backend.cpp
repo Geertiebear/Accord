@@ -86,8 +86,16 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
     uint8_t low = body[0];
     uint8_t high = body[1];
     uint16_t error = accord::util::BinUtil::assembleUint16(low, high);
-    if (error == accord::AUTH_ERR)
-        server->backend.failedAuthenticated();
+
+    switch (error) {
+        case accord::AUTH_ERR:
+            server->backend.failedAuthenticated();
+            break;
+        case accord::REGIST_ERR:
+            server->backend.failedRegistered();
+            break;
+    }
+
     return false;
 }
 

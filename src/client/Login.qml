@@ -17,12 +17,18 @@ Item {
         }
 
         register.onClicked: {
-            loginForm.login.text = "Register";
-            register.visible = false;
-            email.visible = true;
-            registering = true
+            failed = false
+            if (!registering) {
+                registering = true
+                return;
+            }
+            registering = false;
         }
 
         text1.visible: failed
+        text1.text: registering ? "Registration Error!" : "Authentication Error!"
+        login.text: registering ? "Register" : "Login"
+        email.visible: registering
+        register.text: registering ? "Back" : "Register"
     }    
 }

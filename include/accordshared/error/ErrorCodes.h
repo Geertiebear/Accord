@@ -9,6 +9,7 @@ enum Error {
     TOO_LONG = 2,
     AUTH_ERR = 3,
     ARGS_ERR = 4,
+    REGIST_ERR = 5,
 };
 
 } /* namespace accord */

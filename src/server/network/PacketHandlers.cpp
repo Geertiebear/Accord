@@ -85,8 +85,21 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
                  boost::token_compress_on);
      if (strings.size() != 3)
         return false;
-    return Authentication::registerUser(client->thread.database, strings[0],
+    bool ret = Authentication::registerUser(client->thread.database, strings[0],
                                  strings[1], strings[2]);
+    if (!ret) {
+        network::ErrorPacket packet;
+        packet.dispatch(client->bufferEvent, REGIST_ERR);
+        return false;
+    }
+
+    std::string token = Authentication::authUser(client->thread.database,
+                                                 strings[0], strings[2]);
+    network::TokenPacket packet;
+    std::vector<char> message = packet.construct(token);
+    bufferevent_write(client->bufferEvent, &message[0], message.size());
+
+    return true;
 }
 
 
