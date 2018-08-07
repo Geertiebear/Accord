@@ -10,6 +10,7 @@
 #include <accordserver/thread/Thread.h>
 #include <accordserver/Config.h>
 #include <accordshared/network/PacketHandler.h>
+#include <accordshared/util/Serialization.h>
 
 namespace accord {
 
@@ -42,6 +43,7 @@ private:
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
 
+    static util::FunctionMap serializationMap;
     static std::vector<network::ReceiveHandler> handlers;
 };
 

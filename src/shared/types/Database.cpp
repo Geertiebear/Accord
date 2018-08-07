@@ -10,15 +10,12 @@ std::vector<char> CommunitiesTable::serialize()
 {
     std::vector<char> res;
     std::string type = "CommunitiesTable";
-    std::copy(type.begin(), type.end(), std::back_inserter(res));
-    res.push_back(0x3);
-    res.push_back(id); res.push_back(0x3);
-    std::copy(name.begin(), name.end(), std::back_inserter(res));
-    res.push_back(0x3);
-    std::copy(profilepic.begin(), profilepic.end(), std::back_inserter(res));
-    res.push_back(0x3);
-    res.push_back(members); res.push_back(0x3);
-    res.push_back(channels);
+    insertData(res, type); res.push_back(0x3);
+    insertData(res, id); res.push_back(0x3);
+    insertData(res, name); res.push_back(0x3);
+    insertData(res, profilepic); res.push_back(0x3);
+    insertData(res, members); res.push_back(0x3);
+    insertData(res, channels);
     return res;
 }
 

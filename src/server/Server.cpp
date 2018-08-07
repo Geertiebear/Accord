@@ -22,6 +22,10 @@ std::vector<network::ReceiveHandler> Server::handlers = {
     &network::PacketHandlers::receiveRegisterPacket
 };
 
+util::FunctionMap Server::serializationMap = {
+    //empty for now
+};
+
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
 {
     ConfigLoader configLoader(args.config);
@@ -29,6 +33,7 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
     ctx = util::OpenSSLUtil::getContext(config);
     network::PacketDecoder::init();
     network::PacketHandler::init(handlers);
+    util::Serializable::initTypes(serializationMap);
     threads.reserve(numThreads);
 
     verifyDatabase(args);

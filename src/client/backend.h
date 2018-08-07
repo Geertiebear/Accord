@@ -7,6 +7,7 @@
 
 #include <accordshared/network/PacketData.h>
 #include <accordshared/network/PacketHandler.h>
+#include <accordshared/util/Serialization.h>
 
 class BackEnd;
 
@@ -34,6 +35,8 @@ public:
     static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
+
+    static bool handleCommunitiesTable(PacketData *data, boost::any object);
 signals:
     void authenticated();
     void failedAuthenticated();
@@ -44,6 +47,7 @@ public slots:
     void readyRead();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;
+    static accord::util::FunctionMap serializationMap;
     qint64 write(const QByteArray &data);
     QByteArray read(qint64 maxSize);
     void doConnect();

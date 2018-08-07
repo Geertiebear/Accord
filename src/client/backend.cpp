@@ -9,6 +9,7 @@
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/util/BinUtil.h>
+#include <accordshared/types/Database.h>
 
 std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::noopPacket,
@@ -20,11 +21,16 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::receiveSerializePacket
 };
 
+accord::util::FunctionMap BackEnd::serializationMap = {
+    { "CommunitiesTable", &BackEnd::handleCommunitiesTable }
+};
+
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
 {
     socket.setPeerVerifyMode(QSslSocket::QueryPeer);
     accord::network::PacketDecoder::init();
     accord::network::PacketHandler::init(handlers);
+    accord::util::Serializable::initTypes(serializationMap);
     QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
     doConnect();
 }
@@ -117,8 +123,14 @@ bool BackEnd::regist(QString name, QString email, QString password)
     QByteArray msg = Util::convertCharVectorToQt(data);
     return write(msg);
 }
+
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
 {
-    qDebug() << body;
+    return accord::util::Serializable::receive(body, data);
+}
+
+bool BackEnd::handleCommunitiesTable(PacketData *data, boost::any object)
+{
+    accord::types::CommunitiesTable table = boost::any_cast<accord::types::CommunitiesTable>(object);
     return true;
 }
