@@ -10,6 +10,14 @@
 
 class BackEnd;
 
+struct Communtity {
+    uint64_t id;
+    QString name;
+    std::vector<char> profilePic;
+    int members;
+    int channels;
+};
+
 struct Server : public PacketData {
     Server(BackEnd &backend) : backend(backend) { }
     QByteArray token;
@@ -25,6 +33,7 @@ public:
     static bool noopPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
 signals:
     void authenticated();
     void failedAuthenticated();

@@ -16,7 +16,8 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
-    &BackEnd::receiveTokenPacket
+    &BackEnd::receiveTokenPacket,
+    &BackEnd::receiveSerializePacket
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -115,4 +116,9 @@ bool BackEnd::regist(QString name, QString email, QString password)
                                               password.toStdString());
     QByteArray msg = Util::convertCharVectorToQt(data);
     return write(msg);
+}
+bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
+{
+    qDebug() << body;
+    return true;
 }

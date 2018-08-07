@@ -6,6 +6,7 @@
 #include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
 #include <accordshared/network/packet/TokenPacket.h>
+#include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/util/BinUtil.h>
 
 #include <iostream>
@@ -29,6 +30,8 @@ void PacketDecoder::init()
     packets.insert(registerPacketId, new RegisterPacket());
     PacketId tokenPacketId = TOKEN_PACKET;
     packets.insert(tokenPacketId, new TokenPacket());
+    PacketId serializationPacketId = SERIALIZATION_PACKET;
+    packets.insert(serializationPacketId, new SerializationPacket());
 }
 
 const Packet *PacketDecoder::getPacket(PacketId id)

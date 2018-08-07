@@ -18,11 +18,12 @@ enum PacketIds {
     AUTH_PACKET = 3,
     REGISTER_PACKET = 4,
     TOKEN_PACKET = 5,
+    SERIALIZATION_PACKET = 6,
 };
 
 class Packet {
 public:
-	virtual ~Packet() { }; //base class
+    virtual ~Packet() { } //base class
 	virtual Packet *clone() const = 0; //polymorphic construction
     virtual size_t getMaxSize() const = 0;
 	virtual int getId() const {

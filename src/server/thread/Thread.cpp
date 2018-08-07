@@ -10,13 +10,16 @@
 #include <event2/bufferevent_ssl.h>
 
 #include <accordserver/Server.h>
+#include <accordserver/database/Database.h>
 #include <accordserver/Authentication.h>
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/LibEventUtil.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/packet/ErrorPacket.h>
+#include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/util/BinUtil.h>
+#include <accordshared/types/Database.h>
 
 namespace accord {
 namespace thread {

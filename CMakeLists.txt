@@ -40,8 +40,11 @@ set(SOURCES_SHARED
     src/shared/network/packet/AuthPacket.cpp
     src/shared/network/packet/RegisterPacket.cpp
     src/shared/network/packet/TokenPacket.cpp
+    src/shared/network/packet/SerializationPacket.cpp
     src/shared/network/Packet.cpp
     src/shared/util/BinUtil.cpp
+    src/shared/util/Serialization.cpp
+    src/shared/types/Database.cpp
     )
 #libraries
 find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui QuickWidgets Network)
