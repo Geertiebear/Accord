@@ -30,6 +30,7 @@ struct Client : public PacketData {
 	int channel;
     database::table_users user;
     std::string token;
+    bool authenticated;
 };
 
 class Thread {

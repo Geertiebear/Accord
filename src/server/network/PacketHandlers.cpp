@@ -67,6 +67,7 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         return false;
     }
     client->user = client->thread.database.getUser(strings[0]);
+    client->authenticated = true;
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
     //send token to client
@@ -116,20 +117,27 @@ bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, Pac
     thread::Client *client = (thread::Client*) data;
     uint16_t requestId = util::BinUtil::assembleUint16((uint8_t) body[0], (uint8_t) body[1]);
     switch (requestId) {
-        case network::COMMUNITIES_TABLE_REQUEST:
+        case network::COMMUNITIES_TABLE_REQUEST: {
+            if (!client->authenticated) {
+                network::ErrorPacket packet;
+                packet.dispatch(client->bufferEvent, AUTH_ERR);
+                break;
+            }
             auto communities = client->thread.database.getCommunitiesForUser(client->user.id());
             std::vector<types::CommunitiesTable> shared;
             for (database::table_communities community : communities)
                 shared.push_back(database::Database::communityServerToShared(community));
 
-            network::SerializationPacket packet; // for now just for loop over it
-            for (types::CommunitiesTable table : shared) { //yikes
+            network::SerializationPacket packet;
+            for (types::CommunitiesTable table : shared) {
                 auto data = table.serialize();
                 auto msg = packet.construct(std::string(data.begin(), data.end()));
                 bufferevent_write(client->bufferEvent, &msg[0], msg.size());
             }
             break;
+        }
     }
+    return true;
 }
 
 } /* namespace network */

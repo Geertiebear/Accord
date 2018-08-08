@@ -75,6 +75,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
     Client *client = new Client(server, *this);
     client->channel = 0;
 	client->bufferEvent = bufferEvent;
+    client->authenticated = false;
 
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
 			&Thread::eventCallback, client);
