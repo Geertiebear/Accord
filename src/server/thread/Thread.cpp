@@ -81,13 +81,6 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
     clients.push_back(client);
-
-    //TODO: temp, please remove if it's still here
-    network::SerializationPacket packet;
-    types::CommunitiesTable betterTable(0, "table.name()", "table.profilepic()", 1, 1);
-    std::vector<char> data = betterTable.serialize();
-    std::vector<char> msg = packet.construct(std::string(data.begin(), data.end()));
-    bufferevent_write(bufferEvent, &msg[0], msg.size());
 }
 
 void Thread::removeClient(Client *client)

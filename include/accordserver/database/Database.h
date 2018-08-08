@@ -6,6 +6,8 @@
 #include <ssqls.h>
 #include <memory>
 
+#include <accordshared/types/Database.h>
+
 namespace accord {
 namespace database {
 
@@ -92,7 +94,12 @@ public:
     table_users getUser(const std::string &login);
     table_users getUser(uint64_t id);
     table_communities getCommunity(uint64_t id);
+    std::vector<table_communities> getCommunitiesForUser(uint64_t id);
     mysqlpp::Query query(std::string statement);
+
+    //helper functions
+    static types::CommunitiesTable communityServerToShared(table_communities community);
+    static std::string sqlBlobNullableToString(mysqlpp::sql_blob_null blob);
 private:
     const DatabaseOptions &options;
     mysqlpp::Connection connection;

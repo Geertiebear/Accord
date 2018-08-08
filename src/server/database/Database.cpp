@@ -354,5 +354,34 @@ table_communities Database::getCommunity(uint64_t id)
     return table;
 }
 
+std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
+{
+    std::vector<table_communities> ret;
+    std::vector<communities> res;
+    mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE id ="
+                                            " (SELECT community_members.id FROM"
+                                            " community_members WHERE user=" +
+                                            std::to_string(id) + ");");
+    query.storein(res);
+    for (size_t i = 0; i < res.size(); i++) {
+        auto community = std::make_shared<communities>(res[i]);
+        ret.emplace_back(community);
+    }
+    return ret;
+}
+
+types::CommunitiesTable Database::communityServerToShared(table_communities community)
+{
+    return types::CommunitiesTable((uint64_t) community.id(), (std::string) community.name(),
+                                   sqlBlobNullableToString(community.profilepic()),
+                                   (int) community.members(),
+                                   (int) community.channels());
+}
+
+std::string Database::sqlBlobNullableToString(mysqlpp::sql_blob_null blob)
+{
+    return blob.is_null ? std::string(" ") : std::string(blob.data.begin(), blob.data.end());
+}
+
 } /* namespace database */
 } /* namespace accord */

@@ -34,11 +34,6 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     accord::util::Serializable::initTypes(serializationMap);
     QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
     doConnect();
-
-    //TODO: temp
-    accord::network::RequestDataPacket packet;
-    auto msg = packet.construct(0);
-    write(Util::convertCharVectorToQt(msg));
 }
 
 QByteArray BackEnd::read(qint64 maxSize)
@@ -117,6 +112,11 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     Server *server = (Server*) data;
     server->token = Util::convertCharVectorToQt(body);
     server->backend.authenticated();
+
+    //TODO: temp
+    accord::network::RequestDataPacket packet;
+    auto msg = packet.construct(0);
+    server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
 
