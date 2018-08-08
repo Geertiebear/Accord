@@ -6,6 +6,7 @@
 
 #include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
+#include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/util/BinUtil.h>
@@ -33,6 +34,11 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     accord::util::Serializable::initTypes(serializationMap);
     QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
     doConnect();
+
+    //TODO: temp
+    accord::network::RequestDataPacket packet;
+    auto msg = packet.construct(0);
+    write(Util::convertCharVectorToQt(msg));
 }
 
 QByteArray BackEnd::read(qint64 maxSize)

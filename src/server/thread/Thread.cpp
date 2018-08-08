@@ -67,13 +67,13 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 {
 	struct bufferevent *bufferEvent = bufferevent_openssl_socket_new(eventBase,
 			clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE);
-	struct timeval readTimeout = {
-		.tv_sec = 30,
-		.tv_usec = 0,
-	};
+    struct timeval readTimeout = {
+        .tv_sec = 30,
+        .tv_usec = 0,
+    };
 
-	Client *client = new Client(server, *this);
-	client->channel = 0;
+    Client *client = new Client(server, *this);
+    client->channel = 0;
 	client->bufferEvent = bufferEvent;
 
 	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,

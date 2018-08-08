@@ -11,8 +11,8 @@ std::vector<char> SendMessagePacket::construct(const std::string &message)
 {
 	std::vector<char> result;
 	result.reserve(HEADER_SIZE + message.size());
-    writeHeader(&result, SEND_MESSAGE_PACKET);
-	std::copy(message.begin(), message.end(), std::back_inserter(result));
+    write(result, SEND_MESSAGE_PACKET);
+    write(result, message);
 	return result;
 }
 

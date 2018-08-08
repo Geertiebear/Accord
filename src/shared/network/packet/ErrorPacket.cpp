@@ -8,12 +8,7 @@ namespace network {
 int ErrorPacket::dispatch(struct bufferevent *bufferevent, Error error)
 {
 	ErrorPacket packet;
-	std::vector<char> result;
-	std::vector<char> constructed = packet.construct(error);
-    result.reserve(constructed.size() + HEADER_SIZE);
-    writeHeader(&result, ERROR_PACKET);
-	std::copy(constructed.begin(), constructed.end(), std::back_inserter(result));
-
+    std::vector<char> result = packet.construct(error);
 	return bufferevent_write(bufferevent, &result[0], result.size());
 }
 
@@ -21,11 +16,8 @@ std::vector<char> ErrorPacket::construct(Error error)
 {
 	std::vector<char> result;
     result.reserve(sizeof(Error));
-    uint8_t low = 0;
-	uint8_t high = 0;
-	util::BinUtil::splitUint16((uint16_t) error, &low, &high);
-    result.push_back(low);
-    result.push_back(high);
+    write(result, ERROR_PACKET);
+    write(result, (uint16_t) error);
 	return result;
 }
 

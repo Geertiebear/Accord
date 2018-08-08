@@ -7,7 +7,7 @@ namespace network {
 
 std::vector<char> DisconnectPacket::construct() {
 	std::vector<char> result;
-    writeHeader(&result, DISCONNECT_PACKET);
+    write(result, DISCONNECT_PACKET);
 	return result;
 }
 

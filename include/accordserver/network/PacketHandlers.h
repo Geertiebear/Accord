@@ -15,6 +15,8 @@ public:
     static bool receiveDisconnectPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveAuthPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveRegisterPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveNoopPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveRequestDataPacket(const std::vector<char> &body, PacketData *data);
 };
 
 } /* namespace network */

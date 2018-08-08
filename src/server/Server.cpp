@@ -19,7 +19,10 @@ std::vector<network::ReceiveHandler> Server::handlers = {
 	&network::PacketHandlers::receiveErrorPacket,
     &network::PacketHandlers::receiveDisconnectPacket,
     &network::PacketHandlers::receiveAuthPacket,
-    &network::PacketHandlers::receiveRegisterPacket
+    &network::PacketHandlers::receiveRegisterPacket,
+    &network::PacketHandlers::receiveNoopPacket,
+    &network::PacketHandlers::receiveNoopPacket,
+    &network::PacketHandlers::receiveRequestDataPacket
 };
 
 util::FunctionMap Server::serializationMap = {

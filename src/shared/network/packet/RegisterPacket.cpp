@@ -11,12 +11,12 @@ std::vector<char> RegisterPacket::construct(const std::string &name,
 {
     std::vector<char> result;
     result.reserve(HEADER_SIZE + name.length() + email.length() + password.length());
-    writeHeader(&result, REGISTER_PACKET);
-    std::copy(name.begin(), name.end(), std::back_inserter(result));
+    write(result, REGISTER_PACKET);
+    write(result, name);
     result.push_back(0x3);
-    std::copy(email.begin(), email.end(), std::back_inserter(result));
+    write(result, email);
     result.push_back(0x3);
-    std::copy(password.begin(), password.end(), std::back_inserter(result));
+    write(result, password);
     return result;
 }
 

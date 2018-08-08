@@ -7,8 +7,8 @@ std::vector<char> TokenPacket::construct(const std::string &token)
 {
     std::vector<char> result;
     result.reserve(HEADER_SIZE + token.length());
-    writeHeader(&result, TOKEN_PACKET);
-    std::copy(token.begin(), token.end(), std::back_inserter(result));
+    write(result, TOKEN_PACKET);
+    write(result, token);
     return result;
 }
 

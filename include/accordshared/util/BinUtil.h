@@ -1,4 +1,4 @@
-#ifndef UTIL_BIN_UIL
+#ifndef UTIL_BIN_UTIL
 #define UTIL_BIN_UTIL
 
 #include <cstdint>

@@ -5,6 +5,7 @@
 #include <accordserver/Authentication.h>
 #include <accordserver/thread/Thread.h>
 
+#include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/packet/TokenPacket.h>
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/error/ErrorCodes.h>
@@ -102,6 +103,24 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
     return true;
 }
 
+bool PacketHandlers::receiveNoopPacket(const std::vector<char> &body, PacketData *data)
+{
+    thread::Client *client = (thread::Client*) data;
+    log::Logger::log(log::WARNING, "Received packet NOOP from " + client->user.name());
+    return true;
+}
+
+bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, PacketData *data)
+{
+    thread::Client *client = (thread::Client*) data;
+    uint16_t requestId = util::BinUtil::assembleUint16((uint8_t) body[0], (uint8_t) body[1]);
+    switch (requestId) {
+        case network::COMMUNITIES_TABLE_REQUEST:
+            log::Logger::log(log::DEBUG, "Received communities table request!");
+            //TODO request all communties the user is in
+            break;
+    }
+}
 
 } /* namespace network */
 } /* namespace accord */

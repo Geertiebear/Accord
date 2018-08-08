@@ -2,9 +2,11 @@
 #define NETWORK_PACKET_H
 
 #include <vector>
+#include <type_traits>
 
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/network/PacketData.h>
+#include <accordshared/util/BinUtil.h>
 
 namespace accord {
 namespace network {
@@ -19,6 +21,7 @@ enum PacketIds {
     REGISTER_PACKET = 4,
     TOKEN_PACKET = 5,
     SERIALIZATION_PACKET = 6,
+    REQUEST_DATA_PACKET = 7,
 };
 
 class Packet {
@@ -35,7 +38,30 @@ public:
 		return PacketHandler::handle(getId(), body, data);
 	}
 
-    static void writeHeader(std::vector<char> *msg, int id);
+
+    //helper functions for serializing different types of data
+    //different from Serialization::insterData because here we binary
+    //encode some things
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, uint16_t>::value> write(std::vector<char> &msg, T data)
+    {
+        uint8_t low = 0, high = 0;
+        util::BinUtil::splitUint16(data, &low, &high);
+        msg.push_back((char)low);
+        msg.push_back((char)high);
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, std::string>::value> write(std::vector<char> &msg, T data)
+    {
+        std::copy(data.begin(), data.end(), std::back_inserter(msg));
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, PacketIds>::value> write(std::vector<char> &msg, T data)
+    {
+        write(msg, (uint16_t) data);
+    }
 };
 
 } /* namespace network */
