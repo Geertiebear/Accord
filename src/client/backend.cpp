@@ -138,5 +138,9 @@ bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *
 bool BackEnd::handleCommunitiesTable(PacketData *data, boost::any object)
 {
     accord::types::CommunitiesTable table = boost::any_cast<accord::types::CommunitiesTable>(object);
+    CommunitiesTable ownTable;
+    CommunitiesTable::fromShared(ownTable, table);
+    Server *server = (Server*) data;
+    server->backend.communityReady(QVariant::fromValue(&ownTable));
     return true;
 }

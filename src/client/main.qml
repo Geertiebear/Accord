@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.3
+import accord.types 1.0
 
 Window {
     visible: true
@@ -11,7 +12,7 @@ Window {
     objectName: "main"
 
     function onAuthenticated() {
-        stack.push(client, {}, StackView.Immediate);
+        stack.replace(client, {}, StackView.Immediate);
     }
 
     function onFailedAuthenticated() {
@@ -20,6 +21,10 @@ Window {
 
     function onFailedRegistered() {
         stack.replace(login, {"failed": "true", "registering": "true"}, StackView.Immediate);
+    }
+
+    function onCommunityReady(table) {
+        stack.currentItem.listView.model.append({"name": table.name});
     }
 
     StackView {
