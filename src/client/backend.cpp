@@ -23,7 +23,7 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
 };
 
 accord::util::FunctionMap BackEnd::serializationMap = {
-    { "CommunitiesTable", &BackEnd::handleCommunitiesTable }
+    { accord::network::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -31,7 +31,6 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     socket.setPeerVerifyMode(QSslSocket::QueryPeer);
     accord::network::PacketDecoder::init();
     accord::network::PacketHandler::init(handlers);
-    accord::util::Serializable::initTypes(serializationMap);
     QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
     doConnect();
 }
@@ -132,14 +131,15 @@ bool BackEnd::regist(QString name, QString email, QString password)
 
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
 {
-    return accord::util::Serializable::receive(body, data);
+    return accord::util::Serialization::receive(serializationMap, body, data);
 }
 
-bool BackEnd::handleCommunitiesTable(PacketData *data, boost::any object)
+bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &body)
 {
-    accord::types::CommunitiesTable table = boost::any_cast<accord::types::CommunitiesTable>(object);
+    accord::types::CommunitiesTable table = accord::util::Serialization::
+            deserealize<accord::types::CommunitiesTable>(body);
     CommunitiesTable ownTable;
-    CommunitiesTable::fromShared(ownTable, table);
+    ownTable.fromShared(table);
     Server *server = (Server*) data;
     server->backend.communityReady(QVariant::fromValue(&ownTable));
     return true;

@@ -34,13 +34,13 @@ public:
     int members;
     int channels;
 
-    static void fromShared(CommunitiesTable &ret, accord::types::CommunitiesTable &table)
+    void fromShared(accord::types::CommunitiesTable &table)
     {
-        ret.id = table.id;
-        ret.name = QString::fromStdString(table.name);
-        ret.profilepic = QVector<char>::fromStdVector(std::vector<char>(table.profilepic.begin(), table.profilepic.end()));
-        ret.members = table.members;
-        ret.channels = table.channels;
+        id = table.id;
+        name = QString::fromStdString(table.name);
+        profilepic = QVector<char>::fromStdVector(table.profilepic);
+        members = table.members;
+        channels = table.channels;
     }
 };
 
@@ -58,7 +58,7 @@ public:
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
 
-    static bool handleCommunitiesTable(PacketData *data, boost::any object);
+    static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
 signals:
     void authenticated();
     void failedAuthenticated();

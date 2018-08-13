@@ -1,49 +1,49 @@
 #ifndef ACCORD_UTIL_SERIALIZATION_H
 #define ACCORD_UTIL_SERIALIZATION_H
 
-#include <accordshared/util/Factory.h>
 #include <accordshared/network/PacketData.h>
-#include <map>
-#include <string>
+#include <accordshared/util/BinUtil.h>
 #include <functional>
-#include <type_traits>
-#include <boost/any.hpp>
-#include <vector>
+#include <map>
+#include <sstream>
+#include <cereal/archives/json.hpp>
 
 namespace accord {
 namespace util {
 
-using FunctionMap = std::map<std::string, std::function<bool(PacketData*, boost::any)>>;
+using FunctionMap = std::map<int, std::function<bool(PacketData*, const std::vector<char>&)>>;
 
-class Serializable {
+class Serialization {
 public:
-    virtual std::vector<char> serialize() = 0;
-    virtual boost::any deserialize(const std::vector<char> &data) = 0;
-    static void initTypes(FunctionMap);
-    static bool receive(const std::vector<char> &body, PacketData *data);
-    static FunctionMap map;
-    static Factory<Serializable> serializableFactory;
-
-    //cant use c++17 because of mysql++ q.q
-    //otherwise I would be using if constexpr for this
-    template<typename T>
-    static std::enable_if_t<std::is_same<T, std::string>::value> insertData(std::vector<char> &data, T toBeInsterted)
+    template<class T>
+    static std::vector<char> serialize(T object)
     {
-        std::copy(toBeInsterted.begin(), toBeInsterted.end(), std::back_inserter(data));
+        std::stringstream ss;
+        {
+            cereal::JSONOutputArchive archive(ss);
+            archive(object);
+        }
+        std::vector<char> ret;
+        const std::string &str = ss.str();
+        ret.assign(str.begin(), str.end());
+        return ret;
     }
 
-    template<typename T>
-    static std::enable_if_t<std::is_same<T, int>::value> insertData(std::vector<char> &data, T toBeInsterted)
+    template<class T>
+    static T deserealize(const std::vector<char> &data)
     {
-        std::string string = std::to_string(toBeInsterted);
-        std::copy(string.begin(), string.end(), std::back_inserter(data));
+        std::stringstream ss(std::string(data.begin(), data.end()));
+        cereal::JSONInputArchive archive(ss);
+        T object;
+        archive(object);
+        return object;
     }
 
-    template<typename T>
-    static std::enable_if_t<std::is_same<T, uint64_t>::value> insertData(std::vector<char> &data, T toBeInsterted)
+    static bool receive(FunctionMap &map, const std::vector<char> &body, PacketData *data)
     {
-        std::string string = std::to_string(toBeInsterted);
-        std::copy(string.begin(), string.end(), std::back_inserter(data));
+        uint16_t id = util::BinUtil::assembleUint16(body[0], body[1]);
+        std::vector<char> editedBody(body.begin() + 2, body.end());
+        return map[id](data, editedBody);
     }
 };
 

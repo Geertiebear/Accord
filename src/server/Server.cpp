@@ -36,7 +36,6 @@ Server::Server(Arguments args) : numThreads(args.threads), port(args.port)
     ctx = util::OpenSSLUtil::getContext(config);
     network::PacketDecoder::init();
     network::PacketHandler::init(handlers);
-    util::Serializable::initTypes(serializationMap);
     threads.reserve(numThreads);
 
     verifyDatabase(args);

@@ -99,7 +99,7 @@ public:
 
     //helper functions
     static types::CommunitiesTable communityServerToShared(table_communities community);
-    static std::string sqlBlobNullableToString(mysqlpp::sql_blob_null blob);
+    static std::vector<char> sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob);
 private:
     const DatabaseOptions &options;
     mysqlpp::Connection connection;

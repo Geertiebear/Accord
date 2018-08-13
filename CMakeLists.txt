@@ -43,8 +43,6 @@ set(SOURCES_SHARED
     src/shared/network/packet/SerializationPacket.cpp
     src/shared/network/packet/RequestDataPacket.cpp
     src/shared/util/BinUtil.cpp
-    src/shared/util/Serialization.cpp
-    src/shared/types/Database.cpp
     )
 #libraries
 find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui QuickWidgets Network)

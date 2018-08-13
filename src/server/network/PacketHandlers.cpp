@@ -130,8 +130,8 @@ bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, Pac
 
             network::SerializationPacket packet;
             for (types::CommunitiesTable table : shared) {
-                auto data = table.serialize();
-                auto msg = packet.construct(std::string(data.begin(), data.end()));
+                auto data = util::Serialization::serialize(table);
+                auto msg = packet.construct(network::COMMUNITIES_TABLE_REQUEST, std::string(data.begin(), data.end()));
                 bufferevent_write(client->bufferEvent, &msg[0], msg.size());
             }
             break;

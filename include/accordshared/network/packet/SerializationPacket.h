@@ -16,7 +16,7 @@ public:
         return SERIALIZATION_PACKET;
     }
 
-    std::vector<char> construct(const std::string &data);
+    std::vector<char> construct(uint16_t id, const std::string &data);
     size_t getMaxSize() const;
 };
 

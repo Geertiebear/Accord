@@ -373,14 +373,14 @@ std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
 types::CommunitiesTable Database::communityServerToShared(table_communities community)
 {
     return types::CommunitiesTable((uint64_t) community.id(), (std::string) community.name(),
-                                   sqlBlobNullableToString(community.profilepic()),
+                                   sqlBlobNullableToVectorChar(community.profilepic()),
                                    (int) community.members(),
                                    (int) community.channels());
 }
 
-std::string Database::sqlBlobNullableToString(mysqlpp::sql_blob_null blob)
+std::vector<char> Database::sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob)
 {
-    return blob.is_null ? std::string(" ") : std::string(blob.data.begin(), blob.data.end());
+    return blob.is_null ? std::vector<char>() : std::vector<char>(blob.data.begin(), blob.data.end());
 }
 
 } /* namespace database */
