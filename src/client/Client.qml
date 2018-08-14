@@ -14,6 +14,7 @@ ClientForm {
                     radius: 50
                     color: "red"
                 }
+                onClicked: print("LOL");
                 text: name
                 radius: 50
                 width: 65

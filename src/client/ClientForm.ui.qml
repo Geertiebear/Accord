@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Window 2.10
 import QtQuick.Controls 2.3
+import QtGraphicalEffects 1.0
 
 Page {
     height: Screen.desktopAvailableHeight
@@ -32,6 +33,33 @@ Page {
             }
             delegate: communityDelegate
             focus: true
+
+            RoundButton {
+                id: addCommunityButton
+                background: Rectangle {
+                    color: "red"
+                    radius: 50
+                    Image {
+                        source: "qrc:/plus.png"
+                        sourceSize.width: 65
+                        sourceSize.height: 65
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                radius: 50
+                                width: 65
+                                height: 65
+                                visible: false
+                            }
+                        }
+                    }
+                }
+                anchors.top: parent.top
+                radius: 50
+                anchors.topMargin: (65 * listView.model.count)
+                width: 65
+                height: 65
+            }
         }
     }
 
