@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QSslSocket>
+#include <QUrl>
 
 #include <accordshared/types/Database.h>
 #include <accordshared/network/PacketData.h>
@@ -67,6 +68,7 @@ signals:
 public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
+    void addCommunity(QString name, QUrl file);
     void readyRead();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;

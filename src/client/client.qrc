@@ -6,5 +6,7 @@
         <file>LoginForm.ui.qml</file>
         <file>main.qml</file>
         <file>plus.png</file>
+        <file>AddCommunity.qml</file>
+        <file>AddCommunityForm.ui.qml</file>
     </qresource>
 </RCC>

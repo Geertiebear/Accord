@@ -7,6 +7,7 @@ Page {
     height: Screen.desktopAvailableHeight
     property alias button2: button2
     property alias listView: listView
+    property alias addCommunityButton: addCommunityButton
     width: 1920
 
     ScrollView {

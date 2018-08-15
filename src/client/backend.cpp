@@ -144,3 +144,8 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
     server->backend.communityReady(QVariant::fromValue(&ownTable));
     return true;
 }
+
+void BackEnd::addCommunity(QString name, QUrl file)
+{
+    qDebug() << name << file;
+}
