@@ -21,12 +21,8 @@ std::vector<network::ReceiveHandler> Server::handlers = {
     &network::PacketHandlers::receiveAuthPacket,
     &network::PacketHandlers::receiveRegisterPacket,
     &network::PacketHandlers::receiveNoopPacket,
-    &network::PacketHandlers::receiveNoopPacket,
+    &network::PacketHandlers::receiveSerializationPacket,
     &network::PacketHandlers::receiveRequestDataPacket
-};
-
-util::FunctionMap Server::serializationMap = {
-    //empty for now
 };
 
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)

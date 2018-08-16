@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <accordshared/types/Database.h>
+#include <accordshared/types/Request.h>
 
 namespace accord {
 namespace database {
@@ -87,7 +88,8 @@ public:
                   const std::string &email,
                   const std::string &password,
                   const std::string &salt);
-    bool initCommunity(uint64_t id, uint64_t user, const std::string &name);
+    bool initCommunity(uint64_t id, uint64_t user, const types::AddCommunity &request,
+                       table_communities *ret = nullptr);
     bool addMember(uint64_t id, uint64_t user);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
@@ -100,6 +102,7 @@ public:
     //helper functions
     static types::CommunitiesTable communityServerToShared(table_communities community);
     static std::vector<char> sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob);
+    static mysqlpp::sql_blob_null vectorChartoSqlBlobNullable(const std::vector<char> &vector);
 private:
     const DatabaseOptions &options;
     mysqlpp::Connection connection;

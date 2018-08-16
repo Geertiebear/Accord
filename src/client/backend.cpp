@@ -3,8 +3,10 @@
 #include <QDebug>
 
 #include <iostream>
+#include <QErrorMessage>
 
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
 #include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/PacketDecoder.h>
@@ -147,5 +149,32 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
 
 void BackEnd::addCommunity(QString name, QUrl file)
 {
-    qDebug() << name << file;
+    QFile fileObj(file.toLocalFile());
+    QVector<char> buffer = readFile(fileObj);
+    if (buffer.empty()) {
+        handleFileError(file);
+        return;
+    }
+
+    AddCommunity request(name, buffer);
+    auto shared = request.toShared();
+    auto data = accord::util::Serialization::serialize(shared);
+    accord::network::SerializationPacket packet;
+    auto msg = packet.construct(accord::network::ADD_COMMUNITY_REQUEST,
+                                std::string(data.begin(), data.end()));
+    write(Util::convertCharVectorToQt(msg));
+}
+
+QVector<char> BackEnd::readFile(QFile &file)
+{
+    if (!file.open(QIODevice::ReadOnly))
+        return QVector<char>();
+    QByteArray data = file.readAll(); //qt doesnt allow init from iterators wtf
+    return QVector<char>::fromStdVector(std::vector<char>(data.begin(), data.end()));
+}
+
+void BackEnd::handleFileError(QUrl file)
+{
+    QErrorMessage msg;
+    msg.showMessage("Failed to read file: " + file.toLocalFile());
 }

@@ -4,12 +4,14 @@
 #include <accordserver/Server.h>
 #include <accordserver/Authentication.h>
 #include <accordserver/thread/Thread.h>
+#include <accordserver/util/CryptoUtil.h>
 
 #include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/TokenPacket.h>
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/error/ErrorCodes.h>
+#include <accordshared/types/Request.h>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -18,6 +20,10 @@
 
 namespace accord {
 namespace network {
+
+util::FunctionMap PacketHandlers::serializationMap = {
+    { ADD_COMMUNITY_REQUEST, &PacketHandlers::handleAddCommunityRequest }
+};
 
 bool PacketHandlers::receiveSendMessagePacket(const std::vector<char> &body, PacketData *data)
 {
@@ -137,6 +143,36 @@ bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, Pac
             break;
         }
     }
+    return true;
+}
+
+bool PacketHandlers::receiveSerializationPacket(const std::vector<char> &body, PacketData *data)
+{
+    return util::Serialization::receive(serializationMap, body, data);
+}
+
+bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vector<char> &body)
+{
+    types::AddCommunity request = util::Serialization::deserealize<
+            types::AddCommunity>(body);
+
+    thread::Client *client = (thread::Client*) data;
+    uint64_t communityId = util::CryptoUtil::getRandomUINT64();
+    database::table_communities community;
+    if (!client->thread.database.initCommunity(communityId,
+                                               client->user.id(),
+                                               request, &community)) {
+        return false; //TODO: send error packet
+    }
+
+    //we added a community, now let's send it back so that they can add it to their list
+    types::CommunitiesTable table = database::Database::communityServerToShared(community);
+    network::SerializationPacket packet;
+    auto json = util::Serialization::serialize(table);
+    auto msg = packet.construct(network::COMMUNITIES_TABLE_REQUEST, std::string(json.begin(), json.end()));
+    bufferevent_write(client->bufferEvent, &msg[0], msg.size());
+
+    //done for now
     return true;
 }
 

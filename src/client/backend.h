@@ -5,7 +5,9 @@
 #include <QString>
 #include <QSslSocket>
 #include <QUrl>
+#include <QFile>
 
+#include <accordshared/types/Request.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/network/PacketData.h>
 #include <accordshared/network/PacketHandler.h>
@@ -19,6 +21,19 @@ struct Server : public PacketData {
     BackEnd &backend;
 };
 
+class AddCommunity {
+public:
+    AddCommunity() { }
+    AddCommunity(QString name, QVector<char> profilepic)
+        : name(name), profilepic(profilepic) { }
+    QString name;
+    QVector<char> profilepic;
+
+    accord::types::AddCommunity toShared()
+    {
+        return accord::types::AddCommunity(name.toStdString(), profilepic.toStdVector());
+    }
+};
 
 class CommunitiesTable : public QObject {
     Q_OBJECT
@@ -79,6 +94,8 @@ private:
     QSslSocket socket;
     bool connected;
     Server state;
+    QVector<char> readFile(QFile &file);
+    void handleFileError(QUrl file);
 };
 
 #endif // BACKEND_H
