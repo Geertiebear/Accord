@@ -236,19 +236,24 @@ bool Database::initUser(uint64_t id, const std::string &name,
     return query.execute();
 }
 
-bool Database::initCommunity(uint64_t id, uint64_t user, const std::string &name)
+bool Database::initCommunity(uint64_t id, uint64_t user,
+                             const types::AddCommunity &request,
+                             table_communities *ret)
 {
     table_communities check = getCommunity(id);
     if (check.table != NULL)
         return false;
 
     mysqlpp::Query query = connection.query();
-    communities community(id, name, mysqlpp::null, 0, 0);
+    communities community(id, request.name,
+                          vectorChartoSqlBlobNullable(request.profilepic), 0, 0);
     query.insert(community);
     if(!query.execute())
         return false;
     if(!addMember(id, user))
         return false;
+
+    *ret = table_communities(std::make_shared<communities>(community));
     return true;
 }
 
@@ -358,7 +363,7 @@ std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
 {
     std::vector<table_communities> ret;
     std::vector<communities> res;
-    mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE id ="
+    mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE id IN"
                                             " (SELECT community_members.id FROM"
                                             " community_members WHERE user=" +
                                             std::to_string(id) + ");");
@@ -381,6 +386,13 @@ types::CommunitiesTable Database::communityServerToShared(table_communities comm
 std::vector<char> Database::sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob)
 {
     return blob.is_null ? std::vector<char>() : std::vector<char>(blob.data.begin(), blob.data.end());
+}
+
+mysqlpp::sql_blob_null Database::vectorChartoSqlBlobNullable(const std::vector<char> &vector)
+{
+    mysqlpp::String string(std::string(vector.begin(), vector.end()),
+                     mysqlpp::mysql_type_info::string_type, vector.empty());
+    return mysqlpp::sql_blob_null(string);
 }
 
 } /* namespace database */

@@ -9,10 +9,13 @@
 #include <thread>
 #include <string>
 #include <vector>
+#include <deque>
 
 #include <accordserver/database/Database.h>
 #include <accordserver/Config.h>
+#include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/PacketData.h>
+#include <accordshared/error/ErrorCodes.h>
 
 namespace accord {
 
@@ -21,6 +24,15 @@ class Server;
 namespace thread {
     
 class Thread;
+
+/*
+ * struct for holding info about partially read packets
+ */
+struct PacketBuffer {
+    network::PacketId id;
+    uint64_t length;
+    std::vector<char> buffer;
+};
 
 struct Client : public PacketData {
     Client(Server &server, Thread &thread) : server(server), thread(thread) { }
@@ -31,6 +43,11 @@ struct Client : public PacketData {
     database::table_users user;
     std::string token;
     bool authenticated;
+    bool hasPartialPacket;
+    PacketBuffer partialPacket;
+    std::deque<char> writeBuffer;
+
+    void write(const std::vector<char> &msg);
 };
 
 class Thread {
@@ -47,6 +64,7 @@ public:
 
     //callbacks
     static void readCallback(struct bufferevent *bufferEvent, void *data);
+    static void writeCallback(struct bufferevent *bufferEvent, void *data);
     static void eventCallback(struct bufferevent *bufferEvent, short events,
     		void *data);
     
@@ -59,6 +77,8 @@ private:
     std::vector<Client*> clients; //libevent can't foreach on bufferevents :((
 
     void run();
+    static void handlePartialPacket(struct bufferevent *bufferEvent, Client *client);
+    static void dispatchError(Client *client, Error error);
 };
 
 } /* namespace thread */

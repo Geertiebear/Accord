@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <accordshared/network/PacketData.h>
+#include <accordshared/util/Serialization.h>
 
 namespace accord {
 namespace network {
@@ -17,6 +18,10 @@ public:
     static bool receiveRegisterPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveNoopPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveRequestDataPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveSerializationPacket(const std::vector<char> &body, PacketData *data);
+
+    static util::FunctionMap serializationMap;
+    static bool handleAddCommunityRequest(PacketData *data, const std::vector<char> &body);
 };
 
 } /* namespace network */

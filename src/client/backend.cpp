@@ -3,8 +3,11 @@
 #include <QDebug>
 
 #include <iostream>
+#include <QErrorMessage>
 
+#include<accordshared/network/Packet.h>
 #include <accordshared/network/packet/AuthPacket.h>
+#include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
 #include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/PacketDecoder.h>
@@ -27,6 +30,7 @@ accord::util::FunctionMap BackEnd::serializationMap = {
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
+  ,isPartialPacket(false)
 {
     socket.setPeerVerifyMode(QSslSocket::QueryPeer);
     accord::network::PacketDecoder::init();
@@ -53,7 +57,9 @@ qint64 BackEnd::write(const QByteArray &data)
 {
     if (!connected)
         doConnect();
-    return socket.write(data);
+    socket.write(data);
+    socket.waitForBytesWritten();
+    return 1;
 }
 
 void BackEnd::doConnect()
@@ -77,9 +83,36 @@ bool BackEnd::authenticate(QString email, QString password)
 
 void BackEnd::readyRead()
 {
-    QByteArray received = socket.readAll();
-    std::vector<char> data = Util::convertQtToVectorChar(received);
-    accord::network::PacketDecoder::receivePacket(data, &state);
+    if (isPartialPacket) {
+        handlePartialPacket();
+        return;
+    }
+
+    std::vector<char> buffer;
+    buffer.resize(HEADER_SIZE);
+    socket.read(&buffer[0], HEADER_SIZE);
+
+    const auto id = accord::util::BinUtil::assembleUint16(
+                buffer[0], buffer[1]);
+    const auto length = accord::util::BinUtil::assembleUint64(
+                std::vector<uint8_t>(buffer.begin() + 2, buffer.end()));
+    const uint64_t bufferSize = socket.bytesAvailable();
+
+    if (length > bufferSize) {
+        partialPacket.length = length;
+        partialPacket.id = id;
+        partialPacket.buffer.resize(bufferSize);
+        socket.read(&partialPacket.buffer[0], bufferSize);
+        isPartialPacket = true;
+        return;
+    }
+
+    buffer.resize(length);
+    socket.read(&buffer[0], length);
+    accord::network::PacketDecoder::receivePacket(id, buffer, &state);
+
+    if (socket.bytesAvailable())
+        readyRead();
 }
 
 bool BackEnd::noopPacket(const std::vector<char> &body, PacketData *data)
@@ -147,5 +180,52 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
 
 void BackEnd::addCommunity(QString name, QUrl file)
 {
-    qDebug() << name << file;
+    QFile fileObj(file.toLocalFile());
+    QVector<char> buffer = readFile(fileObj);
+    if (buffer.empty()) {
+        handleFileError(file);
+        return;
+    }
+
+    AddCommunity request(name, buffer);
+    auto shared = request.toShared();
+    auto data = accord::util::Serialization::serialize(shared);
+    accord::network::SerializationPacket packet;
+    auto msg = packet.construct(accord::network::ADD_COMMUNITY_REQUEST,
+                                std::string(data.begin(), data.end()));
+    write(Util::convertCharVectorToQt(msg));
+}
+
+QVector<char> BackEnd::readFile(QFile &file)
+{
+    if (!file.open(QIODevice::ReadOnly))
+        return QVector<char>();
+    QByteArray data = file.readAll(); //qt doesnt allow init from iterators wtf
+    return QVector<char>::fromStdVector(std::vector<char>(data.begin(), data.end()));
+}
+
+void BackEnd::handleFileError(QUrl file)
+{
+    QErrorMessage msg;
+    msg.showMessage("Failed to read file: " + file.toLocalFile());
+}
+
+void BackEnd::handlePartialPacket()
+{
+    const auto &length = partialPacket.length;
+    const auto &id = partialPacket.id;
+    auto &buffer = partialPacket.buffer;
+    auto currentBufferSize = buffer.size();
+    const uint64_t bufferSize = socket.bytesAvailable();
+    const auto toRead = std::min(length, bufferSize);
+
+    buffer.resize(toRead + currentBufferSize);
+    socket.read(&buffer[currentBufferSize], toRead);
+
+    currentBufferSize = buffer.size();
+    if (length > currentBufferSize)
+        return;
+
+    isPartialPacket = false;
+    accord::network::PacketDecoder::receivePacket(id, buffer, &state);
 }

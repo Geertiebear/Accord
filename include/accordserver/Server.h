@@ -43,7 +43,6 @@ private:
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
 
-    static util::FunctionMap serializationMap;
     static std::vector<network::ReceiveHandler> handlers;
 };
 

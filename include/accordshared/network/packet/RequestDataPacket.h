@@ -8,6 +8,7 @@ namespace network {
 
 enum RequestIds {
     COMMUNITIES_TABLE_REQUEST = 0,
+    ADD_COMMUNITY_REQUEST = 1,
 };
 
 class RequestDataPacket : public Packet {

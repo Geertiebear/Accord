@@ -5,13 +5,22 @@
 #include <QString>
 #include <QSslSocket>
 #include <QUrl>
+#include <QFile>
 
+#include <accordshared/types/Request.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/network/PacketData.h>
+#include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/util/Serialization.h>
 
 class BackEnd;
+
+struct PacketBuffer {
+    accord::network::PacketId id;
+    uint64_t length;
+    std::vector<char> buffer;
+};
 
 struct Server : public PacketData {
     Server(BackEnd &backend) : backend(backend) { }
@@ -19,6 +28,19 @@ struct Server : public PacketData {
     BackEnd &backend;
 };
 
+class AddCommunity {
+public:
+    AddCommunity() { }
+    AddCommunity(QString name, QVector<char> profilepic)
+        : name(name), profilepic(profilepic) { }
+    QString name;
+    QVector<char> profilepic;
+
+    accord::types::AddCommunity toShared()
+    {
+        return accord::types::AddCommunity(name.toStdString(), profilepic.toStdVector());
+    }
+};
 
 class CommunitiesTable : public QObject {
     Q_OBJECT
@@ -79,6 +101,12 @@ private:
     QSslSocket socket;
     bool connected;
     Server state;
+    QVector<char> readFile(QFile &file);
+    void handleFileError(QUrl file);
+    bool isPartialPacket;
+    PacketBuffer partialPacket;
+
+    void handlePartialPacket();
 };
 
 #endif // BACKEND_H

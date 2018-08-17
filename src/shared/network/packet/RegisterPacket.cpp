@@ -10,8 +10,9 @@ std::vector<char> RegisterPacket::construct(const std::string &name,
                                             const std::string &password)
 {
     std::vector<char> result;
-    result.reserve(HEADER_SIZE + name.length() + email.length() + password.length());
-    write(result, REGISTER_PACKET);
+    const uint64_t length = name.size() + 1 + email.size() + 1 +
+            password.size();
+    writeHeader(REGISTER_PACKET, length, result);
     write(result, name);
     result.push_back(0x3);
     write(result, email);
@@ -22,7 +23,7 @@ std::vector<char> RegisterPacket::construct(const std::string &name,
 
 size_t RegisterPacket::getMaxSize() const
 {
-    return HEADER_SIZE + (255*3);
+    return (255*3);
 }
 
 } /* namespace network */
