@@ -10,10 +10,17 @@
 #include <accordshared/types/Request.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/network/PacketData.h>
+#include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/util/Serialization.h>
 
 class BackEnd;
+
+struct PacketBuffer {
+    accord::network::PacketId id;
+    uint64_t length;
+    std::vector<char> buffer;
+};
 
 struct Server : public PacketData {
     Server(BackEnd &backend) : backend(backend) { }
@@ -96,6 +103,10 @@ private:
     Server state;
     QVector<char> readFile(QFile &file);
     void handleFileError(QUrl file);
+    bool isPartialPacket;
+    PacketBuffer partialPacket;
+
+    void handlePartialPacket();
 };
 
 #endif // BACKEND_H

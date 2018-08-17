@@ -9,6 +9,13 @@
 #include <accordshared/network/Packet.h>
 
 namespace accord {
+
+namespace thread {
+
+struct Client;
+
+} /* namespace thread */
+
 namespace network {
 
 class ErrorPacket : public Packet {
@@ -21,8 +28,6 @@ public:
 		return ERROR_PACKET;
 	}
 	
-	static int dispatch(struct bufferevent *bufferEvent, Error error);
-
 	std::vector<char> construct(Error error);
     size_t getMaxSize() const;
 };

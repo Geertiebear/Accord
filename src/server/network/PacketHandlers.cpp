@@ -60,7 +60,8 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
                  boost::token_compress_on);
     if (strings.size() != 2) {
         network::ErrorPacket packet;
-        packet.dispatch(client->bufferEvent, ARGS_ERR);
+        const auto msg = packet.construct(ARGS_ERR);
+        client->write(msg);
         return false;
     }
     std::string token = Authentication::authUser(client->thread.database,
@@ -69,7 +70,8 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     client->token = token;
     if (token.length() != TOKEN_LEN) {
         network::ErrorPacket packet;
-        packet.dispatch(client->bufferEvent, AUTH_ERR);
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
         return false;
     }
     client->user = client->thread.database.getUser(strings[0]);
@@ -79,7 +81,7 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     //send token to client
     network::TokenPacket packet;
     std::vector<char> message = packet.construct(token);
-    bufferevent_write(client->bufferEvent, &message[0], message.size());
+    client->write(message);
 
     return true;
 }
@@ -98,7 +100,8 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
                                  strings[1], strings[2]);
     if (!ret) {
         network::ErrorPacket packet;
-        packet.dispatch(client->bufferEvent, REGIST_ERR);
+        const auto msg = packet.construct(REGIST_ERR);
+        client->write(msg);
         return false;
     }
 
@@ -106,7 +109,7 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
                                                  strings[0], strings[2]);
     network::TokenPacket packet;
     std::vector<char> message = packet.construct(token);
-    bufferevent_write(client->bufferEvent, &message[0], message.size());
+    client->write(message);
 
     return true;
 }
@@ -126,7 +129,8 @@ bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, Pac
         case network::COMMUNITIES_TABLE_REQUEST: {
             if (!client->authenticated) {
                 network::ErrorPacket packet;
-                packet.dispatch(client->bufferEvent, AUTH_ERR);
+                const auto msg = packet.construct(AUTH_ERR);
+                client->write(msg);
                 break;
             }
             auto communities = client->thread.database.getCommunitiesForUser(client->user.id());
@@ -138,7 +142,7 @@ bool PacketHandlers::receiveRequestDataPacket(const std::vector<char> &body, Pac
             for (types::CommunitiesTable table : shared) {
                 auto data = util::Serialization::serialize(table);
                 auto msg = packet.construct(network::COMMUNITIES_TABLE_REQUEST, std::string(data.begin(), data.end()));
-                bufferevent_write(client->bufferEvent, &msg[0], msg.size());
+                client->write(msg);
             }
             break;
         }
@@ -170,7 +174,7 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     network::SerializationPacket packet;
     auto json = util::Serialization::serialize(table);
     auto msg = packet.construct(network::COMMUNITIES_TABLE_REQUEST, std::string(json.begin(), json.end()));
-    bufferevent_write(client->bufferEvent, &msg[0], msg.size());
+    client->write(msg);
 
     //done for now
     return true;

@@ -7,12 +7,12 @@ namespace network {
 
 std::vector<char> DisconnectPacket::construct() {
 	std::vector<char> result;
-    write(result, DISCONNECT_PACKET);
-	return result;
+    writeHeader(DISCONNECT_PACKET, 0, result);
+    return result;
 }
 
 size_t DisconnectPacket::getMaxSize() const {
-    return HEADER_SIZE;
+    return 0;
 }
 
 } /* network */

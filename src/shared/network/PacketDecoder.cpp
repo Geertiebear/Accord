@@ -46,16 +46,12 @@ const Packet *PacketDecoder::getPacket(PacketId id)
 	}
 }
 
-int PacketDecoder::receivePacket(std::vector<char> &buffer, PacketData *data)
+int PacketDecoder::receivePacket(PacketId id, const std::vector<char> &buffer,
+                                 PacketData *data)
 {
-    uint8_t low = (uint8_t) buffer[0];
-    uint8_t high = (uint8_t) buffer[1];
-
-    network::PacketId packetId = util::BinUtil::assembleUint16(low, high);
-    const network::Packet *packet = network::PacketDecoder::getPacket(packetId);
+    const network::Packet *packet = network::PacketDecoder::getPacket(id);
     if (!packet)
         return Error::NOT_FOUND;
-    buffer.erase(buffer.begin(), buffer.begin() + HEADER_SIZE);
     if (buffer.size() > packet->getMaxSize()) {
         return Error::TOO_LONG;
     }

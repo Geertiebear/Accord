@@ -10,8 +10,7 @@ namespace network {
 std::vector<char> SendMessagePacket::construct(const std::string &message)
 {
 	std::vector<char> result;
-	result.reserve(HEADER_SIZE + message.size());
-    write(result, SEND_MESSAGE_PACKET);
+    writeHeader(SEND_MESSAGE_PACKET, message.length(), result);
     write(result, message);
 	return result;
 }

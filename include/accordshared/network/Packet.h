@@ -11,7 +11,7 @@
 namespace accord {
 namespace network {
 
-#define HEADER_SIZE 2
+#define HEADER_SIZE 10
 
 enum PacketIds {
 	SEND_MESSAGE_PACKET = 0,
@@ -61,6 +61,19 @@ public:
     static std::enable_if_t<std::is_same<T, PacketIds>::value> write(std::vector<char> &msg, T data)
     {
         write(msg, (uint16_t) data);
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, uint64_t>::value> write(std::vector<char> &msg, T data)
+    {
+        auto bytes = util::BinUtil::splitUint64(data);
+        std::copy(bytes.begin(), bytes.end(), std::back_inserter(msg));
+    }
+
+    void writeHeader(PacketIds id, uint64_t length, std::vector<char> &msg)
+    {
+        write(msg, id);
+        write(msg, length);
     }
 };
 

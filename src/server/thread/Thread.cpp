@@ -65,19 +65,32 @@ void Thread::start()
 
 void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 {
+    /*
+     * we defer our callbacks because the bufferevent could be
+     * emptied before we have a chance to copy over the buffer
+     * the the writeBuffer. Which results in the write callback
+     * being called without the buffer having been copied, wasting
+     * a callback and having to wait for a new one. Deffering the callback
+     * makes sure that the buffer has been copied before the callback
+     * gets called.
+     */
 	struct bufferevent *bufferEvent = bufferevent_openssl_socket_new(eventBase,
-			clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE);
+            clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE |
+                          BEV_OPT_DEFER_CALLBACKS);
     struct timeval readTimeout = {
         .tv_sec = 30,
         .tv_usec = 0,
     };
-
+    //TODO: move this to constructor
     Client *client = new Client(server, *this);
     client->channel = 0;
 	client->bufferEvent = bufferEvent;
     client->authenticated = false;
+    client->hasPartialPacket = false;
+    client->writeBuffer.clear();
 
-	bufferevent_setcb(bufferEvent, &Thread::readCallback, NULL,
+    bufferevent_setcb(bufferEvent, &Thread::readCallback,
+                      &Thread::writeCallback,
 			&Thread::eventCallback, client);
 	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
@@ -97,7 +110,8 @@ void Thread::broadcast(const std::string &message, int channel)
 	for (Client *client : clients) {
 		if (client->channel == channel) {
 			bufferevent_lock(client->bufferEvent);
-			bufferevent_write(client->bufferEvent, message.c_str(), message.size());
+            const auto msg = std::vector<char>(message.begin(), message.end());
+            client->write(msg);
 			bufferevent_unlock(client->bufferEvent);
 		}
 	}
@@ -105,13 +119,49 @@ void Thread::broadcast(const std::string &message, int channel)
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
+    Client *client = (Client*) data;
+    if (client->hasPartialPacket) {
+        handlePartialPacket(bufferEvent, client);
+        return;
+    }
+
     std::vector<char> buffer;
-    int n = evbuffer_get_length(bufferevent_get_input(bufferEvent));
-    buffer.resize(n);
-    bufferevent_read(bufferEvent, &buffer[0], n);
-    int ret = network::PacketDecoder::receivePacket(buffer, (PacketData*) data);
+    buffer.resize(HEADER_SIZE);
+    bufferevent_read(bufferEvent, &buffer[0], HEADER_SIZE);
+
+    /*
+    * first two bytes are packet id
+    * last 8 bytes are the packet length
+    * grab the packet length and id and see
+    * if we can receive the entire packet in one go.
+    * If we can't we save the ID and length in the
+    * client and empty the buffer in there. Then next iteration
+    * we repeat the process
+    * If we can that's fine we pass the ID and buffer onto
+    * the packet decoder.
+    */
+    const auto id = util::BinUtil::assembleUint16(buffer[0], buffer[1]);
+    const auto length = util::BinUtil::assembleUint64(
+                std::vector<uint8_t>(buffer.begin() + 2, buffer.end()));
+    const auto bufferSize = evbuffer_get_length(bufferevent_get_input(
+                                                  bufferEvent));
+
+    if (length > bufferSize) {
+        log::Logger::log(log::DEBUG, "We have identified it is a partial packet!");
+        client->partialPacket.length = length;
+        client->partialPacket.id = id;
+        client->partialPacket.buffer.resize(bufferSize);
+        bufferevent_read(bufferEvent, &client->partialPacket.buffer[0],
+                bufferSize);
+        client->hasPartialPacket = true;
+        return;
+    }
+
+    buffer.resize(length);
+    bufferevent_read(bufferEvent, &buffer[0], length);
+    int ret = network::PacketDecoder::receivePacket(id, buffer, (PacketData*) data);
     if (ret != 1)
-        network::ErrorPacket::dispatch(bufferEvent, (Error) ret);
+        dispatchError(client, (Error) ret);
 }
 
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
@@ -122,6 +172,73 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 		Client *client = (Client*) data;
 		client->thread.removeClient(client);
 	}
+}
+
+void Thread::handlePartialPacket(bufferevent *bufferEvent, Client *client)
+{
+    log::Logger::log(log::DEBUG, "Entering handlePartialPacket()!");
+    const auto &length = client->partialPacket.length;
+    const auto &id = client->partialPacket.id;
+    auto &buffer = client->partialPacket.buffer;
+    auto currentBufferSize = buffer.size();
+    const uint64_t bufferSize = evbuffer_get_length(bufferevent_get_input(
+                                                  bufferEvent));
+    const auto toRead = std::min(length, bufferSize);
+
+    buffer.resize(toRead + currentBufferSize);
+    bufferevent_read(bufferEvent,
+                     &buffer[currentBufferSize],
+                     toRead);
+
+    currentBufferSize = buffer.size();
+    if (length > currentBufferSize)
+        return;
+
+    client->hasPartialPacket = false;
+    int ret = network::PacketDecoder::receivePacket(id, buffer, (PacketData*) client);
+    if (ret != 1)
+        dispatchError(client, (Error) ret);
+}
+
+void Thread::writeCallback(struct bufferevent *bufferEvent, void *data)
+{
+    Client *client = (Client*) data;
+    auto &buffer = client->writeBuffer;
+
+    if (buffer.empty())
+        return;
+
+    const auto &size = buffer.size();
+    const auto evBufferSize = evbuffer_get_length(bufferevent_get_output(
+                                                      bufferEvent));
+    bufferevent_write(bufferEvent, &buffer[0], size);
+    const auto evBufferSize2 = evbuffer_get_length(bufferevent_get_output(
+                                                       bufferEvent));
+    const uint64_t written = evBufferSize2 - evBufferSize;
+    buffer.erase(buffer.begin(), buffer.begin() + written);
+}
+
+void Thread::dispatchError(Client *client, Error error)
+{
+    network::ErrorPacket packet;
+    const auto msg = packet.construct(error);
+    client->write(msg);
+}
+
+/* start client functions */
+void Client::write(const std::vector<char> &msg)
+{
+    const auto size = msg.size();
+    const auto evBufferSize = evbuffer_get_length(bufferevent_get_output(
+                                                      bufferEvent));
+    bufferevent_write(bufferEvent, &msg[0], size);
+    const auto evBufferSize2 = evbuffer_get_length(bufferevent_get_output(
+                                                       bufferEvent));
+    const uint64_t written = evBufferSize2 - evBufferSize;
+
+    if (size > written)
+        std::copy(msg.begin() + written, msg.end(), std::back_inserter(
+                      writeBuffer));
 }
 
 } /* namespace thread */

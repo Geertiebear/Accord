@@ -6,15 +6,14 @@ namespace network {
 std::vector<char> TokenPacket::construct(const std::string &token)
 {
     std::vector<char> result;
-    result.reserve(HEADER_SIZE + token.length());
-    write(result, TOKEN_PACKET);
+    writeHeader(TOKEN_PACKET, token.size(), result);
     write(result, token);
     return result;
 }
 
 size_t TokenPacket::getMaxSize() const
 {
-    return 255 + HEADER_SIZE;
+    return 255;
 }
 
 } /* namespace network */
