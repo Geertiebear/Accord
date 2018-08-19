@@ -15,6 +15,7 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <Magick++.h>
 
 #include <iostream>
 
@@ -159,6 +160,20 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
 {
     types::AddCommunity request = util::Serialization::deserealize<
             types::AddCommunity>(body);
+
+    //compress the image to a 200x200 jpg first and put it in the request
+    auto &profilepic = request.profilepic;
+    log::Logger::log(log::DEBUG, "profilepic.size(): " + std::to_string(profilepic.size()));
+    Magick::Blob blob(&profilepic[0], profilepic.size());
+    Magick::Image image(blob);
+    image.resize("200x200");
+    image.magick("JPEG");
+    image.write(&blob);
+    profilepic.clear();
+    const auto imageData = (const char*) blob.data();
+    const auto imageLength = blob.length();
+    std::copy(imageData, imageData + imageLength, std::back_inserter(profilepic));
+    log::Logger::log(log::DEBUG, "profilepic.size(): " + std::to_string(profilepic.size()));
 
     thread::Client *client = (thread::Client*) data;
     uint64_t communityId = util::CryptoUtil::getRandomUINT64();

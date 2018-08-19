@@ -1,4 +1,5 @@
 #include <iostream>
+#include <Magick++.h>
 
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/LibEventUtil.h>
@@ -12,6 +13,7 @@ int main(int argc, char **argv) {
     accord::log::Logger::init(args.logLevel);
     accord::util::LibEventUtil::init();
     accord::util::OpenSSLUtil::opensslInit();
+    Magick::InitializeMagick(argv[0]);
     accord::Server server(args);
     return 0;
 }
