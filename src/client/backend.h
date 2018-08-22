@@ -6,6 +6,8 @@
 #include <QSslSocket>
 #include <QUrl>
 #include <QFile>
+#include <QMap>
+#include <string>
 
 #include <accordshared/types/Request.h>
 #include <accordshared/types/Database.h>
@@ -44,24 +46,24 @@ public:
 
 class CommunitiesTable : public QObject {
     Q_OBJECT
-    Q_PROPERTY(quint64 id MEMBER id)
+    Q_PROPERTY(QString id MEMBER id)
     Q_PROPERTY(QString name MEMBER name)
-    Q_PROPERTY(QVector<char> profilepic MEMBER profilepic)
+    Q_PROPERTY(QByteArray profilepic MEMBER profilepic)
     Q_PROPERTY(int members MEMBER members)
     Q_PROPERTY(int channels MEMBER channels)
 public:
     CommunitiesTable() { }
-    quint64 id;
+    QString id; /* QML doesn't have support for 64 bit ints so store it in string */
     QString name;
-    QVector<char> profilepic;
+    QByteArray profilepic;
     int members;
     int channels;
 
     void fromShared(accord::types::CommunitiesTable &table)
     {
-        id = table.id;
+        id = QString::fromStdString(std::to_string(table.id));
         name = QString::fromStdString(table.name);
-        profilepic = QVector<char>::fromStdVector(table.profilepic);
+        profilepic = QByteArray(&table.profilepic[0], table.profilepic.size());
         members = table.members;
         channels = table.channels;
     }
@@ -82,11 +84,13 @@ public:
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
 
     static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
+
 signals:
     void authenticated();
     void failedAuthenticated();
     void failedRegistered();
     void communityReady(QVariant table);
+    void communityProfilepic(quint64, QByteArray data);
 public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>

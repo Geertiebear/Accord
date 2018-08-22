@@ -98,6 +98,7 @@ void BackEnd::readyRead()
                 std::vector<uint8_t>(buffer.begin() + 2, buffer.end()));
     const uint64_t bufferSize = socket.bytesAvailable();
 
+    qDebug() << length;
     if (length > bufferSize) {
         partialPacket.length = length;
         partialPacket.id = id;
@@ -174,6 +175,8 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
     CommunitiesTable ownTable;
     ownTable.fromShared(table);
     Server *server = (Server*) data;
+    server->backend.communityProfilepic(table.id, ownTable.profilepic);
+    ownTable.profilepic.clear(); // we are done with it
     server->backend.communityReady(QVariant::fromValue(&ownTable));
     return true;
 }
@@ -217,7 +220,7 @@ void BackEnd::handlePartialPacket()
     auto &buffer = partialPacket.buffer;
     auto currentBufferSize = buffer.size();
     const uint64_t bufferSize = socket.bytesAvailable();
-    const auto toRead = std::min(length, bufferSize);
+    const auto toRead = std::min(length - currentBufferSize, bufferSize);
 
     buffer.resize(toRead + currentBufferSize);
     socket.read(&buffer[currentBufferSize], toRead);

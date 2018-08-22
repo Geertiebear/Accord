@@ -30,7 +30,8 @@ set(SOURCES_CLICLIENT
 set(SOURCES_CLIENT
     src/client/main.cpp
     src/client/backend.cpp
-    src/client/util.cpp)
+    src/client/util.cpp
+    src/client/communityimageprovider.cpp)
 set(SOURCES_SHARED
     src/shared/network/PacketDecoder.cpp
     src/shared/network/PacketHandler.cpp

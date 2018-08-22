@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.2
+import QtGraphicalEffects 1.0
 
 ClientForm {
     background: Rectangle {
@@ -12,9 +13,19 @@ ClientForm {
         Component {
             id: communityDelegate
             RoundButton {
-                background: Rectangle {
-                    radius: 50
-                    color: "red"
+                background: Image {
+                    source: "image://communityImageProvider/" + id
+                    sourceSize.width: 65
+                    sourceSize.height: 65
+                    layer.enabled: true
+                    layer.effect: OpacityMask {
+                        maskSource: Rectangle {
+                            radius: 50
+                            width: 65
+                            height: 65
+                            visible: false
+                        }
+                    }
                 }
                 onClicked: print("LOL");
                 text: name
