@@ -183,7 +183,7 @@ void Thread::handlePartialPacket(bufferevent *bufferEvent, Client *client)
     auto currentBufferSize = buffer.size();
     const uint64_t bufferSize = evbuffer_get_length(bufferevent_get_input(
                                                   bufferEvent));
-    const auto toRead = std::min(length, bufferSize);
+    const auto toRead = std::min(length - currentBufferSize, bufferSize);
 
     buffer.resize(toRead + currentBufferSize);
     bufferevent_read(bufferEvent,
