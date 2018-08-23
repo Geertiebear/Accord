@@ -5,6 +5,8 @@ import QtGraphicalEffects 1.0
 
 Page {
     height: Screen.desktopAvailableHeight
+    property alias channelList: channelList
+    property alias channelView: channelView
     property alias button2: button2
     property alias listView: listView
     property alias addCommunityButton: addCommunityButton
@@ -104,5 +106,33 @@ Page {
         x: 688
         y: 137
         text: qsTr("Button")
+    }
+
+    ScrollView {
+        id: channelView
+        x: 1
+        y: -4
+        width: 200
+        anchors.left: communityView.right
+        anchors.leftMargin: 10
+        anchors.topMargin: 50
+        anchors.bottom: parent.bottom
+        ListView {
+            id: channelList
+            y: 0
+            width: 100
+            height: parent.height
+            anchors.left: parent.left
+            anchors.leftMargin: 70
+            anchors.topMargin: 10
+            anchors.bottom: parent.bottom
+            anchors.top: parent.top
+            model: ListModel {
+            }
+            delegate: channelDelegate
+            focus: true
+        }
+        anchors.top: parent.top
+        anchors.bottomMargin: 50
     }
 }

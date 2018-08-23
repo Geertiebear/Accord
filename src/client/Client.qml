@@ -7,6 +7,10 @@ ClientForm {
     background: Rectangle {
         color: "#5d5959"
     }
+    button2.onClicked: {
+        channelList.model.append({})
+    }
+
     addCommunityButton.onClicked: {
         addCommunityPopup.open();
     }
@@ -34,6 +38,20 @@ ClientForm {
                 height: 65
             }
         }
+        Component {
+            id: channelDelegate
+            Rectangle {
+                Label {
+                    text: "XDDDDDDDDD"
+                    width: 50
+                    height: 20
+                }
+                color: "red"
+                width: 50
+                height: 20
+            }
+        }
+
         Popup {
             id: addCommunityPopup
             x: Math.round((parent.width - width) / 2)
