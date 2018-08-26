@@ -72,6 +72,10 @@ add_executable(accordserver ${SOURCES_SERVER})
 add_executable(accordcliclient ${SOURCES_CLICLIENT})
 add_executable(accordclient ${SOURCES_CLIENT} ${qml_QRC})
 
+#defines
+target_compile_definitions(accordserver PRIVATE MAGICKCORE_HDRI_ENABLE=0
+    MAGICKCORE_QUANTUM_DEPTH=16)
+
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 endif (CMAKE_COMPILER_IS_GNUCC)
