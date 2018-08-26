@@ -6,9 +6,13 @@
 namespace accord {
 namespace network {
 
+/* TODO: remove this packet - it is useless, everything can be done through
+ * seriliazation packet */
+
 enum RequestIds {
     COMMUNITIES_TABLE_REQUEST = 0,
     ADD_COMMUNITY_REQUEST = 1,
+    CHANNELS_REQUEST = 2,
 };
 
 class RequestDataPacket : public Packet {

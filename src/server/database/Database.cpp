@@ -478,6 +478,15 @@ types::CommunitiesTable Database::communityServerToShared(table_communities comm
                                    (int) community.channels());
 }
 
+types::ChannelsTable Database::channelServerToShared(table_channels channel)
+{
+    return types::ChannelsTable((uint64_t) channel.id(), (uint64_t)
+                                channel.community(), (std::string)
+                                channel.name(), (std::string)
+                                channel.description());
+}
+
+
 std::vector<char> Database::sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob)
 {
     return blob.is_null ? std::vector<char>() : std::vector<char>(blob.data.begin(), blob.data.end());

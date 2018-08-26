@@ -31,6 +31,24 @@ public:
     }
 };
 
+class ChannelsTable {
+public:
+    ChannelsTable() { }
+    ChannelsTable(uint64_t id, uint64_t community, std::string name,
+                  std::string description) : id(id), community(community),
+        name(name), description(description) { }
+    uint64_t id;
+    uint64_t community;
+    std::string name;
+    std::string description;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, community, name, description);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

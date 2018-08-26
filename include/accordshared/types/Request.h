@@ -41,6 +41,19 @@ public:
     }
 };
 
+class Channels {
+public:
+    Channels() { }
+    Channels(uint64_t community) : community(community) { }
+    uint64_t community;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(community);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

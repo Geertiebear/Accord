@@ -117,6 +117,7 @@ public:
 
     //helper functions
     static types::CommunitiesTable communityServerToShared(table_communities community);
+    static types::ChannelsTable channelServerToShared(table_channels channel);
     static std::vector<char> sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob);
     static mysqlpp::sql_blob_null vectorChartoSqlBlobNullable(const std::vector<char> &vector);
 private:

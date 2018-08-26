@@ -197,5 +197,34 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     return true;
 }
 
+bool PacketHandlers::handleChannels(PacketData *data,
+                                    const std::vector<char> &body)
+{
+    thread::Client *client = (thread::Client*) data;
+    if (!client->authenticated) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
+        return false;
+    }
+    const auto request = util::Serialization::deserealize<
+            types::Channels>(body);
+    const auto &community = request.community;
+    const auto channels = client->thread.database.getChannelsForCommunity(
+                community);
+
+    std::vector<types::ChannelsTable> shared;
+    for (auto channel : channels)
+        shared.push_back(database::Database::channelServerToShared(channel));
+
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(shared);
+    const auto msg = packet.construct(network::CHANNELS_REQUEST, std::string(
+                                          json.begin(), json.end()));
+    client->write(msg);
+
+    return true;
+}
+
 } /* namespace network */
 } /* namespace accord */

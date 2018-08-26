@@ -22,6 +22,7 @@ public:
 
     static util::FunctionMap serializationMap;
     static bool handleAddCommunityRequest(PacketData *data, const std::vector<char> &body);
+    static bool handleChannels(PacketData *data, const std::vector<char> &body);
 };
 
 } /* namespace network */
