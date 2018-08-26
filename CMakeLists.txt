@@ -59,7 +59,7 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(ImageMagick COMPONENTS Magick++)
+find_package(ImageMagick COMPONENTS Magick++ REQUIRED)
 pkg_search_module(argon2 libargon2)
 
 add_library(libaccordshared SHARED ${SOURCES_SHARED})
