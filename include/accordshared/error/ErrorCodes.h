@@ -10,6 +10,7 @@ enum Error {
     AUTH_ERR = 3,
     ARGS_ERR = 4,
     REGIST_ERR = 5,
+    REQUEST_ERR = 6,
 };
 
 } /* namespace accord */

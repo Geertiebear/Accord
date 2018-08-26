@@ -181,7 +181,9 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     if (!client->thread.database.initCommunity(communityId,
                                                client->user.id(),
                                                request, &community)) {
-        return false; //TODO: send error packet
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
     }
 
     //we added a community, now let's send it back so that they can add it to their list
