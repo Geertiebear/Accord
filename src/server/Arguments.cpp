@@ -49,7 +49,7 @@ Arguments ArgumentParser::parse(int argc, char **argv)
     if (varMap.count("initdatabase"))
         arguments.initdatabase = varMap["initdatabase"].as<bool>();
 
-	return arguments;
+    return arguments;
 }
 
 } /* namespace accord */
