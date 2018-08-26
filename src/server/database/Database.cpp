@@ -32,6 +32,12 @@ sql_create_2(community_members, 1, 2,
              mysqlpp::sql_bigint_unsigned, id,
              mysqlpp::sql_bigint_unsigned, user);
 
+sql_create_4(channels, 1, 4,
+             mysqlpp::sql_bigint_unsigned, id,
+             mysqlpp::sql_bigint_unsigned, community,
+             mysqlpp::sql_varchar, name,
+             mysqlpp::sql_varchar, description);
+
 table_users::table_users(std::shared_ptr<users> table) : table(table)
 {}
 
@@ -137,6 +143,29 @@ mysqlpp::sql_bigint_unsigned& table_community_members::user()
     return table->user;
 }
 
+table_channels::table_channels(
+        std::shared_ptr<channels> table) : table(table) { }
+
+mysqlpp::sql_bigint_unsigned &table_channels::id()
+{
+    return table->id;
+}
+
+mysqlpp::sql_bigint_unsigned &table_channels::community()
+{
+    return table->community;
+}
+
+mysqlpp::sql_varchar &table_channels::name()
+{
+    return table->name;
+}
+
+mysqlpp::sql_varchar &table_channels::description()
+{
+    return table->description;
+}
+
 Database::Database(const DatabaseOptions &options)
     : options(options)
 {
@@ -181,6 +210,10 @@ bool Database::verify()
     if (res = query.store())
         if (res.empty())
             return false;
+    query = connection.query("SHOW TABLES LIKE 'channels'");
+    if (res = query.store())
+        if (res.empty())
+            return false;
     return true;
 }
 
@@ -210,6 +243,12 @@ bool Database::initDatabase()
         query = connection.query(
                 "CREATE TABLE community_members (id BIGINT UNSIGNED, "
                 "user BIGINT UNSIGNED)");
+        if (!query.execute())
+            return false;
+        query = connection.query(
+                    "CREATE TABLE channels (id BIGINT UNSIGNED, "
+                    "community BIGINT UNSIGNED, name VARCHAR(255),"
+                    "description VARCHAR(255))");
         if (!query.execute())
             return false;
     } catch (mysqlpp::BadQuery &e) {
@@ -257,6 +296,23 @@ bool Database::initCommunity(uint64_t id, uint64_t user,
     return true;
 }
 
+bool Database::initChannel(uint64_t id, const types::AddChannel &request,
+                           table_channels *ret)
+{
+    table_channels check = getChannel(id);
+    if (check.table != nullptr)
+        return false;
+
+    auto query = connection.query();
+    channels channel(id, request.community, request.name, request.description);
+    query.insert(channel);
+    if (!query.execute())
+        return false;
+    if (!addChannel(request.community))
+        return false;
+    return true;
+}
+
 bool Database::addMember(uint64_t id, uint64_t user)
 {
     mysqlpp::Query query = connection.query();
@@ -278,6 +334,17 @@ bool Database::addMember(uint64_t id, uint64_t user)
     community_members community_member(id, user);
     query.insert(community_member);
 
+    return query.execute();
+}
+
+bool Database::addChannel(uint64_t id)
+{
+    auto query = connection.query();
+
+    table_communities community = getCommunity(id);
+    communities originalCommunity = *community.table;
+    community.channels()++;
+    query.update(originalCommunity, *community.table);
     return query.execute();
 }
 
@@ -343,6 +410,20 @@ table_users Database::getUser(uint64_t id)
     return table;
 }
 
+table_channels Database::getChannel(uint64_t id)
+{
+    auto query = connection.query("SELECT * FROM channels WHERE"
+                                  "id=" + std::to_string(id));
+    std::vector<channels> res;
+    query.storein(res);
+    if (res.size() != 1)
+        return table_channels(nullptr);
+
+    auto channel = std::make_shared<channels>(res[0]);
+    table_channels table(channel);
+    return table;
+}
+
 table_communities Database::getCommunity(uint64_t id)
 {
     mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE "
@@ -371,6 +452,20 @@ std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
     for (size_t i = 0; i < res.size(); i++) {
         auto community = std::make_shared<communities>(res[i]);
         ret.emplace_back(community);
+    }
+    return ret;
+}
+
+std::vector<table_channels> Database::getChannelsForCommunity(uint64_t id)
+{
+    std::vector<table_channels> ret;
+    std::vector<channels> res;
+    auto query = connection.query("SELECT * FROM channels WHERE community="
+                                  + std::to_string(id));
+    query.storein(res);
+    for (size_t i = 0; i < res.size(); i++) {
+        auto channel = std::make_shared<channels>(res[i]);
+        ret.emplace_back(channel);
     }
     return ret;
 }

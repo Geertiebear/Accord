@@ -25,6 +25,22 @@ public:
     }
 };
 
+class AddChannel {
+public:
+    AddChannel() { }
+    AddChannel(uint64_t community, std::string name, std::string description)
+        : community(community), name(name), description(description) { }
+    uint64_t community;
+    std::string name;
+    std::string description;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(community, name, description);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

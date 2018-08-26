@@ -21,6 +21,7 @@ struct users;
 struct friends;
 struct communities;
 struct community_members;
+struct channels;
 
 struct table_users {
     table_users() {}
@@ -65,6 +66,16 @@ struct table_community_members {
     mysqlpp::sql_bigint_unsigned &user();
 };
 
+struct table_channels {
+    table_channels() {}
+    table_channels(std::shared_ptr<channels> table);
+    std::shared_ptr<channels> table;
+    mysqlpp::sql_bigint_unsigned &id();
+    mysqlpp::sql_bigint_unsigned &community();
+    mysqlpp::sql_varchar &name();
+    mysqlpp::sql_varchar &description();
+};
+
 struct DatabaseOptions {
     DatabaseOptions() {}
     DatabaseOptions(std::string name, std::string address, std::string user,
@@ -90,13 +101,18 @@ public:
                   const std::string &salt);
     bool initCommunity(uint64_t id, uint64_t user, const types::AddCommunity &request,
                        table_communities *ret = nullptr);
+    bool initChannel(uint64_t id, const types::AddChannel &request,
+                     table_channels *ret = nullptr);
     bool addMember(uint64_t id, uint64_t user);
+    bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
     table_users getUser(const std::string &login);
     table_users getUser(uint64_t id);
+    table_channels getChannel(uint64_t id);
     table_communities getCommunity(uint64_t id);
     std::vector<table_communities> getCommunitiesForUser(uint64_t id);
+    std::vector<table_channels> getChannelsForCommunity(uint64_t id);
     mysqlpp::Query query(std::string statement);
 
     //helper functions
