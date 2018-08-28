@@ -9,8 +9,8 @@
 #include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
-#include <accordshared/network/packet/RequestDataPacket.h>
 #include <accordshared/network/PacketDecoder.h>
+#include <accordshared/types/Request.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/util/BinUtil.h>
 #include <accordshared/types/Database.h>
@@ -26,7 +26,7 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
 };
 
 accord::util::FunctionMap BackEnd::serializationMap = {
-    { accord::network::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable }
+    { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -147,8 +147,9 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     server->backend.authenticated();
 
     //TODO: temp
-    accord::network::RequestDataPacket packet;
-    auto msg = packet.construct(0);
+    accord::network::SerializationPacket packet;
+    auto msg = packet.construct(accord::types::COMMUNITIES_TABLE_REQUEST,
+                                std::string());
     server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
@@ -170,14 +171,17 @@ bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *
 
 bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &body)
 {
-    accord::types::CommunitiesTable table = accord::util::Serialization::
-            deserealize<accord::types::CommunitiesTable>(body);
-    CommunitiesTable ownTable;
-    ownTable.fromShared(table);
+    auto tables = accord::util::Serialization::
+            deserealize<std::vector<
+            accord::types::CommunitiesTable>>(body);
     Server *server = (Server*) data;
-    server->backend.communityProfilepic(table.id, ownTable.profilepic);
-    ownTable.profilepic.clear(); // we are done with it
-    server->backend.communityReady(QVariant::fromValue(&ownTable));
+    for (auto &table : tables) {
+        CommunitiesTable ownTable;
+        ownTable.fromShared(table);
+        server->backend.communityProfilepic(table.id, ownTable.profilepic);
+        ownTable.profilepic.clear(); // we are done with it
+        server->backend.communityReady(QVariant::fromValue(&ownTable));
+    }
     return true;
 }
 
@@ -194,7 +198,7 @@ void BackEnd::addCommunity(QString name, QUrl file)
     auto shared = request.toShared();
     auto data = accord::util::Serialization::serialize(shared);
     accord::network::SerializationPacket packet;
-    auto msg = packet.construct(accord::network::ADD_COMMUNITY_REQUEST,
+    auto msg = packet.construct(accord::types::ADD_COMMUNITY_REQUEST,
                                 std::string(data.begin(), data.end()));
     write(Util::convertCharVectorToQt(msg));
 }

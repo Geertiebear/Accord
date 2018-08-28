@@ -10,6 +10,12 @@
 namespace accord {
 namespace types {
 
+enum RequestIds {
+    COMMUNITIES_TABLE_REQUEST = 0,
+    ADD_COMMUNITY_REQUEST = 1,
+    CHANNELS_REQUEST = 2,
+};
+
 class AddCommunity {
 public:
     AddCommunity() { }

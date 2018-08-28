@@ -42,7 +42,6 @@ set(SOURCES_SHARED
     src/shared/network/packet/RegisterPacket.cpp
     src/shared/network/packet/TokenPacket.cpp
     src/shared/network/packet/SerializationPacket.cpp
-    src/shared/network/packet/RequestDataPacket.cpp
     src/shared/util/BinUtil.cpp
     )
 #libraries

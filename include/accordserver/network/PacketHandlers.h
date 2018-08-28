@@ -17,10 +17,10 @@ public:
     static bool receiveAuthPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveRegisterPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveNoopPacket(const std::vector<char> &body, PacketData *data);
-    static bool receiveRequestDataPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveSerializationPacket(const std::vector<char> &body, PacketData *data);
 
     static util::FunctionMap serializationMap;
+    static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
     static bool handleAddCommunityRequest(PacketData *data, const std::vector<char> &body);
     static bool handleChannels(PacketData *data, const std::vector<char> &body);
 };
