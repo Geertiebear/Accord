@@ -175,13 +175,20 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
             deserealize<std::vector<
             accord::types::CommunitiesTable>>(body);
     Server *server = (Server*) data;
+    std::vector<CommunitiesTable*> ownTables;
     for (auto &table : tables) {
-        CommunitiesTable ownTable;
-        ownTable.fromShared(table);
-        server->backend.communityProfilepic(table.id, ownTable.profilepic);
-        ownTable.profilepic.clear(); // we are done with it
-        server->backend.communityReady(QVariant::fromValue(&ownTable));
+        auto ownTable = new CommunitiesTable;
+        ownTable->fromShared(table);
+        server->backend.communityProfilepic(
+                    table.id, ownTable->profilepic);
+        ownTable->profilepic.clear();
+        ownTables.push_back(ownTable);
     }
+    auto &list = server->backend.communitiesList;
+    list.data.clear();
+    list.fromVector(ownTables);
+    server->backend.qmlContext->setContextProperty("communitiesList",
+                                                   &list);
     return true;
 }
 

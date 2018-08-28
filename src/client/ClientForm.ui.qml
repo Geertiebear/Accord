@@ -32,8 +32,7 @@ Page {
             anchors.bottom: parent.bottom
             anchors.top: parent.top
             anchors.topMargin: 10
-            model: ListModel {
-            }
+            model: communitiesList.data
             delegate: communityDelegate
             focus: true
 
@@ -59,7 +58,6 @@ Page {
                 }
                 anchors.top: parent.top
                 radius: 50
-                anchors.topMargin: (65 * listView.model.count)
                 width: 65
                 height: 65
             }

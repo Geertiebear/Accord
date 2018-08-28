@@ -14,11 +14,15 @@ ClientForm {
     addCommunityButton.onClicked: {
         addCommunityPopup.open();
     }
+
+    listView.onCountChanged: {
+        addCommunityButton.anchors.topMargin = (65 * listView.count)
+    }
         Component {
             id: communityDelegate
             RoundButton {
                 background: Image {
-                    source: "image://communityImageProvider/" + id
+                    source: "image://communityImageProvider/" + modelData.id
                     sourceSize.width: 65
                     sourceSize.height: 65
                     layer.enabled: true
@@ -32,7 +36,7 @@ ClientForm {
                     }
                 }
                 onClicked: print("LOL");
-                text: name
+                text: modelData.name
                 radius: 50
                 width: 65
                 height: 65

@@ -24,7 +24,7 @@ Window {
     }
 
     function onCommunityReady(table) {
-        stack.currentItem.listView.model.append({"name": table.name, "id": table.id});
+        stack.currentItem.listView.model.append({});
     }
 
     StackView {

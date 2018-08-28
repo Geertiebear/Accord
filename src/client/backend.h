@@ -9,6 +9,7 @@
 #include <QMap>
 #include <QCache>
 #include <QVariant>
+#include <QQmlContext>
 #include <string>
 
 #include <accordshared/types/Request.h>
@@ -48,11 +49,10 @@ public:
 
 class CommunitiesTable : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QString id MEMBER id)
-    Q_PROPERTY(QString name MEMBER name)
-    Q_PROPERTY(QByteArray profilepic MEMBER profilepic)
-    Q_PROPERTY(int members MEMBER members)
-    Q_PROPERTY(int channels MEMBER channels)
+    Q_PROPERTY(QString id MEMBER id CONSTANT)
+    Q_PROPERTY(QString name MEMBER name CONSTANT)
+    Q_PROPERTY(int members MEMBER members CONSTANT)
+    Q_PROPERTY(int channels MEMBER channels CONSTANT)
 public:
     CommunitiesTable() { }
     QString id; /* QML doesn't have support for 64 bit ints so store it in string */
@@ -90,6 +90,25 @@ public:
 
 Q_DECLARE_METATYPE(ChannelsTable*)
 
+/* generic object for displaying a list in QML
+ * from a QVariantList */
+class DataList : public QObject {
+  Q_OBJECT
+  Q_PROPERTY(QVariantList data MEMBER data NOTIFY dataChanged)
+public:
+    DataList(QObject *parent = nullptr) : QObject(parent) { }
+
+    template<typename T>
+    void fromVector(std::vector<T> list)
+    {
+        for (T item : list)
+            data.append(QVariant::fromValue(item));
+    }
+    QVariantList data;
+signals:
+    void dataChanged();
+};
+
 class BackEnd : public QObject {
     Q_OBJECT
 public:
@@ -104,6 +123,8 @@ public:
     static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
     static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
 
+    DataList communitiesList;
+    QQmlContext *qmlContext;
 signals:
     void authenticated();
     void failedAuthenticated();

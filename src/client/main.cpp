@@ -13,8 +13,10 @@ int main(int argc, char **argv)
 
     QQmlApplicationEngine engine;
     BackEnd *backend = new BackEnd;
+    backend->qmlContext = engine.rootContext();
     CommunityImageProvider *communityImageProvider = new CommunityImageProvider();
     engine.rootContext()->setContextProperty("backend", backend);
+    engine.rootContext()->setContextProperty("communitiesList", &backend->communitiesList);
     engine.addImageProvider("communityImageProvider", communityImageProvider);
     qmlRegisterType<CommunitiesTable>("accord.types", 1, 0, "CommuntiesTable");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
