@@ -114,6 +114,7 @@ class BackEnd : public QObject {
 public:
     virtual ~BackEnd() {}
     explicit BackEnd(QObject *parent = nullptr);
+    BackEnd(QQmlContext *ctx, QObject *parent = nullptr);
 
     static bool noopPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);

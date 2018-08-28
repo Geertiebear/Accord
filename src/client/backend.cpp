@@ -39,6 +39,12 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     doConnect();
 }
 
+BackEnd::BackEnd(QQmlContext *ctx, QObject *parent)
+    : BackEnd(parent)
+{
+    qmlContext = ctx;
+}
+
 QByteArray BackEnd::read(qint64 maxSize)
 {
     QByteArray res;

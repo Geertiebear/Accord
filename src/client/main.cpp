@@ -12,8 +12,7 @@ int main(int argc, char **argv)
     QCoreApplication::addLibraryPath("./");
 
     QQmlApplicationEngine engine;
-    BackEnd *backend = new BackEnd;
-    backend->qmlContext = engine.rootContext();
+    BackEnd *backend = new BackEnd(engine.rootContext());
     CommunityImageProvider *communityImageProvider = new CommunityImageProvider();
     engine.rootContext()->setContextProperty("backend", backend);
     engine.rootContext()->setContextProperty("communitiesList", &backend->communitiesList);
