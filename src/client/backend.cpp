@@ -185,6 +185,11 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
     return true;
 }
 
+bool BackEnd::handleChannelsTable(PacketData *data, const std::vector<char> &body)
+{
+    return true; //TODO: finish this
+}
+
 void BackEnd::addCommunity(QString name, QUrl file)
 {
     QFile fileObj(file.toLocalFile());

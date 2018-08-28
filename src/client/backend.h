@@ -7,6 +7,8 @@
 #include <QUrl>
 #include <QFile>
 #include <QMap>
+#include <QCache>
+#include <QVariant>
 #include <string>
 
 #include <accordshared/types/Request.h>
@@ -71,6 +73,22 @@ public:
 
 Q_DECLARE_METATYPE(CommunitiesTable*)
 
+class ChannelsTable : public QObject {
+  Q_OBJECT
+public:
+    ChannelsTable() { }
+    QString id, community, name, description;
+
+    void fromShared(const accord::types::ChannelsTable &table)
+    {
+        id = QString::fromStdString(std::to_string(table.id));
+        community = QString::fromStdString(std::to_string(table.community));
+        name = QString::fromStdString(table.name);
+        description = QString::fromStdString(table.description);
+    }
+};
+
+Q_DECLARE_METATYPE(ChannelsTable*)
 
 class BackEnd : public QObject {
     Q_OBJECT
@@ -84,6 +102,7 @@ public:
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
 
     static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
+    static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
 
 signals:
     void authenticated();
