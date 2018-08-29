@@ -26,7 +26,8 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
 };
 
 accord::util::FunctionMap BackEnd::serializationMap = {
-    { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable }
+    { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable },
+    { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable}
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -157,6 +158,13 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     auto msg = packet.construct(accord::types::COMMUNITIES_TABLE_REQUEST,
                                 std::string());
     server->backend.write(Util::convertCharVectorToQt(msg));
+
+    //TODO: more temp shit :>
+    accord::types::Channels request(10209942851463728217);
+    const auto json = accord::util::Serialization::serialize(request);
+    msg = packet.construct(accord::types::CHANNELS_REQUEST,
+                           std::string(json.begin(), json.end()));
+    server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
 
@@ -200,7 +208,27 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
 
 bool BackEnd::handleChannelsTable(PacketData *data, const std::vector<char> &body)
 {
-    return true; //TODO: finish this
+    auto tables = accord::util::Serialization::
+            deserealize<std::vector<
+            accord::types::ChannelsTable>>(body);
+    Server *server = (Server*) data;
+    std::vector<ChannelsTable*> ownTables;
+    for (auto &table : tables) {
+        auto ownTable = new ChannelsTable;
+        ownTable->fromShared(table);
+        ownTables.push_back(ownTable);
+    }
+
+    auto &channelsMap = server->backend.channelsMap;
+    auto it = channelsMap.find(ownTables[0]->community);
+    if (it == channelsMap.end())
+        channelsMap.insert(ownTables[0]->community, QVariant::fromValue(new DataList()));
+
+    auto list = channelsMap[ownTables[0]->community];
+    list.value<DataList*>()->fromVector(ownTables);
+    server->backend.qmlContext->setContextProperty("channelsMap",
+                                            channelsMap);
+    return true;
 }
 
 void BackEnd::addCommunity(QString name, QUrl file)

@@ -75,6 +75,7 @@ Q_DECLARE_METATYPE(CommunitiesTable*)
 
 class ChannelsTable : public QObject {
   Q_OBJECT
+  Q_PROPERTY(QString name MEMBER name CONSTANT)
 public:
     ChannelsTable() { }
     QString id, community, name, description;
@@ -109,6 +110,8 @@ signals:
     void dataChanged();
 };
 
+Q_DECLARE_METATYPE(DataList*)
+
 class BackEnd : public QObject {
     Q_OBJECT
 public:
@@ -125,6 +128,7 @@ public:
     static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
 
     DataList communitiesList;
+    QVariantMap channelsMap;
     QQmlContext *qmlContext;
 signals:
     void authenticated();

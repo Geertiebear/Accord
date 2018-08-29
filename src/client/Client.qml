@@ -4,6 +4,8 @@ import QtQuick.Controls 2.2
 import QtGraphicalEffects 1.0
 
 ClientForm {
+    property bool communitySelected: false
+
     background: Rectangle {
         color: "#5d5959"
     }
@@ -46,7 +48,7 @@ ClientForm {
             id: channelDelegate
             Rectangle {
                 Label {
-                    text: "XDDDDDDDDD"
+                    text: modelData.name
                     width: 50
                     height: 20
                 }
