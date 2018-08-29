@@ -12,6 +12,7 @@
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/types/Request.h>
 #include <accordshared/error/ErrorCodes.h>
+#include <accordshared/types/Return.h>
 #include <accordshared/util/BinUtil.h>
 #include <accordshared/types/Database.h>
 
@@ -174,7 +175,6 @@ bool BackEnd::regist(QString name, QString email, QString password)
 bool BackEnd::loadChannels(QString id)
 {
     quint64 intId = id.toULongLong();
-    //TODO: more temp shit :>
     accord::types::Channels request(intId);
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
@@ -213,10 +213,22 @@ bool BackEnd::handleCommunitiesTable(PacketData *data, const std::vector<char> &
 
 bool BackEnd::handleChannelsTable(PacketData *data, const std::vector<char> &body)
 {
-    auto tables = accord::util::Serialization::
-            deserealize<std::vector<
-            accord::types::ChannelsTable>>(body);
-    Server *server = (Server*) data;
+    const auto res = accord::util::Serialization::
+            deserealize<accord::types::ChannelsReturn>(body);
+    const auto &tables = res.channels;
+    const auto &community = res.community;
+    const auto communityString = QString::fromStdString(std::to_string(community));
+    auto server = (Server*) data;
+    auto &channelsMap = server->backend.channelsMap;
+
+    channelsMap.insert(communityString, QVariant::fromValue(new DataList()));
+
+    if (tables.empty()) {
+        server->backend.qmlContext->setContextProperty("channelsMap",
+                                                channelsMap);
+        return false;
+    }
+
     std::vector<ChannelsTable*> ownTables;
     for (auto &table : tables) {
         auto ownTable = new ChannelsTable;
@@ -224,12 +236,7 @@ bool BackEnd::handleChannelsTable(PacketData *data, const std::vector<char> &bod
         ownTables.push_back(ownTable);
     }
 
-    auto &channelsMap = server->backend.channelsMap;
-    auto it = channelsMap.find(ownTables[0]->community);
-    if (it == channelsMap.end())
-        channelsMap.insert(ownTables[0]->community, QVariant::fromValue(new DataList()));
-
-    auto list = channelsMap[ownTables[0]->community];
+    auto list = channelsMap[communityString];
     list.value<DataList*>()->fromVector(ownTables);
     server->backend.qmlContext->setContextProperty("channelsMap",
                                             channelsMap);

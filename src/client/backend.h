@@ -61,7 +61,7 @@ public:
     int members;
     int channels;
 
-    void fromShared(accord::types::CommunitiesTable &table)
+    void fromShared(const accord::types::CommunitiesTable &table)
     {
         id = QString::fromStdString(std::to_string(table.id));
         name = QString::fromStdString(table.name);

@@ -11,6 +11,7 @@
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/types/Request.h>
+#include <accordshared/types/Return.h>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -208,12 +209,13 @@ bool PacketHandlers::handleChannels(PacketData *data,
     const auto channels = client->thread.database.getChannelsForCommunity(
                 community);
 
-    std::vector<types::ChannelsTable> shared;
+    types::ChannelsReturn ret;
+    ret.community = community;
     for (auto channel : channels)
-        shared.push_back(database::Database::channelServerToShared(channel));
+        ret.channels.push_back(database::Database::channelServerToShared(channel));
 
     network::SerializationPacket packet;
-    const auto json = util::Serialization::serialize(shared);
+    const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::CHANNELS_REQUEST, std::string(
                                           json.begin(), json.end()));
     client->write(msg);
