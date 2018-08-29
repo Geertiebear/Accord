@@ -4,8 +4,6 @@ import QtQuick.Controls 2.2
 import QtGraphicalEffects 1.0
 
 ClientForm {
-    property bool communitySelected: false
-
     background: Rectangle {
         color: "#5d5959"
     }
@@ -37,7 +35,12 @@ ClientForm {
                         }
                     }
                 }
-                onClicked: print("LOL");
+                onClicked: {
+                    var id = modelData.id;
+                    selectedCommunity = id;
+                    backend.loadChannels(id);
+                }
+
                 text: modelData.name
                 radius: 50
                 width: 65

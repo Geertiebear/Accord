@@ -139,6 +139,7 @@ signals:
 public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
+    bool loadChannels(QString id);
     void addCommunity(QString name, QUrl file);
     void readyRead();
 private:

@@ -158,13 +158,6 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     auto msg = packet.construct(accord::types::COMMUNITIES_TABLE_REQUEST,
                                 std::string());
     server->backend.write(Util::convertCharVectorToQt(msg));
-
-    //TODO: more temp shit :>
-    accord::types::Channels request(10209942851463728217);
-    const auto json = accord::util::Serialization::serialize(request);
-    msg = packet.construct(accord::types::CHANNELS_REQUEST,
-                           std::string(json.begin(), json.end()));
-    server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
 
@@ -176,6 +169,18 @@ bool BackEnd::regist(QString name, QString email, QString password)
                                               password.toStdString());
     QByteArray msg = Util::convertCharVectorToQt(data);
     return write(msg);
+}
+
+bool BackEnd::loadChannels(QString id)
+{
+    quint64 intId = id.toULongLong();
+    //TODO: more temp shit :>
+    accord::types::Channels request(intId);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::CHANNELS_REQUEST,
+                           std::string(json.begin(), json.end()));
+   return write(Util::convertCharVectorToQt(msg));
 }
 
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)

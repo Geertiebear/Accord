@@ -10,7 +10,7 @@ Page {
     property alias button2: button2
     property alias listView: listView
     property alias addCommunityButton: addCommunityButton
-    property bool communitySelected: false
+    property string selectedCommunity
     width: 1920
 
     ScrollView {
@@ -126,15 +126,11 @@ Page {
             anchors.topMargin: 10
             anchors.bottom: parent.bottom
             anchors.top: parent.top
-            model: channelsMap["10209942851463728217"].data
+            model: channelsMap[selectedCommunity].data
             delegate: channelDelegate
             focus: true
         }
         anchors.top: parent.top
         anchors.bottomMargin: 50
-    }
-
-    ListModel {
-        id: emptyModel
     }
 }
