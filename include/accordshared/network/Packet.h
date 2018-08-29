@@ -39,8 +39,6 @@ public:
 
 
     //helper functions for serializing different types of data
-    //different from Serialization::insterData because here we binary
-    //encode some things
     template<typename T>
     static std::enable_if_t<std::is_same<T, uint16_t>::value> write(std::vector<char> &msg, T data)
     {
@@ -52,6 +50,12 @@ public:
 
     template<typename T>
     static std::enable_if_t<std::is_same<T, std::string>::value> write(std::vector<char> &msg, T data)
+    {
+        std::copy(data.begin(), data.end(), std::back_inserter(msg));
+    }
+
+    template<typename T>
+    static std::enable_if_t<std::is_same<T, std::vector<char>>::value> write(std::vector<char> &msg, T data)
     {
         std::copy(data.begin(), data.end(), std::back_inserter(msg));
     }

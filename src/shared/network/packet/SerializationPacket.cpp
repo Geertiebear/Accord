@@ -3,7 +3,8 @@
 namespace accord {
 namespace network {
 
-std::vector<char> SerializationPacket::construct(uint16_t id, const std::string &data)
+std::vector<char> SerializationPacket::construct(uint16_t id,
+                                                 const std::vector<char> &data)
 {
     std::vector<char> result;
     writeHeader(SERIALIZATION_PACKET, sizeof(uint16_t) + data.size(), result);

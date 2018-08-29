@@ -146,8 +146,7 @@ bool PacketHandlers::handleCommunitiesTable(PacketData *data, const std::vector<
 
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(shared);
-    const auto msg = packet.construct(types::COMMUNITIES_TABLE_REQUEST,
-                                      std::string(json.begin(), json.end()));
+    const auto msg = packet.construct(types::COMMUNITIES_TABLE_REQUEST, json);
     client->write(msg);
     return true;
 }
@@ -186,7 +185,7 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     types::CommunitiesTable table = database::Database::communityServerToShared(community);
     network::SerializationPacket packet;
     auto json = util::Serialization::serialize(table);
-    auto msg = packet.construct(types::COMMUNITIES_TABLE_REQUEST, std::string(json.begin(), json.end()));
+    auto msg = packet.construct(types::COMMUNITIES_TABLE_REQUEST, json);
     client->write(msg);
 
     //done for now
@@ -216,8 +215,7 @@ bool PacketHandlers::handleChannels(PacketData *data,
 
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
-    const auto msg = packet.construct(types::CHANNELS_REQUEST, std::string(
-                                          json.begin(), json.end()));
+    const auto msg = packet.construct(types::CHANNELS_REQUEST, json);
     client->write(msg);
 
     return true;
