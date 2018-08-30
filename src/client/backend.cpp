@@ -19,7 +19,7 @@
 std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::noopPacket,
     &BackEnd::receiveErrorPacket,
-    &BackEnd::noopPacket,
+    &BackEnd::receiveDisconnectPacket,
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
     &BackEnd::receiveTokenPacket,
@@ -146,6 +146,13 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
     }
 
     return false;
+}
+
+bool BackEnd::receiveDisconnectPacket(const std::vector<char> &body, PacketData *data)
+{
+    auto server = (Server*) data;
+    server->backend.connected = false;
+    return true;
 }
 
 bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data)

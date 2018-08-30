@@ -121,6 +121,7 @@ public:
 
     static bool noopPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveErrorPacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveDisconnectPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
 
@@ -130,6 +131,7 @@ public:
     DataList communitiesList;
     QVariantMap channelsMap;
     QQmlContext *qmlContext;
+    bool connected;
 signals:
     void authenticated();
     void failedAuthenticated();
@@ -149,7 +151,6 @@ private:
     QByteArray read(qint64 maxSize);
     void doConnect();
     QSslSocket socket;
-    bool connected;
     Server state;
     QVector<char> readFile(QFile &file);
     void handleFileError(QUrl file);

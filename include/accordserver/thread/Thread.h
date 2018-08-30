@@ -46,6 +46,7 @@ struct Client : public PacketData {
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;
+    bool remove = false;
 
     void write(const std::vector<char> &msg);
 };
@@ -58,8 +59,9 @@ public:
     void stop();
     void wake();
     void start();
+    void disconnectClient(Client *client);
+    void removeClient(Client *client);
     void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
-	void removeClient(Client *client);
     void broadcast(const std::string &message, int channel);
 
     //callbacks

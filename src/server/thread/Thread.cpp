@@ -18,6 +18,7 @@
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/packet/ErrorPacket.h>
 #include <accordshared/network/packet/SerializationPacket.h>
+#include <accordshared/network/packet/DisconnectPacket.h>
 #include <accordshared/util/BinUtil.h>
 #include <accordshared/types/Database.h>
 
@@ -105,6 +106,14 @@ void Thread::removeClient(Client *client)
 	delete client;
 }
 
+void Thread::disconnectClient(Client *client)
+{
+    network::DisconnectPacket packet;
+    const auto msg = packet.construct();
+    client->write(msg);
+    client->remove = true;
+}
+
 void Thread::broadcast(const std::string &message, int channel)
 {
 	for (Client *client : clients) {
@@ -170,7 +179,7 @@ void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 	if (events & BEV_EVENT_TIMEOUT) {
 	    log::Logger::log(log::DEBUG, "A client has timed out, closing connection!");
 		Client *client = (Client*) data;
-		client->thread.removeClient(client);
+        client->thread.disconnectClient(client);
 	}
 }
 
@@ -204,6 +213,11 @@ void Thread::writeCallback(struct bufferevent *bufferEvent, void *data)
 {
     Client *client = (Client*) data;
     auto &buffer = client->writeBuffer;
+
+    if (buffer.empty() && client->remove) {
+        client->thread.removeClient(client);
+        return;
+    }
 
     if (buffer.empty())
         return;
