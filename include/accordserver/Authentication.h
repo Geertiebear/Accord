@@ -1,15 +1,18 @@
 #ifndef ACCORD_AUTHENTICATION_H
 #define ACCORD_AUTHENTICATION_H
 
-#include <map>
+#include <string>
 #include <mutex>
 #include <stddef.h>
 #include <accordserver/database/Database.h>
+#include <boost/bimap.hpp>
 
 namespace accord {
 
 #define SALT_LEN 32
 #define TOKEN_LEN 32
+
+using TokensMapType = boost::bimap<uint64_t, std::string>;
 
 class Authentication {
 public:
@@ -17,8 +20,9 @@ public:
                              std::string email, std::string password);
     static std::string authUser(database::Database &database,
                          std::string login, std::string password);
+    static bool checkToken(const std::string &token);
 private:
-    static std::map<mysqlpp::sql_bigint_unsigned, std::string> tokens;
+    static TokensMapType tokens;
     static std::mutex tokensMutex;
 };
 

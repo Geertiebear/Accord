@@ -163,8 +163,11 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
 
     //TODO: temp
     accord::network::SerializationPacket packet;
+    accord::types::Communities request(std::string(
+                            server->token.begin(), server->token.end()));
+    const auto json = accord::util::Serialization::serialize(request);
     auto msg = packet.construct(accord::types::COMMUNITIES_TABLE_REQUEST,
-                                std::vector<char>());
+                                json);
     server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
@@ -182,7 +185,8 @@ bool BackEnd::regist(QString name, QString email, QString password)
 bool BackEnd::loadChannels(QString id)
 {
     quint64 intId = id.toULongLong();
-    accord::types::Channels request(intId);
+    accord::types::Channels request(intId,
+                            std::string(state.token.begin(), state.token.end()));
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::CHANNELS_REQUEST, json);
@@ -258,7 +262,7 @@ void BackEnd::addCommunity(QString name, QUrl file)
         return;
     }
 
-    AddCommunity request(name, buffer);
+    AddCommunity request(name, buffer, state.token);
     auto shared = request.toShared();
     auto data = accord::util::Serialization::serialize(shared);
     accord::network::SerializationPacket packet;

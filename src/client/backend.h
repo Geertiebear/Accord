@@ -36,14 +36,17 @@ struct Server : public PacketData {
 class AddCommunity {
 public:
     AddCommunity() { }
-    AddCommunity(QString name, QVector<char> profilepic)
-        : name(name), profilepic(profilepic) { }
+    AddCommunity(QString name, QVector<char> profilepic, QString token)
+        : name(name), profilepic(profilepic), token(token) { }
     QString name;
     QVector<char> profilepic;
+    QString token;
 
     accord::types::AddCommunity toShared()
     {
-        return accord::types::AddCommunity(name.toStdString(), profilepic.toStdVector());
+        return accord::types::AddCommunity(name.toStdString(),
+                                           profilepic.toStdVector(),
+                                           token.toStdString());
     }
 };
 

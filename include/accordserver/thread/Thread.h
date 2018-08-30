@@ -41,8 +41,6 @@ struct Client : public PacketData {
 	struct bufferevent* bufferEvent;
 	int channel;
     database::table_users user;
-    std::string token;
-    bool authenticated;
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;

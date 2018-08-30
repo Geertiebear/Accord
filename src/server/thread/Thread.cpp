@@ -86,7 +86,6 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
     Client *client = new Client(server, *this);
     client->channel = 0;
 	client->bufferEvent = bufferEvent;
-    client->authenticated = false;
     client->hasPartialPacket = false;
     client->writeBuffer.clear();
 

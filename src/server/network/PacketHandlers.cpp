@@ -70,7 +70,6 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     std::string token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[1]);
     //authenticate the user
-    client->token = token;
     if (token.length() != TOKEN_LEN) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
@@ -78,7 +77,6 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         return false;
     }
     client->user = client->thread.database.getUser(strings[0]);
-    client->authenticated = true;
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
     //send token to client
@@ -131,11 +129,14 @@ bool PacketHandlers::receiveSerializationPacket(const std::vector<char> &body, P
 
 bool PacketHandlers::handleCommunitiesTable(PacketData *data, const std::vector<char> &body)
 {
+    const auto request = util::Serialization::deserealize<
+            types::Communities>(body);
     thread::Client *client = (thread::Client*) data;
-    if (!client->authenticated) {
+    if (!Authentication::checkToken(request.token)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
         client->write(msg);
+        return false;
     }
 
     const auto communities = client->thread.database.getCommunitiesForUser(
@@ -155,6 +156,13 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
 {
     types::AddCommunity request = util::Serialization::deserealize<
             types::AddCommunity>(body);
+    thread::Client *client = (thread::Client*) data;
+
+    if (!Authentication::checkToken(request.token)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
+    }
 
     //compress the image to a 200x200 jpg first and put it in the request
     auto &profilepic = request.profilepic;
@@ -170,7 +178,6 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     std::copy(imageData, imageData + imageLength, std::back_inserter(profilepic));
     log::Logger::log(log::DEBUG, "profilepic.size(): " + std::to_string(profilepic.size()));
 
-    thread::Client *client = (thread::Client*) data;
     uint64_t communityId = util::CryptoUtil::getRandomUINT64();
     database::table_communities community;
     if (!client->thread.database.initCommunity(communityId,
@@ -196,14 +203,14 @@ bool PacketHandlers::handleChannels(PacketData *data,
                                     const std::vector<char> &body)
 {
     thread::Client *client = (thread::Client*) data;
-    if (!client->authenticated) {
+    const auto request = util::Serialization::deserealize<
+            types::Channels>(body);
+    if (!Authentication::checkToken(request.token)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
         client->write(msg);
         return false;
     }
-    const auto request = util::Serialization::deserealize<
-            types::Channels>(body);
     const auto &community = request.community;
     const auto channels = client->thread.database.getChannelsForCommunity(
                 community);

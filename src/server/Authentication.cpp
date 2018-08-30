@@ -3,11 +3,12 @@
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/CryptoUtil.h>
 
+#include <algorithm>
 #include <argon2.h>
 
 namespace accord {
 
-std::map<mysqlpp::sql_bigint_unsigned, std::string> Authentication::tokens;
+TokensMapType Authentication::tokens;
 std::mutex Authentication::tokensMutex;
 
 bool Authentication::registerUser(database::Database &database,
@@ -51,9 +52,9 @@ std::string Authentication::authUser(database::Database &database,
         return std::string("");
 
     std::unique_lock<std::mutex> lock(tokensMutex);
-    auto it = tokens.find(user.id());
-    if (it != tokens.end())
-        return tokens[user.id()];
+    auto it = tokens.left.find(user.id());
+    if (it != tokens.left.end())
+        return tokens.left.at(user.id());
     lock.unlock();
 
     std::string storedHash(user.password());
@@ -75,9 +76,15 @@ std::string Authentication::authUser(database::Database &database,
         return std::string("");
 
     lock.lock();
-    tokens.insert(std::make_pair(user.id(), token));
+    tokens.insert(TokensMapType::value_type(user.id(), token));
     log::Logger::log(log::DEBUG, "Successfly authenticated user!");
     return token;
+}
+
+bool Authentication::checkToken(const std::string &token)
+{
+    std::unique_lock<std::mutex> lock(tokensMutex);
+    return tokens.right.find(token) != tokens.right.end();
 }
 
 } /* namespace accord */
