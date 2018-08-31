@@ -107,6 +107,7 @@ public:
     bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
+    bool isUserInCommunity(uint64_t userId, uint64_t communityId);
     table_users getUser(const std::string &login);
     table_users getUser(uint64_t id);
     table_channels getChannel(uint64_t id);

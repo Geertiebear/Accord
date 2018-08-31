@@ -207,13 +207,33 @@ bool PacketHandlers::handleChannels(PacketData *data,
     thread::Client *client = (thread::Client*) data;
     const auto request = util::Serialization::deserealize<
             types::Channels>(body);
+    /* check if token is valid */
     if (!Authentication::checkToken(request.token)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
         client->write(msg);
         return false;
     }
+
+    if (!client->user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
+        return false;
+    }
+
     const auto &community = request.community;
+
+    /* check if user is in community
+     * we don't want random users querying for channels
+     */
+    if (!client->thread.database.isUserInCommunity(
+                client->user.id(), community)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(FORBIDDEN_ERR);
+        client->write(msg);
+        return false;
+    }
     const auto channels = client->thread.database.getChannelsForCommunity(
                 community);
 
