@@ -28,7 +28,8 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
 
 accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable },
-    { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable}
+    { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable},
+    { accord::types::AUTH_REQUEST, &BackEnd::handleAuth}
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -158,13 +159,12 @@ bool BackEnd::receiveDisconnectPacket(const std::vector<char> &body, PacketData 
 bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data)
 {
     Server *server = (Server*) data;
-    server->token = Util::convertCharVectorToQt(body);
+    //server->token = Util::convertCharVectorToQt(body);
     server->backend.authenticated();
 
     //TODO: temp
     accord::network::SerializationPacket packet;
-    accord::types::Communities request(std::string(
-                            server->token.begin(), server->token.end()));
+    accord::types::Communities request(server->token.token);
     const auto json = accord::util::Serialization::serialize(request);
     auto msg = packet.construct(accord::types::COMMUNITIES_TABLE_REQUEST,
                                 json);
@@ -185,8 +185,7 @@ bool BackEnd::regist(QString name, QString email, QString password)
 bool BackEnd::loadChannels(QString id)
 {
     quint64 intId = id.toULongLong();
-    accord::types::Channels request(intId,
-                            std::string(state.token.begin(), state.token.end()));
+    accord::types::Channels request(intId, state.token.token);
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::CHANNELS_REQUEST, json);
@@ -253,6 +252,18 @@ bool BackEnd::handleChannelsTable(PacketData *data, const std::vector<char> &bod
     return true;
 }
 
+bool BackEnd::handleAuth(PacketData *data, const std::vector<char> &body)
+{
+    const auto token = accord::util::Serialization::deserealize<
+            accord::types::Token>(body);
+    auto server = (Server*) data;
+    server->token = token;
+
+    //TODO: temp
+    receiveTokenPacket(std::vector<char>(), data);
+    return true;
+}
+
 void BackEnd::addCommunity(QString name, QUrl file)
 {
     QFile fileObj(file.toLocalFile());
@@ -262,7 +273,8 @@ void BackEnd::addCommunity(QString name, QUrl file)
         return;
     }
 
-    AddCommunity request(name, buffer, state.token);
+    AddCommunity request(name, buffer,
+                         QString::fromStdString(state.token.token));
     auto shared = request.toShared();
     auto data = accord::util::Serialization::serialize(shared);
     accord::network::SerializationPacket packet;

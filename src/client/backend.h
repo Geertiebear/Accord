@@ -12,6 +12,7 @@
 #include <QQmlContext>
 #include <string>
 
+#include <accordshared/types/Return.h>
 #include <accordshared/types/Request.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/network/PacketData.h>
@@ -29,7 +30,7 @@ struct PacketBuffer {
 
 struct Server : public PacketData {
     Server(BackEnd &backend) : backend(backend) { }
-    QByteArray token;
+    accord::types::Token token;
     BackEnd &backend;
 };
 
@@ -130,6 +131,7 @@ public:
 
     static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
     static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
+    static bool handleAuth(PacketData *data, const std::vector<char> &body);
 
     DataList communitiesList;
     QVariantMap channelsMap;

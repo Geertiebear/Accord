@@ -5,10 +5,11 @@
 
 #include <algorithm>
 #include <argon2.h>
+#include <chrono>
 
 namespace accord {
 
-TokensMapType Authentication::tokens;
+std::vector<std::string> Authentication::tokens;
 std::mutex Authentication::tokensMutex;
 
 bool Authentication::registerUser(database::Database &database,
@@ -43,25 +44,19 @@ bool Authentication::registerUser(database::Database &database,
  * Returns session token and puts it in the map
  * the function has errored when it returns an empty string
  */
-std::string Authentication::authUser(database::Database &database,
+types::Token Authentication::authUser(database::Database &database,
                               std::string login, std::string password)
 {
     log::Logger::log(log::DEBUG, "Authenticating user!");
     database::table_users user = database.getUser(login);
     if (user.table == NULL)
-        return std::string("");
-
-    std::unique_lock<std::mutex> lock(tokensMutex);
-    auto it = tokens.left.find(user.id());
-    if (it != tokens.left.end())
-        return tokens.left.at(user.id());
-    lock.unlock();
+        return types::Token();
 
     std::string storedHash(user.password());
     std::string salt(user.salt());
     if (salt.length() != SALT_LEN) {
         log::Logger::log(log::ERROR, "Login " + login + " has invalid salt!");
-        return std::string("");
+        return types::Token();
     }
     std::vector<char> buffer;
     buffer.resize(32);
@@ -69,22 +64,54 @@ std::string Authentication::authUser(database::Database &database,
                      salt.c_str(), salt.length(), &buffer[0], 32);
     std::string hash = util::CryptoUtil::charToHex(buffer);
     if (hash != storedHash)
-        return std::string("invalid");
+        return types::Token();
 
-    std::string token = util::CryptoUtil::getRandomString(TOKEN_LEN);
-    if (token.empty())
-        return std::string("");
+    std::string key = util::CryptoUtil::getRandomString(TOKEN_LEN);
+    if (key.empty())
+        return types::Token();
 
-    lock.lock();
-    tokens.insert(TokensMapType::value_type(user.id(), token));
+    std::time_t currentTime = std::chrono::system_clock::now().
+            time_since_epoch().count();
+    std::time_t expiration = currentTime + TOKEN_LIFETIME;
+
+    std::vector<char> token = constructVectorFromTokenData(
+                key, user.id(), expiration);
+
+    std::string tokenHash = util::CryptoUtil::sha256(token);
+    std::unique_lock<std::mutex> lock(tokensMutex);
+    tokens.push_back(tokenHash);
+
+    types::Token res(tokenHash, key, user.id(), expiration);
     log::Logger::log(log::DEBUG, "Successfly authenticated user!");
-    return token;
+    return res;
+}
+
+bool Authentication::authUser(const types::Token &token)
+{
+    std::vector<char> toHash = constructVectorFromTokenData(
+                token.key, token.id, token.expiration);
+    auto hash = util::CryptoUtil::sha256(toHash);
+    return hash == token.token && checkToken(hash);
 }
 
 bool Authentication::checkToken(const std::string &token)
 {
     std::unique_lock<std::mutex> lock(tokensMutex);
-    return tokens.right.find(token) != tokens.right.end();
+    return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
+}
+
+std::vector<char> Authentication::constructVectorFromTokenData(
+        const std::string &key, uint64_t id, std::time_t expiration)
+{
+    std::vector<char> res;
+    std::copy(key.begin(), key.end(), std::back_inserter(res));
+
+    std::string userIdString = std::to_string(id);
+    std::string timeString = std::to_string(expiration);
+    std::copy(userIdString.begin(), userIdString.end(),
+              std::back_inserter(res));
+    std::copy(timeString.begin(), timeString.end(), std::back_inserter(res));
+    return res;
 }
 
 } /* namespace accord */

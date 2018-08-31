@@ -2,6 +2,7 @@
 #define ACCORD_TYPES_RETURN_H
 
 #include <vector>
+#include <ctime>
 
 #include <cereal/types/vector.hpp>
 
@@ -24,6 +25,23 @@ public:
     void serialize(Archive &archive)
     {
         archive(channels, community);
+    }
+};
+
+class Token {
+public:
+    Token() { }
+    Token(const std::string &token, const std::string &key,
+          uint64_t id, std::time_t expiration) : token(token), key(key), id(id),
+        expiration(expiration) { }
+    std::string token, key;
+    uint64_t id;
+    std::time_t expiration;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(token, key, id, expiration);
     }
 };
 

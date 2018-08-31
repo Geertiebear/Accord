@@ -67,10 +67,10 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         client->write(msg);
         return false;
     }
-    std::string token = Authentication::authUser(client->thread.database,
+    const auto token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[1]);
     //authenticate the user
-    if (token.length() != TOKEN_LEN) {
+    if (token.token.length() != TOKEN_LEN) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
         client->write(msg);
@@ -80,9 +80,10 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
     //send token to client
-    network::TokenPacket packet;
-    std::vector<char> message = packet.construct(token);
-    client->write(message);
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(token);
+    const auto msg = packet.construct(types::AUTH_REQUEST, json);
+    client->write(msg);
 
     return true;
 }
@@ -106,10 +107,11 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
         return false;
     }
 
-    std::string token = Authentication::authUser(client->thread.database,
+    const auto token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[2]);
-    network::TokenPacket packet;
-    std::vector<char> message = packet.construct(token);
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(token);
+    std::vector<char> message = packet.construct(types::AUTH_REQUEST, json);
     client->write(message);
 
     return true;

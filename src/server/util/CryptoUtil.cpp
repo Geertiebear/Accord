@@ -2,6 +2,7 @@
 
 #include <accordserver/log/Logger.h>
 #include <openssl/rand.h>
+#include <openssl/sha.h>
 #include <stdlib.h>
 #include <vector>
 
@@ -65,6 +66,16 @@ std::string CryptoUtil::getRandomString(int length)
         return getRandomString(length);
     else
         return ret;
+}
+
+std::string CryptoUtil::sha256(const std::vector<char> &data)
+{
+    std::vector<unsigned char> array(SHA256_DIGEST_LENGTH);
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, &data[0], data.size());
+    SHA256_Final(&array[0], &ctx);
+    return charToHex(std::vector<char>(array.begin(), array.end()));
 }
 
 uint64_t CryptoUtil::getRandomUINT64()

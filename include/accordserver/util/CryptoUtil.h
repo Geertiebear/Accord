@@ -14,6 +14,8 @@ public:
     static std::vector<char> hexToChar(std::string hex);
     static std::string charToHex(std::vector<char> array);
     static std::string getRandomString(int length);
+    /* returns hash of data in hex form */
+    static std::string sha256(const std::vector<char> &data);
     static uint64_t getRandomUINT64();
 };
 
