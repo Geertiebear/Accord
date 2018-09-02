@@ -157,6 +157,7 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
                                               AUTH_WITH_TOKEN_REQUEST, json);
             QByteArray array = Util::convertCharVectorToQt(msg);
             server->backend.write(array);
+            server->backend.retryFailedRequest();
             break;
     }
 
@@ -203,6 +204,7 @@ bool BackEnd::loadChannels(QString id)
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::CHANNELS_REQUEST, json);
+    lastRequest = msg;
     return write(Util::convertCharVectorToQt(msg));
 }
 
@@ -294,6 +296,14 @@ bool BackEnd::handleCommunityTable(PacketData *data, const std::vector<char> &bo
     return true;
 }
 
+void BackEnd::retryFailedRequest()
+{
+    if (lastRequest.empty())
+        return;
+    write(Util::convertCharVectorToQt(lastRequest));
+    lastRequest.clear();
+}
+
 void BackEnd::addCommunity(QString name, QUrl file)
 {
     QFile fileObj(file.toLocalFile());
@@ -309,6 +319,7 @@ void BackEnd::addCommunity(QString name, QUrl file)
     auto data = accord::util::Serialization::serialize(shared);
     accord::network::SerializationPacket packet;
     auto msg = packet.construct(accord::types::ADD_COMMUNITY_REQUEST, data);
+    lastRequest = msg;
     write(Util::convertCharVectorToQt(msg));
 }
 

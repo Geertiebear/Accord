@@ -134,9 +134,12 @@ public:
     static bool handleAuth(PacketData *data, const std::vector<char> &body);
     static bool handleCommunityTable(PacketData *data, const std::vector<char> &body);
 
+    void retryFailedRequest();
+
     DataList communitiesList;
     QVariantMap channelsMap;
     QQmlContext *qmlContext;
+    std::vector<char> lastRequest;
     bool connected;
 signals:
     void authenticated();
