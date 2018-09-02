@@ -377,6 +377,30 @@ bool Database::acceptFriendRequest(uint64_t id)
     return query.execute();
 }
 
+bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
+{
+    auto query = connection.query("SELECT * FROM community_members WHERE"
+                                  " id=" + std::to_string(communityId) +
+                                  " AND user=" + std::to_string(userId));
+    std::vector<community_members> res;
+    query.storein(res);
+    if (res.size() > 1) {
+        /* there is something wrong with the database,
+         * assume that the user is in there
+         * and report a warning. This is non-fatal
+         * no need to crash the server or inconvencience
+         * the client
+         */
+        log::Logger::log(log::WARNING, "There are multiple entries"
+                                       "for a user in community_members."
+                                       "PLEASE CHECK!");
+        return true;
+    }
+    if (res.size() == 0)
+        return false;
+    return true;
+}
+
 table_users Database::getUser(const std::string &login)
 {
     mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
