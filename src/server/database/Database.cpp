@@ -38,6 +38,12 @@ sql_create_4(channels, 1, 4,
              mysqlpp::sql_varchar, name,
              mysqlpp::sql_varchar, description);
 
+sql_create_4(messages, 1, 4,
+             mysqlpp::sql_bigint_unsigned, id,
+             mysqlpp::sql_bigint_unsigned, community,
+             mysqlpp::sql_varchar, contents,
+             mysqlpp::sql_bigint_unsigned, timestamp);
+
 table_users::table_users(std::shared_ptr<users> table) : table(table)
 {}
 
@@ -166,6 +172,29 @@ mysqlpp::sql_varchar &table_channels::description()
     return table->description;
 }
 
+table_messages::table_messages(std::shared_ptr<messages> table)
+    : table(table) { }
+
+mysqlpp::sql_bigint_unsigned &table_messages::id()
+{
+    return table->id;
+}
+
+mysqlpp::sql_bigint_unsigned &table_messages::channel()
+{
+    return table->channel;
+}
+
+mysqlpp::sql_varchar &table_messages::contents()
+{
+    return table->contents;
+}
+
+mysqlpp::sql_bigint_unsigned &table_messages::timestamp()
+{
+    return table->timestamp;
+}
+
 Database::Database(const DatabaseOptions &options)
     : options(options)
 {
@@ -214,6 +243,10 @@ bool Database::verify()
     if (res = query.store())
         if (res.empty())
             return false;
+    query = connection.query("SHOW TABLES LIKE 'messages'");
+    if (res = query.store())
+        if (res.empty())
+            return false;
     return true;
 }
 
@@ -249,6 +282,12 @@ bool Database::initDatabase()
                     "CREATE TABLE channels (id BIGINT UNSIGNED, "
                     "community BIGINT UNSIGNED, name VARCHAR(255),"
                     "description VARCHAR(255))");
+        if (!query.execute())
+            return false;
+        query = connection.query(
+                    "CREATE TABLE messages (id BIGINT UNSIGNED, "
+                    "channel BIGINT UNSIGNED, contents VARCHAR(2000),"
+                    "timestamp BIGINT UNSIGNED)");
         if (!query.execute())
             return false;
     } catch (mysqlpp::BadQuery &e) {
@@ -311,6 +350,31 @@ bool Database::initChannel(uint64_t id, const types::AddChannel &request,
     if (!addChannel(request.community))
         return false;
     return true;
+}
+
+bool Database::initMessage(uint64_t id, uint64_t channel,
+                           const std::string&msg, uint64_t timestamp,
+                           table_messages *ret)
+{
+    table_messages check = getMessage(id);
+    if (check.table != nullptr)
+        return false;
+
+    auto query = connection.query();
+    messages message(id, channel, msg, timestamp);
+    query.insert(message);
+    if (!query.execute())
+        return false;
+    *ret = table_messages(std::make_shared<messages>(message));
+    return true;
+}
+
+bool Database::submitMessage(uint64_t channel, const std::string &msg)
+{
+    std::time_t currentTime = std::chrono::system_clock::now().
+            time_since_epoch().count();
+    auto id = util::CryptoUtil::getRandomUINT64();
+    return initMessage(id, channel, msg, currentTime);
 }
 
 bool Database::addMember(uint64_t id, uint64_t user)
@@ -464,6 +528,18 @@ table_communities Database::getCommunity(uint64_t id)
     return table;
 }
 
+table_messages Database::getMessage(uint64_t id)
+{
+    auto query = connection.query("SELECT * FROM messages WHERE"
+                                  "id=" + std::to_string(id));
+    std::vector<messages> res;
+    query.storein(res);
+    if (res.size() != 1)
+        return table_messages(nullptr);
+    table_messages table(std::make_shared<messages>(res[0]));
+    return table;
+}
+
 std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
 {
     std::vector<table_communities> ret;
@@ -491,6 +567,18 @@ std::vector<table_channels> Database::getChannelsForCommunity(uint64_t id)
         auto channel = std::make_shared<channels>(res[i]);
         ret.emplace_back(channel);
     }
+    return ret;
+}
+
+std::vector<table_messages> Database::getMessagesForChannel(uint64_t id)
+{
+    std::vector<table_messages> ret;
+    std::vector<messages> res;
+    auto query = connection.query("SELECT * FROM messages WHERE channel="
+                                  + std::to_string(id));
+    query.storein(res);
+    for (auto message : res)
+        ret.emplace_back(std::make_shared<messages>(message));
     return ret;
 }
 
