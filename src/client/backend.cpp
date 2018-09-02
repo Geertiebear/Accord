@@ -146,8 +146,10 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
             server->backend.failedRegistered();
             break;
         case accord::NOT_LOGGED_IN_ERR:
-            if (server->token.token.empty())
+            if (server->token.token.empty()) {
                 server->backend.failedAuthenticated();
+                break;
+            }
             accord::network::SerializationPacket packet;
             const auto json = accord::util::Serialization::serialize(
                         server->token);
