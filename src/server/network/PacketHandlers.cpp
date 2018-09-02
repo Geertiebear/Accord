@@ -196,7 +196,7 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     types::CommunitiesTable table = database::Database::communityServerToShared(community);
     network::SerializationPacket packet;
     auto json = util::Serialization::serialize(table);
-    auto msg = packet.construct(types::COMMUNITIES_TABLE_REQUEST, json);
+    auto msg = packet.construct(types::COMMUNITY_TABLE_REQUEST, json);
     client->write(msg);
 
     //done for now

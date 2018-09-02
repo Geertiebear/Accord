@@ -28,8 +28,9 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
 
 accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable },
-    { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable},
-    { accord::types::AUTH_REQUEST, &BackEnd::handleAuth}
+    { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable },
+    { accord::types::AUTH_REQUEST, &BackEnd::handleAuth },
+    { accord::types::COMMUNITY_TABLE_REQUEST, &BackEnd::handleCommunityTable }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -272,6 +273,22 @@ bool BackEnd::handleAuth(PacketData *data, const std::vector<char> &body)
 
     //TODO: temp
     receiveTokenPacket(std::vector<char>(), data);
+    return true;
+}
+
+bool BackEnd::handleCommunityTable(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto table = accord::util::Serialization::deserealize<
+            accord::types::CommunitiesTable>(body);
+    auto ownTable = new CommunitiesTable;
+    ownTable->fromShared(table);
+    server->backend.communityProfilepic(
+                table.id, ownTable->profilepic);
+    server->backend.communitiesList.data.append(
+                QVariant::fromValue(ownTable));
+    server->backend.qmlContext->setContextProperty("communitiesList",
+                                 &server->backend.communitiesList);
     return true;
 }
 

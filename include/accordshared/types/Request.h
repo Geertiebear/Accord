@@ -16,6 +16,7 @@ enum RequestIds {
     CHANNELS_REQUEST = 2,
     AUTH_REQUEST = 3, //with password
     AUTH_WITH_TOKEN_REQUEST = 4, //with token
+    COMMUNITY_TABLE_REQUEST = 5,
 };
 
 class Communities {
