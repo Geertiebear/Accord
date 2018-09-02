@@ -25,7 +25,8 @@ namespace network {
 util::FunctionMap PacketHandlers::serializationMap = {
     { types::ADD_COMMUNITY_REQUEST, &PacketHandlers::handleAddCommunityRequest },
     { types::COMMUNITIES_TABLE_REQUEST, &PacketHandlers::handleCommunitiesTable },
-    { types::CHANNELS_REQUEST, &PacketHandlers::handleChannels }
+    { types::CHANNELS_REQUEST, &PacketHandlers::handleChannels },
+    { types::AUTH_WITH_TOKEN_REQUEST, &PacketHandlers::handleTokenAuth }
 };
 
 bool PacketHandlers::receiveSendMessagePacket(const std::vector<char> &body, PacketData *data)
@@ -247,6 +248,24 @@ bool PacketHandlers::handleChannels(PacketData *data,
     const auto msg = packet.construct(types::CHANNELS_REQUEST, json);
     client->write(msg);
 
+    return true;
+}
+
+bool PacketHandlers::handleTokenAuth(PacketData *data, const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::Token>(body);
+    if (!Authentication::authUser(request)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    /* token is valid we can log the user in */
+    client->user = client->thread.database.getUser(
+                request.id);
     return true;
 }
 

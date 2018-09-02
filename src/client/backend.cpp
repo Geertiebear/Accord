@@ -83,6 +83,17 @@ void BackEnd::doConnect()
 
 bool BackEnd::authenticate(QString email, QString password)
 {
+    if (!state.token.token.empty()) {
+        accord::network::SerializationPacket packet;
+        const auto json = accord::util::Serialization::serialize(
+                    state.token);
+        const auto msg = packet.construct(accord::types::
+                                          AUTH_WITH_TOKEN_REQUEST, json);
+        QByteArray array = Util::convertCharVectorToQt(msg);
+        write(array);
+        authenticated();
+        return true;
+    }
     accord::network::AuthPacket packet;
     std::vector<char> data = packet.construct(email.toStdString(),
                                                password.toStdString());
