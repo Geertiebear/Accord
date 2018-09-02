@@ -110,6 +110,7 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
 
     const auto token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[2]);
+    client->user = client->thread.database.getUser(strings[0]);
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(token);
     std::vector<char> message = packet.construct(types::AUTH_REQUEST, json);
