@@ -143,6 +143,13 @@ bool PacketHandlers::handleCommunitiesTable(PacketData *data, const std::vector<
         return false;
     }
 
+    if (!client->user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
+        client->write(msg);
+        return false;
+    }
+
     const auto communities = client->thread.database.getCommunitiesForUser(
                 client->user.id());
     std::vector<types::CommunitiesTable> shared;
@@ -166,6 +173,14 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
         client->write(msg);
+        return false;
+    }
+
+    if (!client->user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
+        client->write(msg);
+        return false;
     }
 
     //compress the image to a 200x200 jpg first and put it in the request
@@ -219,7 +234,7 @@ bool PacketHandlers::handleChannels(PacketData *data,
 
     if (!client->user.table) {
         network::ErrorPacket packet;
-        const auto msg = packet.construct(AUTH_ERR);
+        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
         client->write(msg);
         return false;
     }

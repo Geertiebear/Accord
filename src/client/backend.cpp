@@ -84,17 +84,6 @@ void BackEnd::doConnect()
 
 bool BackEnd::authenticate(QString email, QString password)
 {
-    if (!state.token.token.empty()) {
-        accord::network::SerializationPacket packet;
-        const auto json = accord::util::Serialization::serialize(
-                    state.token);
-        const auto msg = packet.construct(accord::types::
-                                          AUTH_WITH_TOKEN_REQUEST, json);
-        QByteArray array = Util::convertCharVectorToQt(msg);
-        write(array);
-        authenticated();
-        return true;
-    }
     accord::network::AuthPacket packet;
     std::vector<char> data = packet.construct(email.toStdString(),
                                                password.toStdString());
@@ -156,6 +145,17 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
         case accord::REGIST_ERR:
             server->backend.failedRegistered();
             break;
+        case accord::NOT_LOGGED_IN_ERR:
+            if (server->token.token.empty())
+                server->backend.failedAuthenticated();
+            accord::network::SerializationPacket packet;
+            const auto json = accord::util::Serialization::serialize(
+                        server->token);
+            const auto msg = packet.construct(accord::types::
+                                              AUTH_WITH_TOKEN_REQUEST, json);
+            QByteArray array = Util::convertCharVectorToQt(msg);
+            server->backend.write(array);
+            break;
     }
 
     return false;
@@ -201,7 +201,7 @@ bool BackEnd::loadChannels(QString id)
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::CHANNELS_REQUEST, json);
-   return write(Util::convertCharVectorToQt(msg));
+    return write(Util::convertCharVectorToQt(msg));
 }
 
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
