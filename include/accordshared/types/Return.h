@@ -28,6 +28,35 @@ public:
     }
 };
 
+class MessagesReturn {
+public:
+    MessagesReturn() { }
+    MessagesReturn(const std::vector<MessagesTable> &messages,
+                   uint64_t channel)
+        : messages(messages), channel(channel) { }
+    std::vector<MessagesTable> messages;
+    uint64_t channel;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(messages, channel);
+    }
+};
+
+class MessageSuccess {
+public:
+    MessageSuccess() { }
+    MessageSuccess(uint64_t id) : id(id) { }
+    uint64_t id;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id);
+    }
+};
+
 class Token {
 public:
     Token() { }

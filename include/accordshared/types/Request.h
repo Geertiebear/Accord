@@ -17,6 +17,10 @@ enum RequestIds {
     AUTH_REQUEST = 3, //with password
     AUTH_WITH_TOKEN_REQUEST = 4, //with token
     COMMUNITY_TABLE_REQUEST = 5,
+    MESSAGE_REQUEST = 6,
+    MESSAGES_REQUEST = 7,
+    SEND_MESSAGE_REQUEST = 8,
+    MESSAGE_SUCCESS = 9, //signals that a message was received successfully
 };
 
 class Communities {
@@ -80,6 +84,38 @@ public:
     void serialize(Archive &archive)
     {
         archive(community, token);
+    }
+};
+
+class SendMessage {
+public:
+    SendMessage() { }
+    SendMessage(uint64_t channel, const std::string &msg,
+                uint64_t timestamp, const std::string &token)
+        : channel(channel), message(msg), timestamp(timestamp),
+          token(token) { }
+    uint64_t channel, timestamp;
+    std::string message, token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(channel, message, timestamp, token);
+    }
+};
+
+class Messages {
+public:
+    Messages() { }
+    Messages(uint64_t channel, const std::string &token)
+        : channel(channel), token(token) { }
+    uint64_t channel;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(channel, token);
     }
 };
 

@@ -49,6 +49,23 @@ public:
     }
 };
 
+class MessagesTable {
+public:
+    MessagesTable() { }
+    MessagesTable(uint64_t id, uint64_t channel,
+                  const std::string &msg, uint64_t timestamp)
+        : id(id), channel(channel), message(msg), timestamp(timestamp)
+    { }
+    uint64_t id, channel, timestamp;
+    std::string message;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, channel, message, timestamp);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

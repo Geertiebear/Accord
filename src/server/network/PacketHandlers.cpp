@@ -26,8 +26,28 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::ADD_COMMUNITY_REQUEST, &PacketHandlers::handleAddCommunityRequest },
     { types::COMMUNITIES_TABLE_REQUEST, &PacketHandlers::handleCommunitiesTable },
     { types::CHANNELS_REQUEST, &PacketHandlers::handleChannels },
-    { types::AUTH_WITH_TOKEN_REQUEST, &PacketHandlers::handleTokenAuth }
+    { types::AUTH_WITH_TOKEN_REQUEST, &PacketHandlers::handleTokenAuth },
+    { types::MESSAGES_REQUEST, &PacketHandlers::handleMessagesRequest },
+    { types::SEND_MESSAGE_REQUEST, &PacketHandlers::handleSubmitMessage }
 };
+
+bool checkLoggedIn(thread::Client *client, const std::string &token)
+{
+    if (!Authentication::checkToken(token)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(AUTH_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    if (!client->user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
+        client->write(msg);
+        return false;
+    }
+    return true;
+}
 
 bool PacketHandlers::receiveSendMessagePacket(const std::vector<char> &body, PacketData *data)
 {
@@ -205,6 +225,7 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
+        return false;
     }
 
     //we added a community, now let's send it back so that they can add it to their list
@@ -282,6 +303,63 @@ bool PacketHandlers::handleTokenAuth(PacketData *data, const std::vector<char> &
     /* token is valid we can log the user in */
     client->user = client->thread.database.getUser(
                 request.id);
+    return true;
+}
+
+bool PacketHandlers::handleMessagesRequest(PacketData *data, const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::Messages>(body);
+
+    if (!checkLoggedIn(client, request.token))
+        return false;
+
+    if (!client->thread.database.canUserViewChannel(client->user.id(),
+                                                    request.channel)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(FORBIDDEN_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    const auto messages = client->thread.database.getMessagesForChannel(
+                request.channel);
+    types::MessagesReturn ret;
+    ret.channel = request.channel;
+    for (auto message : messages)
+        ret.messages.push_back(database::Database::messageServerToShared
+                               (message));
+
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::MESSAGES_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleSubmitMessage(PacketData *data,
+                                         const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::SendMessage>(body);
+    database::table_messages message;
+    if (!client->thread.database.submitMessage(request.channel,
+                                               request.message,
+                                               request.timestamp,
+                                               &message)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(types::MessageSuccess(
+                                                         message.id()));
+    const auto msg = packet.construct(types::MESSAGE_SUCCESS, json);
+    client->write(msg);
     return true;
 }
 

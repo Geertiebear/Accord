@@ -24,6 +24,8 @@ public:
     static bool handleAddCommunityRequest(PacketData *data, const std::vector<char> &body);
     static bool handleChannels(PacketData *data, const std::vector<char> &body);
     static bool handleTokenAuth(PacketData *data, const std::vector<char> &body);
+    static bool handleMessagesRequest(PacketData *data, const std::vector<char> &body);
+    static bool handleSubmitMessage(PacketData *data, const std::vector<char> &body);
 };
 
 } /* namespace network */

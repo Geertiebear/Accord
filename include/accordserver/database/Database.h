@@ -116,12 +116,14 @@ public:
                      table_channels *ret = nullptr);
     bool initMessage(uint64_t id, uint64_t channel, const std::string &msg,
                      uint64_t timestamp, table_messages *ret = nullptr);
-    bool submitMessage(uint64_t channel, const std::string &msg);
+    bool submitMessage(uint64_t channel, const std::string &msg, uint64_t timestamp,
+                       table_messages *ret = nullptr);
     bool addMember(uint64_t id, uint64_t user);
     bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
     bool isUserInCommunity(uint64_t userId, uint64_t communityId);
+    bool canUserViewChannel(uint64_t userId, uint64_t channelId);
     table_users getUser(const std::string &login);
     table_users getUser(uint64_t id);
     table_channels getChannel(uint64_t id);
@@ -135,6 +137,7 @@ public:
     //helper functions
     static types::CommunitiesTable communityServerToShared(table_communities community);
     static types::ChannelsTable channelServerToShared(table_channels channel);
+    static types::MessagesTable messageServerToShared(table_messages message);
     static std::vector<char> sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob);
     static mysqlpp::sql_blob_null vectorChartoSqlBlobNullable(const std::vector<char> &vector);
 private:

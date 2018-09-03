@@ -40,7 +40,7 @@ sql_create_4(channels, 1, 4,
 
 sql_create_4(messages, 1, 4,
              mysqlpp::sql_bigint_unsigned, id,
-             mysqlpp::sql_bigint_unsigned, community,
+             mysqlpp::sql_bigint_unsigned, channel,
              mysqlpp::sql_varchar, contents,
              mysqlpp::sql_bigint_unsigned, timestamp);
 
@@ -369,12 +369,11 @@ bool Database::initMessage(uint64_t id, uint64_t channel,
     return true;
 }
 
-bool Database::submitMessage(uint64_t channel, const std::string &msg)
+bool Database::submitMessage(uint64_t channel, const std::string &msg,
+                             uint64_t timestamp, table_messages *ret)
 {
-    std::time_t currentTime = std::chrono::system_clock::now().
-            time_since_epoch().count();
     auto id = util::CryptoUtil::getRandomUINT64();
-    return initMessage(id, channel, msg, currentTime);
+    return initMessage(id, channel, msg, timestamp, ret);
 }
 
 bool Database::addMember(uint64_t id, uint64_t user)
@@ -455,6 +454,26 @@ bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
          * no need to crash the server or inconvencience
          * the client
          */
+        log::Logger::log(log::WARNING, "There are multiple entries"
+                                       "for a user in community_members."
+                                       "PLEASE CHECK!");
+        return true;
+    }
+    if (res.size() == 0)
+        return false;
+    return true;
+}
+
+bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
+{
+    auto query = connection.query("SELECT * FROM community_members WHERE id="
+                                  "(SELECT community FROM channels WHERE id="
+                                  + std::to_string(channelId) +
+                                  "AND user=" + std::to_string(userId));
+    std::vector<community_members> res;
+    query.storein(res);
+    if (res.size() > 1) {
+        /* same deal as above */
         log::Logger::log(log::WARNING, "There are multiple entries"
                                        "for a user in community_members."
                                        "PLEASE CHECK!");
@@ -598,6 +617,13 @@ types::ChannelsTable Database::channelServerToShared(table_channels channel)
                                 channel.description());
 }
 
+types::MessagesTable Database::messageServerToShared(table_messages message)
+{
+    return types::MessagesTable((uint64_t) message.id(),
+                                (uint64_t) message.channel(),
+                                (std::string) message.contents(),
+                                (uint64_t) message.timestamp());
+}
 
 std::vector<char> Database::sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob)
 {
