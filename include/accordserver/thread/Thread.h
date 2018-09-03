@@ -60,7 +60,7 @@ public:
     void disconnectClient(Client *client);
     void removeClient(Client *client);
     void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
-    void broadcast(const std::string &message, int channel);
+    void broadcast(const std::vector<char> &data);
 
     //callbacks
     static void readCallback(struct bufferevent *bufferEvent, void *data);

@@ -7,9 +7,6 @@ ClientForm {
     background: Rectangle {
         color: "#5d5959"
     }
-    button2.onClicked: {
-        channelList.model.append({})
-    }
 
     addCommunityButton.onClicked: {
         addCommunityPopup.open();
@@ -17,6 +14,11 @@ ClientForm {
 
     listView.onCountChanged: {
         addCommunityButton.anchors.topMargin = (65 * listView.count)
+    }
+
+    messageInput.onAccepted: {
+        backend.sendMessage(messageInput.text, selectedChannel);
+        messageInput.clear();
     }
         Component {
             id: communityDelegate
@@ -50,8 +52,14 @@ ClientForm {
         Component {
             id: channelDelegate
             Rectangle {
-                Label {
+                Button {
                     text: modelData.name
+                    onClicked: {
+                        var id = modelData.id;
+                        selectedChannel = id;
+                        backend.loadMessages(id);
+                    }
+
                     width: 50
                     height: 20
                 }
@@ -71,5 +79,12 @@ ClientForm {
             focus: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
             AddCommunity {}
+        }
+
+        Component {
+            id: messageDelegate
+            Text {
+                text: modelData.contents
+            }
         }
     }

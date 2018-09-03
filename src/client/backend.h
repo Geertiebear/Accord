@@ -80,6 +80,7 @@ Q_DECLARE_METATYPE(CommunitiesTable*)
 class ChannelsTable : public QObject {
   Q_OBJECT
   Q_PROPERTY(QString name MEMBER name CONSTANT)
+  Q_PROPERTY(QString id MEMBER id CONSTANT)
 public:
     ChannelsTable() { }
     QString id, community, name, description;
@@ -94,6 +95,22 @@ public:
 };
 
 Q_DECLARE_METATYPE(ChannelsTable*)
+
+class MessagesTable : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString contents MEMBER contents CONSTANT)
+public:
+    MessagesTable() { }
+    QString id, channel, contents, timestamp;
+
+    void fromShared(const accord::types::MessagesTable &table)
+    {
+        id = QString::fromStdString(std::to_string(table.id));
+        channel = QString::fromStdString(std::to_string(table.channel));
+        contents = QString::fromStdString(table.message);
+        timestamp = QString::fromStdString(std::to_string(table.timestamp));
+    }
+};
 
 /* generic object for displaying a list in QML
  * from a QVariantList */
@@ -133,11 +150,15 @@ public:
     static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
     static bool handleAuth(PacketData *data, const std::vector<char> &body);
     static bool handleCommunityTable(PacketData *data, const std::vector<char> &body);
+    static bool handleMessages(PacketData *data, const std::vector<char> &body);
+    static bool handleMessage(PacketData *data, const std::vector<char> &body);
+    static bool handleMessageSuccess(PacketData *data, const std::vector<char> &body);
 
     void retryFailedRequest();
 
     DataList communitiesList;
     QVariantMap channelsMap;
+    QVariantMap messagesMap;
     QQmlContext *qmlContext;
     std::vector<char> lastRequest;
     bool connected;
@@ -151,6 +172,8 @@ public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
     bool loadChannels(QString id);
+    bool loadMessages(QString id);
+    bool sendMessage(QString message, QString channel);
     void addCommunity(QString name, QUrl file);
     void readyRead();
 private:

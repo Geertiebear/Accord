@@ -4,13 +4,17 @@ import QtQuick.Controls 2.3
 import QtGraphicalEffects 1.0
 
 Page {
+    id: page
     height: Screen.desktopAvailableHeight
+    property alias messageInput: messageInput
+    property alias messagesList: messagesList
+    property alias messagesView: messagesView
     property alias channelList: channelList
     property alias channelView: channelView
-    property alias button2: button2
     property alias listView: listView
     property alias addCommunityButton: addCommunityButton
     property string selectedCommunity
+    property string selectedChannel
     width: 1920
 
     ScrollView {
@@ -100,13 +104,6 @@ Page {
         }
     }
 
-    Button {
-        id: button2
-        x: 688
-        y: 137
-        text: qsTr("Button")
-    }
-
     ScrollView {
         id: channelView
         x: 1
@@ -132,5 +129,46 @@ Page {
         }
         anchors.top: parent.top
         anchors.bottomMargin: 50
+    }
+
+    ScrollView {
+        id: messagesView
+        x: 2
+        y: 2
+        width: 1282
+        anchors.bottomMargin: 204
+        anchors.topMargin: 50
+        anchors.left: channelView.right
+        anchors.top: parent.top
+        ListView {
+            id: messagesList
+            y: 0
+            width: 100
+            height: parent.height
+            focus: true
+            model: messagesMap[selectedChannel].data
+            anchors.topMargin: 10
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.leftMargin: 70
+            delegate: messageDelegate
+        }
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 20
+    }
+
+    TextInput {
+        id: messageInput
+        x: 416
+        width: 1310
+        height: 86
+        text: qsTr("Text Input")
+        horizontalAlignment: Text.AlignHCenter
+        anchors.horizontalCenterOffset: 20
+        anchors.horizontalCenter: messagesView.horizontalCenter
+        anchors.top: messagesView.bottom
+        anchors.topMargin: 10
+        font.pixelSize: 12
     }
 }

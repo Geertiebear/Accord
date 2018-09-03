@@ -468,8 +468,8 @@ bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
 {
     auto query = connection.query("SELECT * FROM community_members WHERE id="
                                   "(SELECT community FROM channels WHERE id="
-                                  + std::to_string(channelId) +
-                                  "AND user=" + std::to_string(userId));
+                                  + std::to_string(channelId) + ")"
+                                  " AND user=" + std::to_string(userId));
     std::vector<community_members> res;
     query.storein(res);
     if (res.size() > 1) {
@@ -549,7 +549,7 @@ table_communities Database::getCommunity(uint64_t id)
 
 table_messages Database::getMessage(uint64_t id)
 {
-    auto query = connection.query("SELECT * FROM messages WHERE"
+    auto query = connection.query("SELECT * FROM messages WHERE "
                                   "id=" + std::to_string(id));
     std::vector<messages> res;
     query.storein(res);

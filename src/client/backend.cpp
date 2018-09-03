@@ -3,6 +3,7 @@
 #include <QDebug>
 
 #include <iostream>
+#include <chrono>
 #include <QErrorMessage>
 
 #include<accordshared/network/Packet.h>
@@ -30,7 +31,10 @@ accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::COMMUNITIES_TABLE_REQUEST, &BackEnd::handleCommunitiesTable },
     { accord::types::CHANNELS_REQUEST, &BackEnd::handleChannelsTable },
     { accord::types::AUTH_REQUEST, &BackEnd::handleAuth },
-    { accord::types::COMMUNITY_TABLE_REQUEST, &BackEnd::handleCommunityTable }
+    { accord::types::COMMUNITY_TABLE_REQUEST, &BackEnd::handleCommunityTable },
+    { accord::types::MESSAGES_REQUEST, &BackEnd::handleMessages },
+    { accord::types::MESSAGE_REQUEST, &BackEnd::handleMessage },
+    { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -208,6 +212,17 @@ bool BackEnd::loadChannels(QString id)
     return write(Util::convertCharVectorToQt(msg));
 }
 
+bool BackEnd::loadMessages(QString id)
+{
+    quint64 intId = id.toULongLong();
+    accord::types::Messages request(intId, state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::MESSAGES_REQUEST, json);
+    lastRequest = msg;
+    return write(Util::convertCharVectorToQt(msg));
+}
+
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
 {
     return accord::util::Serialization::receive(serializationMap, body, data);
@@ -296,6 +311,65 @@ bool BackEnd::handleCommunityTable(PacketData *data, const std::vector<char> &bo
     return true;
 }
 
+bool BackEnd::handleMessages(PacketData *data, const std::vector<char> &body)
+{
+    const auto res = accord::util::Serialization::
+            deserealize<accord::types::MessagesReturn>(body);
+    const auto &tables = res.messages;
+    const auto &channel = res.channel;
+    const auto channelString = QString::fromStdString(std::to_string(channel));
+    auto server = (Server*) data;
+    auto &messagesMap = server->backend.messagesMap;
+
+    messagesMap.insert(channelString, QVariant::fromValue(new DataList()));
+
+    if (tables.empty()) {
+        server->backend.qmlContext->setContextProperty("messagesMap",
+                                                messagesMap);
+        return false;
+    }
+
+    std::vector<MessagesTable*> ownTables;
+    for (auto &table : tables) {
+        auto ownTable = new MessagesTable;
+        ownTable->fromShared(table);
+        ownTables.push_back(ownTable);
+    }
+
+    auto list = messagesMap[channelString];
+    list.value<DataList*>()->fromVector(ownTables);
+    server->backend.qmlContext->setContextProperty("messagesMap",
+                                            messagesMap);
+    return true;
+}
+
+bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto table = accord::util::Serialization::deserealize<
+            accord::types::MessagesTable>(body);
+    const auto &channel = table.channel;
+    const auto channelString = QString::fromStdString(std::to_string(channel));
+    auto ownTable = new MessagesTable;
+    ownTable->fromShared(table);
+    /* server->backend.communityProfilepic(
+                table.id, ownTable->profilepic); */
+    if (!server->backend.messagesMap[channelString].value<DataList*>())
+        server->backend.messagesMap.insert(channelString,
+                                           QVariant::fromValue(new DataList()));
+    server->backend.messagesMap[channelString].
+            value<DataList*>()->data.append(
+                QVariant::fromValue(ownTable));
+    server->backend.qmlContext->setContextProperty("messagesMap",
+                                 server->backend.messagesMap);
+    return true;
+}
+bool BackEnd::handleMessageSuccess(PacketData *data, const std::vector<char> &body)
+{
+    /* TODO */
+    return true;
+}
+
 void BackEnd::retryFailedRequest()
 {
     if (lastRequest.empty())
@@ -321,6 +395,23 @@ void BackEnd::addCommunity(QString name, QUrl file)
     auto msg = packet.construct(accord::types::ADD_COMMUNITY_REQUEST, data);
     lastRequest = msg;
     write(Util::convertCharVectorToQt(msg));
+}
+
+bool BackEnd::sendMessage(QString message, QString channel)
+{
+    auto timestamp = std::chrono::system_clock::now().time_since_epoch()
+            .count();
+    auto channelInt = channel.toULongLong();
+    auto request = accord::types::SendMessage(channelInt,
+                                              message.toStdString(),
+                                              timestamp,
+                                              state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::SEND_MESSAGE_REQUEST,
+                                      json);
+    lastRequest = msg;
+    return write(Util::convertCharVectorToQt(msg));
 }
 
 QVector<char> BackEnd::readFile(QFile &file)

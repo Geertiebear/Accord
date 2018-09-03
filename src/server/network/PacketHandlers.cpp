@@ -52,7 +52,7 @@ bool checkLoggedIn(thread::Client *client, const std::string &token)
 bool PacketHandlers::receiveSendMessagePacket(const std::vector<char> &body, PacketData *data)
 {
 	thread::Client *client = (thread::Client*) data;
-    client->server.broadcast(std::string(body.begin(), body.end()), client->channel);
+    //client->server.broadcast(std::string(body.begin(), body.end()), client->channel);
     log::Logger::log(log::DEBUG, "Received send message packet with body: " +
                      std::string(body.begin(), body.end()));
 	return true;
@@ -356,10 +356,15 @@ bool PacketHandlers::handleSubmitMessage(PacketData *data,
     }
 
     network::SerializationPacket packet;
-    const auto json = util::Serialization::serialize(types::MessageSuccess(
+    auto json = util::Serialization::serialize(types::MessageSuccess(
                                                          message.id()));
-    const auto msg = packet.construct(types::MESSAGE_SUCCESS, json);
+    auto msg = packet.construct(types::MESSAGE_SUCCESS, json);
     client->write(msg);
+
+    types::MessagesTable toSend = database::Database::messageServerToShared(message);
+    json = util::Serialization::serialize(toSend);
+    msg = packet.construct(types::MESSAGE_REQUEST, json);
+    client->server.broadcast(msg);
     return true;
 }
 

@@ -58,10 +58,10 @@ void Server::stop()
     running = false;
 }
 
-void Server::broadcast(const std::string &message, int channel)
+void Server::broadcast(const std::vector<char> &data)
 {
 	for (int i = 0; i < numThreads; i++)
-	    threads.at(i)->broadcast(message, channel);
+        threads.at(i)->broadcast(data);
 }
 
 void Server::verifyDatabase(const Arguments &args)

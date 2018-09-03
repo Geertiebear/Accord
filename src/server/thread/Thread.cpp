@@ -113,15 +113,12 @@ void Thread::disconnectClient(Client *client)
     client->remove = true;
 }
 
-void Thread::broadcast(const std::string &message, int channel)
+void Thread::broadcast(const std::vector<char> &data)
 {
 	for (Client *client : clients) {
-		if (client->channel == channel) {
 			bufferevent_lock(client->bufferEvent);
-            const auto msg = std::vector<char>(message.begin(), message.end());
-            client->write(msg);
-			bufferevent_unlock(client->bufferEvent);
-		}
+            client->write(data);
+            bufferevent_unlock(client->bufferEvent);
 	}
 }
 
