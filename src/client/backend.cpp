@@ -34,7 +34,8 @@ accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::COMMUNITY_TABLE_REQUEST, &BackEnd::handleCommunityTable },
     { accord::types::MESSAGES_REQUEST, &BackEnd::handleMessages },
     { accord::types::MESSAGE_REQUEST, &BackEnd::handleMessage },
-    { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess }
+    { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess },
+    { accord::types::CHANNEL_REQUEST, &BackEnd::handleChannel }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -223,6 +224,20 @@ bool BackEnd::loadMessages(QString id)
     return write(Util::convertCharVectorToQt(msg));
 }
 
+void BackEnd::addChannel(QString name, QString description, QString community)
+{
+    uint64_t communityInt = community.toULongLong();
+    accord::types::AddChannel request(communityInt,
+                                      name.toStdString(),
+                                      description.toStdString(),
+                                      state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::ADD_CHANNEL_REQUEST, json);
+    lastRequest = msg;
+    write(Util::convertCharVectorToQt(msg));
+}
+
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
 {
     return accord::util::Serialization::receive(serializationMap, body, data);
@@ -367,6 +382,24 @@ bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
 bool BackEnd::handleMessageSuccess(PacketData *data, const std::vector<char> &body)
 {
     /* TODO */
+    return true;
+}
+
+bool BackEnd::handleChannel(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto ret = accord::util::Serialization::deserealize<
+            accord::types::ChannelsTable>(body);
+    const auto &community = ret.community;
+    const auto communityString = QString::fromStdString(std::to_string(
+                                                            community));
+    auto ownTable = new ChannelsTable;
+    ownTable->fromShared(ret);
+    server->backend.channelsMap[communityString].
+            value<DataList*>()->data.append(
+                QVariant::fromValue(ownTable));
+    server->backend.qmlContext->setContextProperty("channelsMap",
+                                 server->backend.channelsMap);
     return true;
 }
 

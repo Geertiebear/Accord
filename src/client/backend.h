@@ -153,6 +153,7 @@ public:
     static bool handleMessages(PacketData *data, const std::vector<char> &body);
     static bool handleMessage(PacketData *data, const std::vector<char> &body);
     static bool handleMessageSuccess(PacketData *data, const std::vector<char> &body);
+    static bool handleChannel(PacketData *data, const std::vector<char> &body);
 
     void retryFailedRequest();
 
@@ -175,6 +176,7 @@ public slots:
     bool loadMessages(QString id);
     bool sendMessage(QString message, QString channel);
     void addCommunity(QString name, QUrl file);
+    void addChannel(QString name, QString description, QString community);
     void readyRead();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;

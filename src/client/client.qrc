@@ -8,5 +8,7 @@
         <file>plus.png</file>
         <file>AddCommunity.qml</file>
         <file>AddCommunityForm.ui.qml</file>
+        <file>AddChannel.qml</file>
+        <file>AddChannelForm.ui.qml</file>
     </qresource>
 </RCC>

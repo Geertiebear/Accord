@@ -28,7 +28,8 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::CHANNELS_REQUEST, &PacketHandlers::handleChannels },
     { types::AUTH_WITH_TOKEN_REQUEST, &PacketHandlers::handleTokenAuth },
     { types::MESSAGES_REQUEST, &PacketHandlers::handleMessagesRequest },
-    { types::SEND_MESSAGE_REQUEST, &PacketHandlers::handleSubmitMessage }
+    { types::SEND_MESSAGE_REQUEST, &PacketHandlers::handleSubmitMessage },
+    { types::ADD_CHANNEL_REQUEST, &PacketHandlers::handleAddChannel }
 };
 
 bool checkLoggedIn(thread::Client *client, const std::string &token)
@@ -365,6 +366,33 @@ bool PacketHandlers::handleSubmitMessage(PacketData *data,
     json = util::Serialization::serialize(toSend);
     msg = packet.construct(types::MESSAGE_REQUEST, json);
     client->server.broadcast(msg);
+    return true;
+}
+
+bool PacketHandlers::handleAddChannel(PacketData *data,
+                                      const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::AddChannel>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
+
+    database::table_channels channel;
+    const auto id = util::CryptoUtil::getRandomUINT64();
+    if (!client->thread.database.initChannel(id, request, &channel)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    network::SerializationPacket packet;
+    types::ChannelsTable table = database::Database::channelServerToShared(
+                channel);
+    const auto json = util::Serialization::serialize(table);
+    const auto msg = packet.construct(types::CHANNEL_REQUEST, json);
+    client->write(msg);
     return true;
 }
 

@@ -21,6 +21,8 @@ enum RequestIds {
     MESSAGES_REQUEST = 7,
     SEND_MESSAGE_REQUEST = 8,
     MESSAGE_SUCCESS = 9, //signals that a message was received successfully
+    ADD_CHANNEL_REQUEST = 10,
+    CHANNEL_REQUEST = 11
 };
 
 class Communities {

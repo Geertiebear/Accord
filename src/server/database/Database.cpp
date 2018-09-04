@@ -349,6 +349,7 @@ bool Database::initChannel(uint64_t id, const types::AddChannel &request,
         return false;
     if (!addChannel(request.community))
         return false;
+    *ret = table_channels(std::make_shared<channels>(channel));
     return true;
 }
 
@@ -519,7 +520,7 @@ table_users Database::getUser(uint64_t id)
 
 table_channels Database::getChannel(uint64_t id)
 {
-    auto query = connection.query("SELECT * FROM channels WHERE"
+    auto query = connection.query("SELECT * FROM channels WHERE "
                                   "id=" + std::to_string(id));
     std::vector<channels> res;
     query.storein(res);

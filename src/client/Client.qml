@@ -12,8 +12,16 @@ ClientForm {
         addCommunityPopup.open();
     }
 
+    addChannelButton.onClicked: {
+        addChannelPopup.open();
+    }
+
     listView.onCountChanged: {
         addCommunityButton.anchors.topMargin = (65 * listView.count)
+    }
+
+    channelList.onCountChanged: {
+        addChannelButton.anchors.topMargin = (20 * channelList.count)
     }
 
     messageInput.onAccepted: {
@@ -79,6 +87,18 @@ ClientForm {
             focus: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
             AddCommunity {}
+        }
+
+        Popup {
+            id: addChannelPopup
+            x: Math.round((parent.width - width) / 2)
+            y: Math.round((parent.height - height) / 2)
+            width: 640
+            height: 480
+            modal: true
+            focus: true
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+            AddChannel {}
         }
 
         Component {

@@ -6,6 +6,7 @@ import QtGraphicalEffects 1.0
 Page {
     id: page
     height: Screen.desktopAvailableHeight
+    property alias addChannelButton: addChannelButton
     property alias messageInput: messageInput
     property alias messagesList: messagesList
     property alias messagesView: messagesView
@@ -129,6 +130,20 @@ Page {
         }
         anchors.top: parent.top
         anchors.bottomMargin: 50
+
+        Button {
+            id: addChannelButton
+            background: Rectangle {
+                Image {
+                    source: "qrc:/plus.png"
+                    sourceSize.width: 50
+                    sourceSize.height: 20
+                }
+            }
+            anchors.top: parent.top
+            width: 50
+            height: 20
+        }
     }
 
     ScrollView {
