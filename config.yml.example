@@ -1,0 +1,9 @@
+database:
+  'name': 'DATABASE NAME'
+  'address' : 'IP ADDRESS'
+  'user': 'USERNAME'
+  'password': 'PASSWORD'
+  'port': PORT NUMBER 0 FOR DEFAULT
+openssl:
+  'cert': 'CERTIFICATE FILE'
+  'pkey': 'PRIVATEKEY FILE'
