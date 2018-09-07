@@ -52,17 +52,18 @@ public:
 class MessagesTable {
 public:
     MessagesTable() { }
-    MessagesTable(uint64_t id, uint64_t channel,
+    MessagesTable(uint64_t id, uint64_t channel, uint64_t sender,
                   const std::string &msg, uint64_t timestamp)
-        : id(id), channel(channel), message(msg), timestamp(timestamp)
+        : id(id), channel(channel), sender(sender),
+          message(msg), timestamp(timestamp)
     { }
-    uint64_t id, channel, timestamp;
+    uint64_t id, channel, timestamp, sender;
     std::string message;
 
     template<class Archive>
     void serialize(Archive &archive)
     {
-        archive(id, channel, message, timestamp);
+        archive(id, channel, sender, message, timestamp);
     }
 };
 

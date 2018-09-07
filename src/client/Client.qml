@@ -104,7 +104,7 @@ ClientForm {
         Component {
             id: messageDelegate
             Text {
-                text: modelData.contents
+                text: modelData.sender + ": " + modelData.contents
             }
         }
     }

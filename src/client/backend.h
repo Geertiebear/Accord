@@ -99,9 +99,10 @@ Q_DECLARE_METATYPE(ChannelsTable*)
 class MessagesTable : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString contents MEMBER contents CONSTANT)
+    Q_PROPERTY(QString sender MEMBER sender CONSTANT)
 public:
     MessagesTable() { }
-    QString id, channel, contents, timestamp;
+    QString id, channel, contents, timestamp, sender;
 
     void fromShared(const accord::types::MessagesTable &table)
     {
@@ -109,6 +110,7 @@ public:
         channel = QString::fromStdString(std::to_string(table.channel));
         contents = QString::fromStdString(table.message);
         timestamp = QString::fromStdString(std::to_string(table.timestamp));
+        sender = QString::fromStdString(std::to_string(table.sender));
     }
 };
 

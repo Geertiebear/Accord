@@ -38,9 +38,10 @@ sql_create_4(channels, 1, 4,
              mysqlpp::sql_varchar, name,
              mysqlpp::sql_varchar, description);
 
-sql_create_4(messages, 1, 4,
+sql_create_5(messages, 1, 5,
              mysqlpp::sql_bigint_unsigned, id,
              mysqlpp::sql_bigint_unsigned, channel,
+             mysqlpp::sql_bigint_unsigned, sender,
              mysqlpp::sql_varchar, contents,
              mysqlpp::sql_bigint_unsigned, timestamp);
 
@@ -185,6 +186,11 @@ mysqlpp::sql_bigint_unsigned &table_messages::channel()
     return table->channel;
 }
 
+mysqlpp::sql_bigint_unsigned &table_messages::sender()
+{
+    return table->sender;
+}
+
 mysqlpp::sql_varchar &table_messages::contents()
 {
     return table->contents;
@@ -286,7 +292,8 @@ bool Database::initDatabase()
             return false;
         query = connection.query(
                     "CREATE TABLE messages (id BIGINT UNSIGNED, "
-                    "channel BIGINT UNSIGNED, contents VARCHAR(2000),"
+                    "channel BIGINT UNSIGNED, sender BIGINT UNSIGNED,"
+                    " contents VARCHAR(2000),"
                     "timestamp BIGINT UNSIGNED)");
         if (!query.execute())
             return false;
@@ -353,7 +360,7 @@ bool Database::initChannel(uint64_t id, const types::AddChannel &request,
     return true;
 }
 
-bool Database::initMessage(uint64_t id, uint64_t channel,
+bool Database::initMessage(uint64_t id, uint64_t channel, uint64_t sender,
                            const std::string&msg, uint64_t timestamp,
                            table_messages *ret)
 {
@@ -362,7 +369,7 @@ bool Database::initMessage(uint64_t id, uint64_t channel,
         return false;
 
     auto query = connection.query();
-    messages message(id, channel, msg, timestamp);
+    messages message(id, channel, sender, msg, timestamp);
     query.insert(message);
     if (!query.execute())
         return false;
@@ -370,11 +377,12 @@ bool Database::initMessage(uint64_t id, uint64_t channel,
     return true;
 }
 
-bool Database::submitMessage(uint64_t channel, const std::string &msg,
+bool Database::submitMessage(uint64_t channel, uint64_t sender,
+                             const std::string &msg,
                              uint64_t timestamp, table_messages *ret)
 {
     auto id = util::CryptoUtil::getRandomUINT64();
-    return initMessage(id, channel, msg, timestamp, ret);
+    return initMessage(id, channel, sender, msg, timestamp, ret);
 }
 
 bool Database::addMember(uint64_t id, uint64_t user)
@@ -622,6 +630,7 @@ types::MessagesTable Database::messageServerToShared(table_messages message)
 {
     return types::MessagesTable((uint64_t) message.id(),
                                 (uint64_t) message.channel(),
+                                (uint64_t) message.sender(),
                                 (std::string) message.contents(),
                                 (uint64_t) message.timestamp());
 }

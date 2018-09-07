@@ -345,8 +345,11 @@ bool PacketHandlers::handleSubmitMessage(PacketData *data,
     auto client = (thread::Client*) data;
     const auto request = util::Serialization::deserealize<
             types::SendMessage>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
     database::table_messages message;
     if (!client->thread.database.submitMessage(request.channel,
+                                               client->user.id(),
                                                request.message,
                                                request.timestamp,
                                                &message)) {

@@ -83,6 +83,7 @@ struct table_messages {
     std::shared_ptr<messages> table;
     mysqlpp::sql_bigint_unsigned &id();
     mysqlpp::sql_bigint_unsigned &channel();
+    mysqlpp::sql_bigint_unsigned &sender();
     mysqlpp::sql_varchar &contents();
     mysqlpp::sql_bigint_unsigned &timestamp();
 };
@@ -114,9 +115,11 @@ public:
                        table_communities *ret = nullptr);
     bool initChannel(uint64_t id, const types::AddChannel &request,
                      table_channels *ret = nullptr);
-    bool initMessage(uint64_t id, uint64_t channel, const std::string &msg,
+    bool initMessage(uint64_t id, uint64_t channel,
+                     uint64_t sender, const std::string &msg,
                      uint64_t timestamp, table_messages *ret = nullptr);
-    bool submitMessage(uint64_t channel, const std::string &msg, uint64_t timestamp,
+    bool submitMessage(uint64_t channel, uint64_t sender,
+                       const std::string &msg, uint64_t timestamp,
                        table_messages *ret = nullptr);
     bool addMember(uint64_t id, uint64_t user);
     bool addChannel(uint64_t id);
