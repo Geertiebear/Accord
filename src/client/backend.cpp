@@ -2,6 +2,7 @@
 #include "util.h"
 #include <QDebug>
 
+#include<algorithm>
 #include <iostream>
 #include <chrono>
 #include <QErrorMessage>
@@ -35,7 +36,8 @@ accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::MESSAGES_REQUEST, &BackEnd::handleMessages },
     { accord::types::MESSAGE_REQUEST, &BackEnd::handleMessage },
     { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess },
-    { accord::types::CHANNEL_REQUEST, &BackEnd::handleChannel }
+    { accord::types::CHANNEL_REQUEST, &BackEnd::handleChannel },
+    { accord::types::USER_REQUEST, &BackEnd::handleUser }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -224,6 +226,23 @@ bool BackEnd::loadMessages(QString id)
     return write(Util::convertCharVectorToQt(msg));
 }
 
+bool BackEnd::loadUser(QString id)
+{
+    quint64 intId = id.toULongLong();
+    auto it = std::find(pendingUserRequests.begin(),
+                        pendingUserRequests.end(),
+                        intId);
+    if (it != pendingUserRequests.end())
+        return false;
+    accord::types::User request(intId, state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::USER_REQUEST, json);
+    lastRequest = msg;
+    pendingUserRequests.push_back(intId);
+    return write(Util::convertCharVectorToQt(msg));
+}
+
 void BackEnd::addChannel(QString name, QString description, QString community)
 {
     uint64_t communityInt = community.toULongLong();
@@ -400,6 +419,27 @@ bool BackEnd::handleChannel(PacketData *data, const std::vector<char> &body)
                 QVariant::fromValue(ownTable));
     server->backend.qmlContext->setContextProperty("channelsMap",
                                  server->backend.channelsMap);
+    return true;
+}
+
+bool BackEnd::handleUser(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto ret = accord::util::Serialization::deserealize<
+            accord::types::UserData>(body);
+    auto ownTable = new UserData(ret);
+    const auto &id = ret.id;
+    const auto idString = QString::fromStdString(std::to_string(id));
+
+    auto it = std::find(
+                server->backend.pendingUserRequests.begin(),
+                server->backend.pendingUserRequests.end(), id);
+    if (it != server->backend.pendingUserRequests.end())
+        server->backend.pendingUserRequests.erase(it);
+
+    server->backend.userMap[idString] = QVariant::fromValue(ownTable);
+    server->backend.qmlContext->setContextProperty("userMap",
+                                                   server->backend.userMap);
     return true;
 }
 

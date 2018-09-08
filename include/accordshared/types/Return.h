@@ -74,6 +74,27 @@ public:
     }
 };
 
+/*
+ * we dont return the entire user's column because it
+ * has sensitive data like passwords. Instead we
+ * return a subset of the data
+ */
+class UserData {
+public:
+    UserData() { }
+    UserData(uint64_t id, const std::string &name,
+             const std::string &profilepic) :
+        id(id), name(name), profilepic(profilepic) { }
+    uint64_t id;
+    std::string name, profilepic;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, name, profilepic);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

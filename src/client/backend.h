@@ -114,6 +114,22 @@ public:
     }
 };
 
+class UserData : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString name MEMBER name CONSTANT)
+public:
+    UserData() { }
+    QString name, profilepic;
+
+    UserData(const accord::types::UserData &other)
+    {
+        name = QString::fromStdString(other.name);
+        profilepic = QString::fromStdString(other.profilepic);
+    }
+};
+
+Q_DECLARE_METATYPE(UserData*)
+
 /* generic object for displaying a list in QML
  * from a QVariantList */
 class DataList : public QObject {
@@ -156,12 +172,15 @@ public:
     static bool handleMessage(PacketData *data, const std::vector<char> &body);
     static bool handleMessageSuccess(PacketData *data, const std::vector<char> &body);
     static bool handleChannel(PacketData *data, const std::vector<char> &body);
+    static bool handleUser(PacketData *data, const std::vector<char> &body);
 
     void retryFailedRequest();
 
     DataList communitiesList;
     QVariantMap channelsMap;
     QVariantMap messagesMap;
+    QVariantMap userMap;
+    QVector<quint64> pendingUserRequests;
     QQmlContext *qmlContext;
     std::vector<char> lastRequest;
     bool connected;
@@ -176,6 +195,7 @@ public slots:
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
     bool loadChannels(QString id);
     bool loadMessages(QString id);
+    bool loadUser(QString id);
     bool sendMessage(QString message, QString channel);
     void addCommunity(QString name, QUrl file);
     void addChannel(QString name, QString description, QString community);

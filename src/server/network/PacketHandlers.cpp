@@ -29,7 +29,8 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::AUTH_WITH_TOKEN_REQUEST, &PacketHandlers::handleTokenAuth },
     { types::MESSAGES_REQUEST, &PacketHandlers::handleMessagesRequest },
     { types::SEND_MESSAGE_REQUEST, &PacketHandlers::handleSubmitMessage },
-    { types::ADD_CHANNEL_REQUEST, &PacketHandlers::handleAddChannel }
+    { types::ADD_CHANNEL_REQUEST, &PacketHandlers::handleAddChannel },
+    { types::USER_REQUEST, &PacketHandlers::handleUser }
 };
 
 bool checkLoggedIn(thread::Client *client, const std::string &token)
@@ -395,6 +396,34 @@ bool PacketHandlers::handleAddChannel(PacketData *data,
                 channel);
     const auto json = util::Serialization::serialize(table);
     const auto msg = packet.construct(types::CHANNEL_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleUser(PacketData *data,
+                                const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::User>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
+    /*
+     * TODO: determine if we want to check if user is associated
+     *  with requestor
+     */
+    database::table_users user = client->thread.database.getUser(request.id);
+    if (!user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    types::UserData ret(user.id(), user.name(), "");
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::USER_REQUEST, json);
     client->write(msg);
     return true;
 }

@@ -18,6 +18,7 @@ int main(int argc, char **argv)
     engine.rootContext()->setContextProperty("communitiesList", &backend->communitiesList);
     engine.rootContext()->setContextProperty("channelsMap", backend->channelsMap);
     engine.rootContext()->setContextProperty("messagesMap", backend->messagesMap);
+    engine.rootContext()->setContextProperty("userMap", backend->userMap);
     engine.addImageProvider("communityImageProvider", communityImageProvider);
     qmlRegisterType<CommunitiesTable>("accord.types", 1, 0, "CommuntiesTable");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

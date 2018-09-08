@@ -22,7 +22,8 @@ enum RequestIds {
     SEND_MESSAGE_REQUEST = 8,
     MESSAGE_SUCCESS = 9, //signals that a message was received successfully
     ADD_CHANNEL_REQUEST = 10,
-    CHANNEL_REQUEST = 11
+    CHANNEL_REQUEST = 11,
+    USER_REQUEST = 12
 };
 
 class Communities {
@@ -118,6 +119,21 @@ public:
     void serialize(Archive &archive)
     {
         archive(channel, token);
+    }
+};
+
+class User {
+public:
+    User() { }
+    User(uint64_t id, const std::string &token) : id(id),
+    token(token) { }
+    uint64_t id;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, token);
     }
 };
 

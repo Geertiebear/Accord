@@ -104,7 +104,13 @@ ClientForm {
         Component {
             id: messageDelegate
             Text {
-                text: modelData.sender + ": " + modelData.contents
-            }
+                text: {
+                    var userData = userMap[modelData.sender];
+                    if (typeof userData !== "undefined")
+                        return userData.name + ": " + modelData.contents;
+                    backend.loadUser(modelData.sender);
+                    return "";
+                }
         }
     }
+}
