@@ -44,7 +44,6 @@ struct Client : public PacketData {
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;
-    bool remove = false;
 
     void write(const std::vector<char> &msg);
 };

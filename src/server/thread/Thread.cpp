@@ -78,10 +78,6 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 	struct bufferevent *bufferEvent = bufferevent_openssl_socket_new(eventBase,
             clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE |
                           BEV_OPT_DEFER_CALLBACKS);
-    struct timeval readTimeout = {
-        .tv_sec = 30,
-        .tv_usec = 0,
-    };
     //TODO: move this to constructor
     Client *client = new Client(server, *this);
     client->channel = 0;
@@ -92,7 +88,6 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
     bufferevent_setcb(bufferEvent, &Thread::readCallback,
                       &Thread::writeCallback,
 			&Thread::eventCallback, client);
-	bufferevent_set_timeouts(bufferEvent, &readTimeout, NULL);
 	bufferevent_enable(bufferEvent, EV_READ | EV_WRITE);
     clients.push_back(client);
 }
@@ -103,14 +98,6 @@ void Thread::removeClient(Client *client)
 	clients.erase(it);
 	util::LibEventUtil::freeBufferEvent(client->bufferEvent);
 	delete client;
-}
-
-void Thread::disconnectClient(Client *client)
-{
-    network::DisconnectPacket packet;
-    const auto msg = packet.construct();
-    client->write(msg);
-    client->remove = true;
 }
 
 void Thread::broadcast(const std::vector<char> &data)
@@ -124,6 +111,7 @@ void Thread::broadcast(const std::vector<char> &data)
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 {
+    log::Logger::log(log::DEBUG, "readCallback()");
     Client *client = (Client*) data;
     if (client->hasPartialPacket) {
         handlePartialPacket(bufferEvent, client);
@@ -172,10 +160,12 @@ void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
 void Thread::eventCallback(struct bufferevent *bufferEvent, short events,
 		void *data)
 {
-	if (events & BEV_EVENT_TIMEOUT) {
-	    log::Logger::log(log::DEBUG, "A client has timed out, closing connection!");
-		Client *client = (Client*) data;
-        client->thread.disconnectClient(client);
+    if (events & BEV_EVENT_ERROR) {
+        log::Logger::log(log::DEBUG, "There has been an error "
+                                     "with a client! Closing the "
+                                     "connection...");
+        Client *client = (Client*) data;
+        client->thread.removeClient(client);
 	}
 }
 
@@ -209,11 +199,6 @@ void Thread::writeCallback(struct bufferevent *bufferEvent, void *data)
 {
     Client *client = (Client*) data;
     auto &buffer = client->writeBuffer;
-
-    if (buffer.empty() && client->remove) {
-        client->thread.removeClient(client);
-        return;
-    }
 
     if (buffer.empty())
         return;
