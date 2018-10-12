@@ -20,6 +20,7 @@
 #include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
 #include <accordshared/util/BinUtil.h>
+#include <accordserver/util/CryptoUtil.h>
 #include <accordshared/types/Database.h>
 
 namespace accord {
@@ -107,6 +108,32 @@ void Thread::broadcast(const std::vector<char> &data)
             client->write(data);
             bufferevent_unlock(client->bufferEvent);
 	}
+}
+
+int Thread::isInviteValid(const std::string &invite)
+{
+    /*
+     * this is a thread function since we first check the cache and
+     * afterwards check it in main database to see if it has
+     * expired. The invite should always be in the cache if it is
+     * valid but this may not always be the case.
+     */
+    if (server.isInviteValid(invite))
+        return 1;
+    return checkInviteInDatabase(invite);
+}
+
+uint64_t Thread::getCommunityForInvite(const std::string &invite)
+{
+    return server.getCommunityForInvite(invite);
+}
+
+std::string Thread::genInvite(uint64_t communityId)
+{
+    auto invite = util::CryptoUtil::getRandomString(INVITE_LENGTH);
+    server.insertInvite(communityId, invite);
+    /* TODO: also insert into db */
+    return invite;
 }
 
 void Thread::readCallback(struct bufferevent *bufferEvent, void *data)
@@ -218,6 +245,11 @@ void Thread::dispatchError(Client *client, Error error)
     network::ErrorPacket packet;
     const auto msg = packet.construct(error);
     client->write(msg);
+}
+
+int Thread::checkInviteInDatabase(const std::string &invite)
+{
+    return 0; /* TODO */
 }
 
 /* start client functions */

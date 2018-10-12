@@ -6,6 +6,8 @@
 #include <iostream>
 #include <chrono>
 #include <QErrorMessage>
+#include <QApplication>
+#include <QClipboard>
 
 #include<accordshared/network/Packet.h>
 #include <accordshared/network/packet/AuthPacket.h>
@@ -37,7 +39,8 @@ accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::MESSAGE_REQUEST, &BackEnd::handleMessage },
     { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess },
     { accord::types::CHANNEL_REQUEST, &BackEnd::handleChannel },
-    { accord::types::USER_REQUEST, &BackEnd::handleUser }
+    { accord::types::USER_REQUEST, &BackEnd::handleUser },
+    { accord::types::INVITE_REQUEST, &BackEnd::handleInvite }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -115,7 +118,8 @@ void BackEnd::readyRead()
                 std::vector<uint8_t>(buffer.begin() + 2, buffer.end()));
     const uint64_t bufferSize = socket.bytesAvailable();
 
-    qDebug() << length;
+    qDebug() << "Packet id: " << id;
+    qDebug() << "Packet length: " << length;
     if (length > bufferSize) {
         partialPacket.length = length;
         partialPacket.id = id;
@@ -144,6 +148,7 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
     uint8_t low = body[0];
     uint8_t high = body[1];
     uint16_t error = accord::util::BinUtil::assembleUint16(low, high);
+    qDebug() << "Got error: " << error;
 
     switch (error) {
         case accord::AUTH_ERR:
@@ -255,6 +260,22 @@ void BackEnd::addChannel(QString name, QString description, QString community)
     const auto msg = packet.construct(accord::types::ADD_CHANNEL_REQUEST, json);
     lastRequest = msg;
     write(Util::convertCharVectorToQt(msg));
+}
+
+bool BackEnd::requestInvite(QString id)
+{
+    auto idInt = id.toULongLong();
+    const accord::types::Invite request(idInt, state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::INVITE_REQUEST, json);
+    lastRequest = msg;
+    return write(Util::convertCharVectorToQt(msg));
+}
+
+void BackEnd::stringToClipboard(QString string)
+{
+    QApplication::clipboard()->setText(string);
 }
 
 bool BackEnd::receiveSerializePacket(const std::vector<char> &body, PacketData *data)
@@ -443,6 +464,17 @@ bool BackEnd::handleUser(PacketData *data, const std::vector<char> &body)
     return true;
 }
 
+bool BackEnd::handleInvite(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto ret = accord::util::Serialization::deserealize<
+            accord::types::InviteRet>(body);
+    const auto invite = QString::fromStdString(ret.invite);
+    const auto id = QString::fromStdString(std::to_string(ret.id));
+    server->backend.inviteReady(id, invite);
+    return true;
+}
+
 void BackEnd::retryFailedRequest()
 {
     if (lastRequest.empty())
@@ -482,6 +514,17 @@ bool BackEnd::sendMessage(QString message, QString channel)
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::SEND_MESSAGE_REQUEST,
+                                      json);
+    lastRequest = msg;
+    return write(Util::convertCharVectorToQt(msg));
+}
+
+bool BackEnd::sendInvite(QString invite)
+{
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(invite.
+                                                             toStdString());
+    const auto msg = packet.construct(accord::types::SEND_INVITE_REQUEST,
                                       json);
     lastRequest = msg;
     return write(Util::convertCharVectorToQt(msg));

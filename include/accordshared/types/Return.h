@@ -95,6 +95,21 @@ public:
     }
 };
 
+class InviteRet {
+public:
+    InviteRet() { }
+    InviteRet(uint64_t id, const std::string &invite) : id(id), invite(invite)
+    { }
+    uint64_t id;
+    std::string invite;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, invite);
+    }
+};
+
 } /* namespace types */
 } /* namespace accord */
 

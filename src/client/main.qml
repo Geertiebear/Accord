@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.3
+import QtQuick.Dialogs 1.3
 import accord.types 1.0
 
 Window {
@@ -27,6 +28,12 @@ Window {
         stack.currentItem.listView.model.append({});
     }
 
+    function onInviteReady(id, invite) {
+        inviteDialog.invite = invite;
+        inviteDialog.communityId = id;
+        inviteDialog.open();
+    }
+
     StackView {
         id: stack
         initialItem: login
@@ -39,6 +46,23 @@ Window {
         Component {
             id: client
             Client { }
+        }
+    }
+
+    MessageDialog {
+        property string communityId
+        property string invite
+        id: inviteDialog
+        title: "Invite is ready"
+        text: {
+            "Your invite for "+ communityId + " is " + invite + ".
+Pressing OK will copy the invite to the clipboard."
+        }
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        width: 200
+        height: 200
+        onAccepted: {
+            backend.stringToClipboard(invite);
         }
     }
 }

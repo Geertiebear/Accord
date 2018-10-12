@@ -28,6 +28,11 @@ ClientForm {
         backend.sendMessage(messageInput.text, selectedChannel);
         messageInput.clear();
     }
+
+    inviteInput.onAccepted: {
+        backend.sendInvite(inviteInput.text);
+        inviteInput.clear();
+    }
         Component {
             id: communityDelegate
             RoundButton {
@@ -45,10 +50,29 @@ ClientForm {
                         }
                     }
                 }
-                onClicked: {
-                    var id = modelData.id;
-                    selectedCommunity = id;
-                    backend.loadChannels(id);
+
+                Menu {
+                    id: communityMenu
+                    MenuItem {
+                        text: "Create invite"
+                        onClicked: {
+                            backend.requestInvite(modelData.id);
+                        }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: {
+                        if (mouse.button === Qt.RightButton) {
+                            communityMenu.popup();
+                            return;
+                        }
+                        var id = modelData.id;
+                        selectedCommunity = id;
+                        backend.loadChannels(id);
+                    }
                 }
 
                 text: modelData.name
@@ -111,6 +135,6 @@ ClientForm {
                     backend.loadUser(modelData.sender);
                     return "";
                 }
+            }
         }
-    }
 }

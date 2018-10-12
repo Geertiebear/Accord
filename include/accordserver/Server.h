@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 
 #include <accordserver/thread/Thread.h>
 #include <accordserver/Config.h>
@@ -23,6 +24,9 @@ public:
     
     void stop();
     void broadcast(const std::vector<char> &data);
+    bool isInviteValid(const std::string &invite);
+    uint64_t getCommunityForInvite(const std::string &invite);
+    void insertInvite(uint64_t communityId, const std::string &invite);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;
@@ -42,6 +46,7 @@ private:
     int selectThread();
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
+    std::map<std::string, uint64_t> inviteMap;
 
     static std::vector<network::ReceiveHandler> handlers;
 };

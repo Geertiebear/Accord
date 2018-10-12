@@ -30,7 +30,9 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::MESSAGES_REQUEST, &PacketHandlers::handleMessagesRequest },
     { types::SEND_MESSAGE_REQUEST, &PacketHandlers::handleSubmitMessage },
     { types::ADD_CHANNEL_REQUEST, &PacketHandlers::handleAddChannel },
-    { types::USER_REQUEST, &PacketHandlers::handleUser }
+    { types::USER_REQUEST, &PacketHandlers::handleUser },
+    { types::SEND_INVITE_REQUEST, &PacketHandlers::handleSendInvite },
+    { types::INVITE_REQUEST, &PacketHandlers::handleGenInvite }
 };
 
 bool checkLoggedIn(thread::Client *client, const std::string &token)
@@ -424,6 +426,71 @@ bool PacketHandlers::handleUser(PacketData *data,
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::USER_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleSendInvite(PacketData *data,
+                                      const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto invite = util::Serialization::deserealize<std::string>(body);
+    if (!client->user.table) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
+        client->write(msg);
+        return false;
+    }
+    log::Logger::log(log::DEBUG, invite);
+
+    if (!client->thread.isInviteValid(invite)) {
+        log::Logger::log(log::DEBUG, "invite handeling prematurely aborted");
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(NOT_FOUND);
+        client->write(msg);
+        return false;
+    }
+
+    const auto communityId = client->thread.getCommunityForInvite(invite);
+    if (!client->thread.database.addMember(communityId, client->user.id())) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    types::CommunitiesTable ret = database::Database::communityServerToShared(
+                client->thread.database.getCommunity(communityId));
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::COMMUNITY_TABLE_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleGenInvite(PacketData *data,
+                                     const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::Invite>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
+
+    /* TODO: permission and stuff q.q */
+    if (!client->thread.database.isUserInCommunity(
+                client->user.id(), request.id)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(FORBIDDEN_ERR);
+        client->write(msg);
+        return false;
+    }
+
+    auto invite = client->thread.genInvite(request.id);
+    types::InviteRet ret(request.id, invite);
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::INVITE_REQUEST, json);
     client->write(msg);
     return true;
 }

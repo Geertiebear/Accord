@@ -60,6 +60,10 @@ public:
     void removeClient(Client *client);
     void acceptClient(evutil_socket_t clientSocket, SSL *ssl);
     void broadcast(const std::vector<char> &data);
+    /* -1 if expired, 0 if invalid, 1 if valid */
+    int isInviteValid(const std::string &invite);
+    uint64_t getCommunityForInvite(const std::string &invite);
+    std::string genInvite(uint64_t communityId);
 
     //callbacks
     static void readCallback(struct bufferevent *bufferEvent, void *data);
@@ -76,6 +80,7 @@ private:
     std::vector<Client*> clients; //libevent can't foreach on bufferevents :((
 
     void run();
+    int checkInviteInDatabase(const std::string &invite);
     static void handlePartialPacket(struct bufferevent *bufferEvent, Client *client);
     static void dispatchError(Client *client, Error error);
 };

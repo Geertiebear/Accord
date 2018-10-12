@@ -10,6 +10,8 @@
 namespace accord {
 namespace types {
 
+#define INVITE_LENGTH 6
+
 enum RequestIds {
     COMMUNITIES_TABLE_REQUEST = 0,
     ADD_COMMUNITY_REQUEST = 1,
@@ -23,7 +25,9 @@ enum RequestIds {
     MESSAGE_SUCCESS = 9, //signals that a message was received successfully
     ADD_CHANNEL_REQUEST = 10,
     CHANNEL_REQUEST = 11,
-    USER_REQUEST = 12
+    USER_REQUEST = 12,
+    SEND_INVITE_REQUEST = 13, //request to be added to community
+    INVITE_REQUEST = 14, //request invite generation
 };
 
 class Communities {
@@ -127,6 +131,20 @@ public:
     User() { }
     User(uint64_t id, const std::string &token) : id(id),
     token(token) { }
+    uint64_t id;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, token);
+    }
+};
+
+class Invite {
+public:
+    Invite () { }
+    Invite(uint64_t id, const std::string &token) : id(id), token(token) { }
     uint64_t id;
     std::string token;
 

@@ -64,6 +64,22 @@ void Server::broadcast(const std::vector<char> &data)
         threads.at(i)->broadcast(data);
 }
 
+bool Server::isInviteValid(const std::string &invite)
+{
+    auto it = inviteMap.find(invite);
+    return it != inviteMap.end();
+}
+
+uint64_t Server::getCommunityForInvite(const std::string &invite)
+{
+    return inviteMap[invite];
+}
+
+void Server::insertInvite(uint64_t communityId, const std::string &invite)
+{
+    inviteMap.insert(std::make_pair(invite, communityId));
+}
+
 void Server::verifyDatabase(const Arguments &args)
 {
     database::Database database(config.database);

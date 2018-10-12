@@ -173,6 +173,7 @@ public:
     static bool handleMessageSuccess(PacketData *data, const std::vector<char> &body);
     static bool handleChannel(PacketData *data, const std::vector<char> &body);
     static bool handleUser(PacketData *data, const std::vector<char> &body);
+    static bool handleInvite(PacketData *data, const std::vector<char> &body);
 
     void retryFailedRequest();
 
@@ -190,6 +191,7 @@ signals:
     void failedRegistered();
     void communityReady(QVariant table);
     void communityProfilepic(quint64, QByteArray data);
+    void inviteReady(QVariant id, QVariant invite);
 public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
@@ -197,8 +199,11 @@ public slots:
     bool loadMessages(QString id);
     bool loadUser(QString id);
     bool sendMessage(QString message, QString channel);
+    bool sendInvite(QString invite);
+    bool requestInvite(QString id);
     void addCommunity(QString name, QUrl file);
     void addChannel(QString name, QString description, QString community);
+    void stringToClipboard(QString string);
     void readyRead();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;

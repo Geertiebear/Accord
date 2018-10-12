@@ -6,6 +6,7 @@ import QtGraphicalEffects 1.0
 Page {
     id: page
     height: Screen.desktopAvailableHeight
+    property alias inviteInput: inviteInput
     property alias addChannelButton: addChannelButton
     property alias messageInput: messageInput
     property alias messagesList: messagesList
@@ -184,6 +185,16 @@ Page {
         anchors.horizontalCenter: messagesView.horizontalCenter
         anchors.top: messagesView.bottom
         anchors.topMargin: 10
+        font.pixelSize: 12
+    }
+
+    TextInput {
+        id: inviteInput
+        x: 60
+        y: 1036
+        width: 80
+        height: 20
+        text: qsTr("Invite")
         font.pixelSize: 12
     }
 }
