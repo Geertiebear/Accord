@@ -84,7 +84,7 @@ qint64 BackEnd::write(const QByteArray &data)
 
 void BackEnd::doConnect()
 {
-    socket.connectToHostEncrypted("localhost", 6524);
+    socket.connectToHostEncrypted("chat.bearservers.net", 6524);
     if (!socket.waitForEncrypted()) {
         qDebug() << socket.errorString();
         return;
