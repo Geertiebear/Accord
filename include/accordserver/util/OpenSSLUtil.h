@@ -16,7 +16,7 @@ public:
 	static void lockCallback(int mode, int n, const char *file, int line);
 	static unsigned long idCallback();
 private:
-	static std::mutex locks[CRYPTO_num_locks()];
+	static std::mutex *locks;
 };
 
 } /* namespace util */

@@ -8,10 +8,11 @@
 namespace accord {
 namespace util {
 
-std::mutex OpenSSLUtil::locks[CRYPTO_num_locks()];
+std::mutex *OpenSSLUtil::locks;
 
 void OpenSSLUtil::opensslInit()
 {
+	locks = new std::mutex[CRYPTO_num_locks()];
 	SSL_load_error_strings();
 	SSL_library_init();
 	CRYPTO_set_id_callback(&OpenSSLUtil::idCallback);
