@@ -61,7 +61,7 @@ find_package(PkgConfig REQUIRED)
 find_package(ImageMagick COMPONENTS Magick++ REQUIRED)
 pkg_search_module(argon2 libargon2)
 
-add_library(libaccordshared SHARED ${SOURCES_SHARED})
+add_library(accordshared SHARED ${SOURCES_SHARED})
 
 #QT specifics
 qt5_add_resources(qml_QRC src/client/client.qrc)
@@ -83,9 +83,9 @@ if (MSVC)
 endif (MSVC)
 
 #linking
-target_include_directories(libaccordshared
+target_include_directories(accordshared
     PUBLIC include/)
-target_link_libraries(libaccordshared ${LIBEVENT_LIBRARIES})
+target_link_libraries(accordshared ${LIBEVENT_LIBRARIES})
 
 target_include_directories(accordserver 
     PUBLIC include/)
@@ -105,18 +105,18 @@ target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
 target_link_libraries(accordserver ${argon2_LIBRARIES})
 target_link_libraries(accordserver ${ImageMagick_LIBRARIES})
 target_link_libraries(accordserver mysqlclient)
-target_link_libraries(accordserver libaccordshared)
+target_link_libraries(accordserver accordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)
 target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(accordcliclient libaccordshared)
+target_link_libraries(accordcliclient accordshared)
 target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 
 target_include_directories(accordclient
     PUBLIC include/)
 target_include_directories(accordclient PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(accordclient libaccordshared)
+target_link_libraries(accordclient accordshared)
 target_link_libraries(accordclient ${OPENSSL_LIBRARIES})
 target_link_libraries(accordclient Qt5::Qml)
 target_link_libraries(accordclient Qt5::Quick)
@@ -125,3 +125,4 @@ target_link_libraries(accordclient Qt5::Network)
 
 #install
 install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)
+install(TARGETS accordshared LIBRARY DESTINATION lib)
