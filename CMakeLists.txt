@@ -126,3 +126,10 @@ target_link_libraries(accordclient Qt5::Network)
 #install
 install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)
 install(TARGETS accordshared LIBRARY DESTINATION lib)
+
+#packaging
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Geert Custers")
+set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+INCLUDE(CPack)

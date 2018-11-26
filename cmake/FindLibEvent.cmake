@@ -14,6 +14,9 @@ foreach(prefix ${LibEvent_EXTRA_PREFIXES})
   list(APPEND LibEvent_LIBRARIES_PATHS "${prefix}/lib")
 endforeach()
 
+# for debian multiarch
+list(APPEND LibEvent_LIBRARIES_PATHS "/usr/lib/x86_64-linux-gnu")
+
 # Looking for "event.h" will find the Platform SDK include dir on windows
 # so we also look for a peer header like evhttp.h to get the right path
 find_path(LIBEVENT_INCLUDE_DIRS evhttp.h event.h PATHS ${LibEvent_INCLUDE_PATHS})

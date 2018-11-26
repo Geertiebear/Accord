@@ -2,5 +2,6 @@
 build/
 Accord.kdev4
 CMakeLists.txt.user
+CMakeLists.txt.user.*
 *.swp
 Session.vim
