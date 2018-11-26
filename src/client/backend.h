@@ -205,6 +205,7 @@ public slots:
     void addChannel(QString name, QString description, QString community);
     void stringToClipboard(QString string);
     void readyRead();
+    void stateChanged(QAbstractSocket::SocketState state);
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;
     static accord::util::FunctionMap serializationMap;

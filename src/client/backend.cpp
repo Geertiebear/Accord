@@ -50,6 +50,9 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     accord::network::PacketDecoder::init();
     accord::network::PacketHandler::init(handlers);
     QObject::connect(&socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    QObject::connect(&socket, SIGNAL(stateChanged(
+                                         QAbstractSocket::SocketState)),
+                     this, SLOT(stateChanged(QAbstractSocket::SocketState)));
     doConnect();
 }
 
@@ -135,6 +138,16 @@ void BackEnd::readyRead()
 
     if (socket.bytesAvailable())
         readyRead();
+}
+
+void BackEnd::stateChanged(QAbstractSocket::SocketState state)
+{
+    if (state == QAbstractSocket::UnconnectedState) {
+        /* TODO: actually make this something useful and not just
+         * spamming the debug log all the time */
+        while (!connected)
+            doConnect();
+    }
 }
 
 bool BackEnd::noopPacket(const std::vector<char> &body, PacketData *data)
