@@ -2,6 +2,7 @@ import QtQuick 2.4
 import QtQuick.Controls 2.3
 
 Item {
+    id: item1
     width: 400
     height: 400
     property alias button: button
@@ -11,20 +12,24 @@ Item {
     TextInput {
         id: textInput
         x: 160
-        y: 83
         width: 80
         height: 20
         text: qsTr("Name")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 83
         font.pixelSize: 12
     }
 
     TextInput {
         id: textInput1
         x: 160
-        y: 169
         width: 80
         height: 20
         text: qsTr("Description")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 169
         font.pixelSize: 12
     }
 
@@ -33,5 +38,8 @@ Item {
         x: 150
         y: 307
         text: qsTr("Add")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 57
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 }

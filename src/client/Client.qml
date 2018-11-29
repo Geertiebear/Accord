@@ -20,6 +20,10 @@ ClientForm {
         addCommunityButton.anchors.topMargin = (65 * listView.count)
     }
 
+    messagesList.onCountChanged: {
+        messagesList.positionViewAtEnd();
+    }
+
     channelList.onCountChanged: {
         addChannelButton.anchors.topMargin = (20 * channelList.count)
     }
@@ -105,24 +109,30 @@ ClientForm {
             id: addCommunityPopup
             x: Math.round((parent.width - width) / 2)
             y: Math.round((parent.height - height) / 2)
-            width: 640
-            height: 480
+            width: parent.width * 0.33
+            height: parent.width * 0.33
             modal: true
             focus: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-            AddCommunity {}
+            AddCommunity {
+                width: parent.width
+                height: parent.height
+            }
         }
 
         Popup {
             id: addChannelPopup
             x: Math.round((parent.width - width) / 2)
             y: Math.round((parent.height - height) / 2)
-            width: 640
-            height: 480
+            width: parent.width * 0.33
+            height: parent.width * 0.33
             modal: true
             focus: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-            AddChannel {}
+            AddChannel {
+                width: parent.width
+                height: parent.height
+            }
         }
 
         Component {

@@ -3,9 +3,10 @@ import QtQuick.Window 2.3
 import QtQuick.Controls 2.3
 
 Item {
+    id: item1
     property alias name: name
-    width: 1920
-    height: Screen.desktopAvailableHeight
+    width: 1280
+    height: 720
     property alias email: email
     property alias register: register
     property alias text1: text1
@@ -14,29 +15,37 @@ Item {
 
     Rectangle {
         id: rectangle
-        x: 771
-        y: 379
-        width: 378
-        height: 322
+        x: 451
+        y: 199
+        width: parent.width * 0.3
+        height: parent.height * 0.45
         color: "#ffffff"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
 
         TextInput {
             id: name
             x: parent.width / 2 - width / 2
-            y: 63
             width: 80
             height: 20
-            text: qsTr("Text Input")
+            text: qsTr("Name/email")
+            anchors.top: parent.top
+            anchors.topMargin: 63
+            anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 12
         }
 
         TextInput {
             id: password
+            echoMode: TextInput.Normal
             x: 149
-            y: 157
             width: 80
             height: 20
-            text: qsTr("Text Input")
+            text: "password"
+            anchors.top: parent.top
+            anchors.topMargin: 157
+            anchors.horizontalCenter: parent.horizontalCenter
+            horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 12
         }
 
@@ -54,17 +63,21 @@ Item {
         Button {
             id: login
             x: 139
-            y: 255
             text: qsTr("Login")
+            anchors.top: parent.top
+            anchors.topMargin: 255
+            anchors.horizontalCenter: parent.horizontalCenter
         }
 
         Button {
             id: register
-            x: 8
-            y: 20
             width: 77
             height: 18
             text: qsTr("Register")
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.top: parent.top
+            anchors.topMargin: 20
             wheelEnabled: false
         }
 

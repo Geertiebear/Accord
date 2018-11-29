@@ -13,12 +13,13 @@ Item {
     Text {
         id: filepath
         x: 121
-        y: 233
         width: 43
         height: 15
         text: qsTr("filepath")
+        anchors.top: parent.top
+        anchors.topMargin: 233
         anchors.right: fileChoose.left
-        anchors.rightMargin: 145
+        anchors.rightMargin: 120
         wrapMode: Text.NoWrap
         font.pixelSize: 12
     }
@@ -28,24 +29,31 @@ Item {
         x: 270
         y: 399
         text: qsTr("Submit")
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 45
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 
     Button {
         id: fileChoose
         x: 308
-        y: 233
         width: 75
         height: 15
         text: qsTr("Choose File")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 233
     }
 
     TextInput {
         id: name
         x: 280
-        y: 110
         width: 80
         height: 20
         text: qsTr("Name")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 110
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: 12
     }
@@ -53,8 +61,10 @@ Item {
     Text {
         id: text1
         x: 245
-        y: 34
         text: qsTr("Create Community")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 34
         font.pixelSize: 18
     }
 }

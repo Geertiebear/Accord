@@ -1,4 +1,6 @@
 #include <QGuiApplication>
+#include <QApplication>
+#include <QDesktopWidget>
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QQmlApplicationEngine>
@@ -7,9 +9,9 @@
 
 int main(int argc, char **argv)
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-    QCoreApplication::addLibraryPath("./");
+    QApplication::addLibraryPath("./");
 
     QQmlApplicationEngine engine;
     BackEnd *backend = new BackEnd(engine.rootContext());
@@ -19,6 +21,7 @@ int main(int argc, char **argv)
     engine.rootContext()->setContextProperty("channelsMap", backend->channelsMap);
     engine.rootContext()->setContextProperty("messagesMap", backend->messagesMap);
     engine.rootContext()->setContextProperty("userMap", backend->userMap);
+    engine.rootContext()->setContextProperty("screenGeometry", QApplication::desktop()->availableGeometry());
     engine.addImageProvider("communityImageProvider", communityImageProvider);
     qmlRegisterType<CommunitiesTable>("accord.types", 1, 0, "CommuntiesTable");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

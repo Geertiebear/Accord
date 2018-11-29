@@ -6,11 +6,12 @@ import accord.types 1.0
 
 Window {
     visible: true
-    visibility: "Maximized"
     title: qsTr("Accord")
     color: "#5d5959"
     id: main
     objectName: "main"
+    width: screenGeometry.width
+    height: screenGeometry.height
 
     function onAuthenticated() {
         stack.replace(client, {}, StackView.Immediate);
@@ -37,15 +38,23 @@ Window {
     StackView {
         id: stack
         initialItem: login
+        width: parent.width
+        height: parent.height
 
         Component {
             id: login
-            Login { }
+            Login {
+                width: parent.width
+                height: parent.height
+            }
         }
 
         Component {
             id: client
-            Client { }
+            Client {
+                width: parent.width
+                height: parent.height
+            }
         }
     }
 

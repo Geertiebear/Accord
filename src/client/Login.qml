@@ -8,6 +8,11 @@ Item {
     LoginForm {
         id: loginForm
         anchors.fill: parent
+
+        password.onTextChanged: {
+            password.echoMode = TextInput.Password
+        }
+
         login.onClicked: {
             if(registering) {
                 backend.regist(name.text, email.text, password.text);

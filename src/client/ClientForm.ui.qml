@@ -5,7 +5,8 @@ import QtGraphicalEffects 1.0
 
 Page {
     id: page
-    height: Screen.desktopAvailableHeight
+    height: 720
+    width: 1280
     property alias inviteInput: inviteInput
     property alias addChannelButton: addChannelButton
     property alias messageInput: messageInput
@@ -17,7 +18,6 @@ Page {
     property alias addCommunityButton: addCommunityButton
     property string selectedCommunity
     property string selectedChannel
-    width: 1920
 
     ScrollView {
         id: communityView
@@ -151,7 +151,10 @@ Page {
         id: messagesView
         x: 2
         y: 2
-        width: 1282
+        width: parent.width * 0.4
+        height: screen.height * 0.43
+        anchors.right: parent.right
+        anchors.rightMargin: 57
         anchors.bottomMargin: 204
         anchors.topMargin: 50
         anchors.left: channelView.right
@@ -176,25 +179,26 @@ Page {
 
     TextInput {
         id: messageInput
-        x: 416
-        width: 1310
         height: 86
         text: qsTr("Text Input")
+        anchors.right: messagesView.right
+        anchors.rightMargin: 167
+        anchors.left: messagesView.left
+        anchors.leftMargin: 208
         horizontalAlignment: Text.AlignHCenter
-        anchors.horizontalCenterOffset: 20
-        anchors.horizontalCenter: messagesView.horizontalCenter
         anchors.top: messagesView.bottom
-        anchors.topMargin: 10
+        anchors.topMargin: 30
         font.pixelSize: 12
     }
 
     TextInput {
         id: inviteInput
         x: 60
-        y: 1036
         width: 80
         height: 20
         text: qsTr("Invite")
+        anchors.top: parent.bottom
+        anchors.topMargin: -100
         font.pixelSize: 12
     }
 }
