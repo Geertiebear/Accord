@@ -164,13 +164,15 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
     qDebug() << "Got error: " << error;
 
     switch (error) {
-        case accord::AUTH_ERR:
+        case accord::AUTH_ERR: {
             server->backend.failedAuthenticated();
             break;
-        case accord::REGIST_ERR:
+        }
+        case accord::REGIST_ERR: {
             server->backend.failedRegistered();
             break;
-        case accord::NOT_LOGGED_IN_ERR:
+        }
+        case accord::NOT_LOGGED_IN_ERR: {
             if (server->token.token.empty()) {
                 server->backend.failedAuthenticated();
                 break;
@@ -184,6 +186,11 @@ bool BackEnd::receiveErrorPacket(const std::vector<char> &body, PacketData *data
             server->backend.write(array);
             server->backend.retryFailedRequest();
             break;
+        }
+        case accord::ALREADY_IN_ERR: {
+            server->backend.alreadyInCommunity();
+            break;
+        }
     }
 
     return false;

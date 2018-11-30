@@ -189,6 +189,7 @@ signals:
     void authenticated();
     void failedAuthenticated();
     void failedRegistered();
+    void alreadyInCommunity();
     void communityReady(QVariant table);
     void communityProfilepic(quint64, QByteArray data);
     void inviteReady(QVariant id, QVariant invite);

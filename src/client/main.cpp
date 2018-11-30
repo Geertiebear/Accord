@@ -30,6 +30,7 @@ int main(int argc, char **argv)
     QObject::connect(backend, SIGNAL(authenticated()), top, SLOT(onAuthenticated()));
     QObject::connect(backend, SIGNAL(failedAuthenticated()), top, SLOT(onFailedAuthenticated()));
     QObject::connect(backend, SIGNAL(failedRegistered()), top, SLOT(onFailedRegistered()));
+    QObject::connect(backend, SIGNAL(alreadyInCommunity()), top, SLOT(onAlreadyInCommunity()));
     QObject::connect(backend, SIGNAL(communityReady(QVariant)), top, SLOT(onCommunityReady(QVariant)));
     QObject::connect(backend, SIGNAL(communityProfilepic(quint64, QByteArray)),
                      communityImageProvider, SLOT(onCommunityProfilepic(quint64,

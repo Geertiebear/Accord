@@ -25,6 +25,10 @@ Window {
         stack.replace(login, {"failed": "true", "registering": "true"}, StackView.Immediate);
     }
 
+    function onAlreadyInCommunity() {
+        alreadyInCommunityDialog.open();
+    }
+
     function onCommunityReady(table) {
         stack.currentItem.listView.model.append({});
     }
@@ -73,5 +77,15 @@ Pressing OK will copy the invite to the clipboard."
         onAccepted: {
             backend.stringToClipboard(invite);
         }
+    }
+
+    MessageDialog {
+        id: alreadyInCommunityDialog
+        title: "Error"
+        text: {
+            "You cannot accept an invite to a community you are already in!"
+        }
+        width: 200
+        height: 200
     }
 }
