@@ -13,6 +13,7 @@ enum Error {
     REQUEST_ERR = 6,
     FORBIDDEN_ERR = 7,
     NOT_LOGGED_IN_ERR = 8,
+    ALREADY_IN_ERR = 9,
 };
 
 } /* namespace accord */

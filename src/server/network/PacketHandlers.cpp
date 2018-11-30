@@ -452,6 +452,14 @@ bool PacketHandlers::handleSendInvite(PacketData *data,
     }
 
     const auto communityId = client->thread.getCommunityForInvite(invite);
+    if (client->thread.database.isUserInCommunity(client->user.id(),
+                                                  communityId)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(ALREADY_IN_ERR);
+        client->write(msg);
+        return false;
+    }
+
     if (!client->thread.database.addMember(communityId, client->user.id())) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
