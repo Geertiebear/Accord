@@ -365,8 +365,10 @@ bool Database::initMessage(uint64_t id, uint64_t channel, uint64_t sender,
                            table_messages *ret)
 {
     table_messages check = getMessage(id);
-    if (check.table != nullptr)
+    if (check.table != nullptr) {
+        log::Logger::log(log::WARNING, "Message already exists!");
         return false;
+    }
 
     auto query = connection.query();
     messages message(id, channel, sender, msg, timestamp);

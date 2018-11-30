@@ -81,7 +81,7 @@ std::string CryptoUtil::sha256(const std::vector<char> &data)
 uint64_t CryptoUtil::getRandomUINT64()
 {
     uint64_t ret;
-    std::vector<unsigned char> buffer = getRandomBytes(1);
+    std::vector<unsigned char> buffer = getRandomBytes(8);
     for (unsigned int i = 0; i < buffer.size(); i++)
         ret += (int) buffer[i];
     return ret;
