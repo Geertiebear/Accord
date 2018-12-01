@@ -53,6 +53,7 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     QObject::connect(&socket, SIGNAL(stateChanged(
                                          QAbstractSocket::SocketState)),
                      this, SLOT(stateChanged(QAbstractSocket::SocketState)));
+    QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(doConnect()));
     doConnect();
 }
 
@@ -88,11 +89,16 @@ qint64 BackEnd::write(const QByteArray &data)
 void BackEnd::doConnect()
 {
     socket.connectToHostEncrypted("chat.bearservers.net", 6524);
+    qDebug() << "connecting!";
     if (!socket.waitForEncrypted()) {
         qDebug() << socket.errorString();
         return;
     }
     connected = true;
+    if (timer.isActive())
+        timer.stop();
+    if (!lastRequest.empty())
+        write(Util::convertCharVectorToQt(lastRequest));
 }
 
 bool BackEnd::authenticate(QString email, QString password)
@@ -143,10 +149,10 @@ void BackEnd::readyRead()
 void BackEnd::stateChanged(QAbstractSocket::SocketState state)
 {
     if (state == QAbstractSocket::UnconnectedState) {
+        connected = false;
         /* TODO: actually make this something useful and not just
          * spamming the debug log all the time */
-        while (!connected)
-            doConnect();
+        timer.start(10000);
     }
 }
 
@@ -429,6 +435,18 @@ bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
     ownTable->fromShared(table);
     /* server->backend.communityProfilepic(
                 table.id, ownTable->profilepic); */
+
+    auto &messagesMap = server->backend.messagesMap;
+    auto &messagesList = messagesMap[channelString].value<DataList*>()->data;
+    auto it = messagesList.end();
+    while (it != messagesList.begin()) {
+        it--;
+        const auto variant = *it;
+        const auto message = variant.value<MessagesTable*>();
+        if (message->isPendingOf(ownTable))
+            messagesList.erase(it);
+    }
+
     if (!server->backend.messagesMap[channelString].value<DataList*>())
         server->backend.messagesMap.insert(channelString,
                                            QVariant::fromValue(new DataList()));
@@ -523,10 +541,23 @@ void BackEnd::addCommunity(QString name, QUrl file)
 }
 
 bool BackEnd::sendMessage(QString message, QString channel)
-{
+{   
     auto timestamp = std::chrono::system_clock::now().time_since_epoch()
             .count();
     auto channelInt = channel.toULongLong();
+
+    auto tempMessage = new MessagesTable(channel, message,
+                                     QString::fromStdString(
+                                         std::to_string(timestamp)),
+                                     true);
+    if (!messagesMap[channel].value<DataList*>())
+        messagesMap.insert(channel, QVariant::fromValue(new DataList()));
+    messagesMap[channel].
+            value<DataList*>()->data.append(
+                QVariant::fromValue(tempMessage));
+    qmlContext->setContextProperty("messagesMap",
+                                 messagesMap);
+
     auto request = accord::types::SendMessage(channelInt,
                                               message.toStdString(),
                                               timestamp,

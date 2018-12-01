@@ -10,6 +10,7 @@
 #include <QCache>
 #include <QVariant>
 #include <QQmlContext>
+#include <QTimer>
 #include <string>
 
 #include <accordshared/types/Return.h>
@@ -100,9 +101,16 @@ class MessagesTable : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString contents MEMBER contents CONSTANT)
     Q_PROPERTY(QString sender MEMBER sender CONSTANT)
+    Q_PROPERTY(bool pending MEMBER pending CONSTANT)
 public:
     MessagesTable() { }
+    MessagesTable(QString channel, QString contents,
+                  QString timestamp, bool pending) :
+        channel(channel), contents(contents), timestamp(timestamp),
+        pending(pending)
+        { }
     QString id, channel, contents, timestamp, sender;
+    bool pending;
 
     void fromShared(const accord::types::MessagesTable &table)
     {
@@ -111,6 +119,14 @@ public:
         contents = QString::fromStdString(table.message);
         timestamp = QString::fromStdString(std::to_string(table.timestamp));
         sender = QString::fromStdString(std::to_string(table.sender));
+        pending = false;
+    }
+
+    bool isPendingOf(const MessagesTable *message) {
+        return message->channel == channel &&
+                message->contents == contents &&
+                message->timestamp == timestamp &&
+                pending;
     }
 };
 
@@ -207,18 +223,19 @@ public slots:
     void stringToClipboard(QString string);
     void readyRead();
     void stateChanged(QAbstractSocket::SocketState state);
+    void doConnect();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;
     static accord::util::FunctionMap serializationMap;
     qint64 write(const QByteArray &data);
     QByteArray read(qint64 maxSize);
-    void doConnect();
     QSslSocket socket;
     Server state;
     QVector<char> readFile(QFile &file);
     void handleFileError(QUrl file);
     bool isPartialPacket;
     PacketBuffer partialPacket;
+    QTimer timer;
 
     void handlePartialPacket();
 };

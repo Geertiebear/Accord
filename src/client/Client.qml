@@ -138,7 +138,15 @@ ClientForm {
         Component {
             id: messageDelegate
             Text {
+                color: {
+                    if (modelData.pending)
+                        return "#ff8c00";
+                    return "#000000";
+                }
+
                 text: {
+                    if(modelData.pending)
+                        return "PENDING: " + modelData.contents;
                     var userData = userMap[modelData.sender];
                     if (typeof userData !== "undefined")
                         return userData.name + ": " + modelData.contents;
