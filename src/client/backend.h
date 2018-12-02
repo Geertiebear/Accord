@@ -12,6 +12,7 @@
 #include <QQmlContext>
 #include <QTimer>
 #include <string>
+#include <chrono>
 
 #include <accordshared/types/Return.h>
 #include <accordshared/types/Request.h>
@@ -20,6 +21,8 @@
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/util/Serialization.h>
+
+#define MESSAGE_EXPIRERY_TIME 6
 
 class BackEnd;
 
@@ -102,15 +105,20 @@ class MessagesTable : public QObject {
     Q_PROPERTY(QString contents MEMBER contents CONSTANT)
     Q_PROPERTY(QString sender MEMBER sender CONSTANT)
     Q_PROPERTY(bool pending MEMBER pending CONSTANT)
+    Q_PROPERTY(bool failure MEMBER failure CONSTANT)
 public:
     MessagesTable() { }
     MessagesTable(QString channel, QString contents,
                   QString timestamp, bool pending) :
         channel(channel), contents(contents), timestamp(timestamp),
         pending(pending)
-        { }
+    { }
+    MessagesTable(const MessagesTable *message) :
+        channel(message->channel), contents(message->contents),
+        timestamp(message->timestamp), pending(false), failure(true)
+    { }
     QString id, channel, contents, timestamp, sender;
-    bool pending;
+    bool pending, failure;
 
     void fromShared(const accord::types::MessagesTable &table)
     {
@@ -120,6 +128,7 @@ public:
         timestamp = QString::fromStdString(std::to_string(table.timestamp));
         sender = QString::fromStdString(std::to_string(table.sender));
         pending = false;
+        failure = false;
     }
 
     bool isPendingOf(const MessagesTable *message) {
@@ -127,6 +136,21 @@ public:
                 message->contents == contents &&
                 message->timestamp == timestamp &&
                 pending;
+    }
+
+    bool hasTimedOut()
+    {
+        const auto now = std::chrono::system_clock::now().
+                time_since_epoch();
+        const auto messageTimestamp = timestamp.toULongLong();
+        const auto messageTimestampSec = std::chrono::duration_cast<
+                std::chrono::seconds>(std::chrono::nanoseconds(
+                                          messageTimestamp));
+        const auto nowSec = std::chrono::duration_cast<
+                std::chrono::seconds>(now);
+        const auto nowCount = nowSec.count();
+        const auto messageTimestampCount = messageTimestampSec.count();
+        return (nowCount - messageTimestampCount) >= MESSAGE_EXPIRERY_TIME;
     }
 };
 
@@ -224,6 +248,7 @@ public slots:
     void readyRead();
     void stateChanged(QAbstractSocket::SocketState state);
     void doConnect();
+    void onEventTimer();
 private:
     static std::vector<accord::network::ReceiveHandler> handlers;
     static accord::util::FunctionMap serializationMap;
@@ -233,9 +258,11 @@ private:
     Server state;
     QVector<char> readFile(QFile &file);
     void handleFileError(QUrl file);
+    void checkPendingMessages();
     bool isPartialPacket;
     PacketBuffer partialPacket;
-    QTimer timer;
+    QTimer reconnectTimer;
+    QTimer eventTimer;
 
     void handlePartialPacket();
 };

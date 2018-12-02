@@ -141,12 +141,16 @@ ClientForm {
                 color: {
                     if (modelData.pending)
                         return "#ff8c00";
+                    if (modelData.failure)
+                        return "#ff0000"
                     return "#000000";
                 }
 
                 text: {
-                    if(modelData.pending)
+                    if (modelData.pending)
                         return "PENDING: " + modelData.contents;
+                    if (modelData.failure)
+                        return "FAILURE: " + modelData.contents;
                     var userData = userMap[modelData.sender];
                     if (typeof userData !== "undefined")
                         return userData.name + ": " + modelData.contents;

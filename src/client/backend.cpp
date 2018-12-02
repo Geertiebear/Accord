@@ -53,7 +53,9 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
     QObject::connect(&socket, SIGNAL(stateChanged(
                                          QAbstractSocket::SocketState)),
                      this, SLOT(stateChanged(QAbstractSocket::SocketState)));
-    QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(doConnect()));
+    QObject::connect(&reconnectTimer, SIGNAL(timeout()), this, SLOT(doConnect()));
+    QObject::connect(&eventTimer, SIGNAL(timeout()), this, SLOT(onEventTimer()));
+    eventTimer.start(1000);
     doConnect();
 }
 
@@ -95,10 +97,33 @@ void BackEnd::doConnect()
         return;
     }
     connected = true;
-    if (timer.isActive())
-        timer.stop();
+    if (reconnectTimer.isActive())
+        reconnectTimer.stop();
     if (!lastRequest.empty())
         write(Util::convertCharVectorToQt(lastRequest));
+}
+
+void BackEnd::onEventTimer()
+{
+    checkPendingMessages();
+}
+
+void BackEnd::checkPendingMessages()
+{
+    for (QVariant variant : messagesMap) {
+        auto &messagesList = variant.value<DataList*>()->data;
+        auto it = messagesList.end();
+        while (it != messagesList.begin()) {
+            it--;
+            const auto variant = *it;
+            const auto message = variant.value<MessagesTable*>();
+            if (message->pending && message->hasTimedOut()) {
+                    const auto newMessage = new MessagesTable(message);
+                    *it = QVariant::fromValue(newMessage);
+            }
+        }
+    }
+    qmlContext->setContextProperty("messagesMap", messagesMap);
 }
 
 bool BackEnd::authenticate(QString email, QString password)
@@ -152,7 +177,7 @@ void BackEnd::stateChanged(QAbstractSocket::SocketState state)
         connected = false;
         /* TODO: actually make this something useful and not just
          * spamming the debug log all the time */
-        timer.start(10000);
+        reconnectTimer.start(10000);
     }
 }
 
