@@ -78,7 +78,7 @@ QByteArray BackEnd::read(qint64 maxSize)
         return res;
     res = QByteArray::fromRawData(buffer, ret);
     delete buffer;
-    return res;auto packet = network::KeepAlivePacket()
+    return res;
 }
 
 qint64 BackEnd::write(const QByteArray &data)
