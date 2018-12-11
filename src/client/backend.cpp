@@ -57,7 +57,7 @@ BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
                      this, SLOT(stateChanged(QAbstractSocket::SocketState)));
     QObject::connect(&reconnectTimer, SIGNAL(timeout()), this, SLOT(doConnect()));
     QObject::connect(&eventTimer, SIGNAL(timeout()), this, SLOT(onEventTimer()));
-    eventTimer.start(1000);
+    eventTimer.start(2000);
     doConnect();
 }
 
@@ -99,6 +99,7 @@ void BackEnd::doConnect()
         return;
     }
     connected = true;
+    timeSinceKeepAlive = 0;
     if (reconnectTimer.isActive())
         reconnectTimer.stop();
 }
@@ -137,11 +138,10 @@ void BackEnd::checkConnected()
         return;
     } else if (!connected) return;
 
-    /* send new keep alive and reset timer */
     accord::network::KeepAlivePacket packet;
     const auto msg = packet.construct();
     write(Util::convertCharVectorToQt(msg));
-    timeSinceKeepAlive = 0;
+    timeSinceKeepAlive++;
 }
 
 bool BackEnd::authenticate(QString email, QString password)
@@ -191,7 +191,6 @@ void BackEnd::readyRead()
 
 void BackEnd::stateChanged(QAbstractSocket::SocketState state)
 {
-    qDebug() << "State changed";
     if (state == QAbstractSocket::UnconnectedState) {
         connected = false;
         /* TODO: actually make this something useful and not just
