@@ -22,6 +22,7 @@ std::vector<network::ReceiveHandler> Server::handlers = {
     &network::PacketHandlers::receiveRegisterPacket,
     &network::PacketHandlers::receiveNoopPacket,
     &network::PacketHandlers::receiveSerializationPacket,
+    &network::PacketHandlers::receiveKeepAlivePacket,
 };
 
 Server::Server(Arguments args) : numThreads(args.threads), port(args.port)

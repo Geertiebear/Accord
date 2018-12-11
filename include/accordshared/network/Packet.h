@@ -21,6 +21,7 @@ enum PacketIds {
     REGISTER_PACKET = 4,
     TOKEN_PACKET = 5,
     SERIALIZATION_PACKET = 6,
+    KEEP_ALIVE_PACKET = 7,
 };
 
 class Packet {

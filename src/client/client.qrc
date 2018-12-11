@@ -10,5 +10,6 @@
         <file>AddCommunityForm.ui.qml</file>
         <file>AddChannel.qml</file>
         <file>AddChannelForm.ui.qml</file>
+        <file>options.png</file>
     </qresource>
 </RCC>

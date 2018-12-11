@@ -13,6 +13,7 @@
 #include <accordshared/network/packet/AuthPacket.h>
 #include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/RegisterPacket.h>
+#include <accordshared/network/packet/KeepAlivePacket.h>
 #include <accordshared/network/PacketDecoder.h>
 #include <accordshared/types/Request.h>
 #include <accordshared/error/ErrorCodes.h>
@@ -27,7 +28,8 @@ std::vector<accord::network::ReceiveHandler> BackEnd::handlers = {
     &BackEnd::noopPacket,
     &BackEnd::noopPacket,
     &BackEnd::receiveTokenPacket,
-    &BackEnd::receiveSerializePacket
+    &BackEnd::receiveSerializePacket,
+    &BackEnd::receiveKeepAlivePacket
 };
 
 accord::util::FunctionMap BackEnd::serializationMap = {
@@ -76,7 +78,7 @@ QByteArray BackEnd::read(qint64 maxSize)
         return res;
     res = QByteArray::fromRawData(buffer, ret);
     delete buffer;
-    return res;
+    return res;auto packet = network::KeepAlivePacket()
 }
 
 qint64 BackEnd::write(const QByteArray &data)
@@ -99,13 +101,12 @@ void BackEnd::doConnect()
     connected = true;
     if (reconnectTimer.isActive())
         reconnectTimer.stop();
-    if (!lastRequest.empty())
-        write(Util::convertCharVectorToQt(lastRequest));
 }
 
 void BackEnd::onEventTimer()
 {
     checkPendingMessages();
+    checkConnected();
 }
 
 void BackEnd::checkPendingMessages()
@@ -117,13 +118,30 @@ void BackEnd::checkPendingMessages()
             it--;
             const auto variant = *it;
             const auto message = variant.value<MessagesTable*>();
-            if (message->pending && message->hasTimedOut()) {
+            if (message->pending && !message->failure) {
+                if (message->hasTimedOut()) {
                     const auto newMessage = new MessagesTable(message);
                     *it = QVariant::fromValue(newMessage);
+                }
             }
         }
     }
     qmlContext->setContextProperty("messagesMap", messagesMap);
+}
+
+void BackEnd::checkConnected()
+{
+    if (timeSinceKeepAlive >= 3 && connected) {
+        connected = false;
+        socket.abort();
+        return;
+    } else if (!connected) return;
+
+    /* send new keep alive and reset timer */
+    accord::network::KeepAlivePacket packet;
+    const auto msg = packet.construct();
+    write(Util::convertCharVectorToQt(msg));
+    timeSinceKeepAlive = 0;
 }
 
 bool BackEnd::authenticate(QString email, QString password)
@@ -173,6 +191,7 @@ void BackEnd::readyRead()
 
 void BackEnd::stateChanged(QAbstractSocket::SocketState state)
 {
+    qDebug() << "State changed";
     if (state == QAbstractSocket::UnconnectedState) {
         connected = false;
         /* TODO: actually make this something useful and not just
@@ -249,6 +268,17 @@ bool BackEnd::receiveTokenPacket(const std::vector<char> &body, PacketData *data
     server->backend.write(Util::convertCharVectorToQt(msg));
     return true;
 }
+
+bool BackEnd::receiveKeepAlivePacket(const std::vector<char> &body,
+                                     PacketData *data)
+{
+    (void)body; /* supress not used warnings */
+    auto server = (Server*) data;
+    /* just reset the timer */
+    server->backend.timeSinceKeepAlive = 0;
+    return true;
+}
+
 
 bool BackEnd::regist(QString name, QString email, QString password)
 {
@@ -583,10 +613,18 @@ bool BackEnd::sendMessage(QString message, QString channel)
     qmlContext->setContextProperty("messagesMap",
                                  messagesMap);
 
+    return sendMessageRequest(channelInt, message.toStdString(), timestamp,
+                              state.token.token);
+}
+
+bool BackEnd::sendMessageRequest(uint64_t channelInt,
+                                 const std::string &message,
+                                 uint64_t timestamp, const std::string &token)
+{
     auto request = accord::types::SendMessage(channelInt,
-                                              message.toStdString(),
+                                              message,
                                               timestamp,
-                                              state.token.token);
+                                              token);
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::SEND_MESSAGE_REQUEST,
@@ -604,6 +642,20 @@ bool BackEnd::sendInvite(QString invite)
                                       json);
     lastRequest = msg;
     return write(Util::convertCharVectorToQt(msg));
+}
+
+void BackEnd::retryMessage()
+{
+    const auto message = failedMessage.value<MessagesTable*>();
+    auto variant = messagesMap[message->channel];
+    auto dataList = variant.value<DataList*>();
+    dataList->data.removeOne(failedMessage);
+    sendMessage(message->contents, message->channel);
+}
+
+void BackEnd::setFailedMessage(QVariant variant)
+{
+    failedMessage = variant;
 }
 
 QVector<char> BackEnd::readFile(QFile &file)

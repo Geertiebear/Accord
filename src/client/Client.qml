@@ -137,7 +137,11 @@ ClientForm {
 
         Component {
             id: messageDelegate
+            Item {
+                width: parent.width
+                height: text.height
             Text {
+                id: text
                 color: {
                     if (modelData.pending)
                         return "#ff8c00";
@@ -158,5 +162,55 @@ ClientForm {
                     return "";
                 }
             }
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                onEntered: {
+                    options.visible = true;
+                }
+
+                onExited: {
+                    options.visible = false;
+                }
+            }
+
+            Button {
+                    id: options
+                    visible: false
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: text.right
+                    anchors.leftMargin: 10
+                    width: 10
+                    height: 10
+                    background: Image {
+                        source: "qrc:/options.png"
+                        anchors.fill: parent
+                        width: 10
+                        height: 10
+                    }
+                    onPressed: {
+                        if (modelData.failure) {
+                            backend.setFailedMessage(modelData);
+                            messageMenuFailed.popup(this);
+                            return;
+                        }
+                        messageMenu.popup(this);
+                    }
+            }
         }
+    }
+
+    Menu {
+        id: messageMenuFailed
+        MenuItem {
+            text: "Retry"
+            onClicked: {
+                backend.retryMessage();
+            }
+        }
+    }
+
+    Menu { /* empty for now */
+        id: messageMenu
+    }
 }

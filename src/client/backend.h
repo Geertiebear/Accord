@@ -118,7 +118,8 @@ public:
         timestamp(message->timestamp), pending(false), failure(true)
     { }
     QString id, channel, contents, timestamp, sender;
-    bool pending, failure;
+    bool pending;
+    bool failure = false;
 
     void fromShared(const accord::types::MessagesTable &table)
     {
@@ -203,6 +204,7 @@ public:
     static bool receiveDisconnectPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveTokenPacket(const std::vector<char> &body, PacketData *data);
     static bool receiveSerializePacket(const std::vector<char> &body, PacketData *data);
+    static bool receiveKeepAlivePacket(const std::vector<char> &body, PacketData *data);
 
     static bool handleCommunitiesTable(PacketData *data, const std::vector<char> &body);
     static bool handleChannelsTable(PacketData *data, const std::vector<char> &body);
@@ -215,6 +217,7 @@ public:
     static bool handleUser(PacketData *data, const std::vector<char> &body);
     static bool handleInvite(PacketData *data, const std::vector<char> &body);
 
+
     void retryFailedRequest();
 
     DataList communitiesList;
@@ -225,6 +228,7 @@ public:
     QQmlContext *qmlContext;
     std::vector<char> lastRequest;
     bool connected;
+    int timeSinceKeepAlive;
 signals:
     void authenticated();
     void failedAuthenticated();
@@ -242,6 +246,9 @@ public slots:
     bool sendMessage(QString message, QString channel);
     bool sendInvite(QString invite);
     bool requestInvite(QString id);
+    void retryMessage();
+    /* need this setter because can't pass message to the menu in q.qml */
+    void setFailedMessage(QVariant message);
     void addCommunity(QString name, QUrl file);
     void addChannel(QString name, QString description, QString community);
     void stringToClipboard(QString string);
@@ -259,10 +266,14 @@ private:
     QVector<char> readFile(QFile &file);
     void handleFileError(QUrl file);
     void checkPendingMessages();
+    void checkConnected();
+    bool sendMessageRequest(uint64_t channelInt, const std::string &message,
+                            uint64_t timestamp, const std::string &token);
     bool isPartialPacket;
     PacketBuffer partialPacket;
     QTimer reconnectTimer;
     QTimer eventTimer;
+    QVariant failedMessage;
 
     void handlePartialPacket();
 };

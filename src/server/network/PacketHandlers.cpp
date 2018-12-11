@@ -9,6 +9,7 @@
 #include <accordshared/network/packet/SerializationPacket.h>
 #include <accordshared/network/packet/TokenPacket.h>
 #include <accordshared/network/packet/ErrorPacket.h>
+#include <accordshared/network/packet/KeepAlivePacket.h>
 #include <accordshared/error/ErrorCodes.h>
 #include <accordshared/types/Request.h>
 #include <accordshared/types/Return.h>
@@ -154,6 +155,18 @@ bool PacketHandlers::receiveSerializationPacket(const std::vector<char> &body, P
 {
     return util::Serialization::receive(serializationMap, body, data);
 }
+
+bool PacketHandlers::receiveKeepAlivePacket(const std::vector<char> &body,
+                                            PacketData *data)
+{
+    (void)body; /* supress not-used warnings */
+    auto client = (thread::Client*) data;
+    network::KeepAlivePacket packet;
+    const auto msg = packet.construct();
+    client->write(msg);
+    return true;
+}
+
 
 bool PacketHandlers::handleCommunitiesTable(PacketData *data, const std::vector<char> &body)
 {
