@@ -132,7 +132,7 @@ void BackEnd::checkPendingMessages()
 
 void BackEnd::checkConnected()
 {
-    if (timeSinceKeepAlive >= 3 && connected) {
+    if (timeSinceKeepAlive >= 4 && connected) {
         connected = false;
         socket.abort();
         return;
