@@ -67,13 +67,13 @@ add_library(accordshared SHARED ${SOURCES_SHARED})
 qt5_add_resources(qml_QRC src/client/client.qrc)
 
 #execs
-add_executable(accordserver ${SOURCES_SERVER})
-add_executable(accordcliclient ${SOURCES_CLICLIENT})
-add_executable(accordclient ${SOURCES_CLIENT} ${qml_QRC})
+#add_executable(accordserver ${SOURCES_SERVER})
+#add_executable(accordcliclient ${SOURCES_CLICLIENT})
+add_executable(accordclient MACOSX_BUNDLE ${SOURCES_CLIENT} ${qml_QRC})
 
 #defines
-target_compile_definitions(accordserver PRIVATE MAGICKCORE_HDRI_ENABLE=0
-    MAGICKCORE_QUANTUM_DEPTH=16)
+#target_compile_definitions(accordserver PRIVATE MAGICKCORE_HDRI_ENABLE=0
+#    MAGICKCORE_QUANTUM_DEPTH=16)
 
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
@@ -87,31 +87,31 @@ target_include_directories(accordshared
     PUBLIC include/)
 target_link_libraries(accordshared ${LIBEVENT_LIBRARIES})
 
-target_include_directories(accordserver 
-    PUBLIC include/)
-target_include_directories(accordserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
-target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
-target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_include_directories(accordserver PUBLIC ${MYSQLPP_INCLUDE_DIR})
-target_include_directories(accordserver PUBLIC ${MYSQL_INCLUDE_DIR})
-target_include_directories(accordserver PUBLIC ${ImageMagick_INCLUDE_DIRS})
-target_link_libraries(accordserver ${MYSQLPP_LIBRARIES})
-target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(accordserver ${Boost_LIBRARIES})
-target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
-target_link_libraries(accordserver ${LIBEVENT_OPENSSL})
-target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
-target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
-target_link_libraries(accordserver ${argon2_LIBRARIES})
-target_link_libraries(accordserver ${ImageMagick_LIBRARIES})
-target_link_libraries(accordserver mysqlclient)
-target_link_libraries(accordserver accordshared)
+#target_include_directories(accordserver 
+#    PUBLIC include/)
+#target_include_directories(accordserver PUBLIC ${LIBEVENT_INCLUDE_DIRS})
+#target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
+#target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
+#target_include_directories(accordserver PUBLIC ${MYSQLPP_INCLUDE_DIR})
+#target_include_directories(accordserver PUBLIC ${MYSQL_INCLUDE_DIR})
+#target_include_directories(accordserver PUBLIC ${ImageMagick_INCLUDE_DIRS})
+#target_link_libraries(accordserver ${MYSQLPP_LIBRARIES})
+#target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(accordserver ${Boost_LIBRARIES})
+#target_link_libraries(accordserver ${LIBEVENT_LIBRARIES})
+#target_link_libraries(accordserver ${LIBEVENT_OPENSSL})
+#target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
+#target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
+#target_link_libraries(accordserver ${argon2_LIBRARIES})
+#target_link_libraries(accordserver ${ImageMagick_LIBRARIES})
+#target_link_libraries(accordserver mysqlclient)
+#target_link_libraries(accordserver accordshared)
 
-target_include_directories(accordcliclient
-    PUBLIC include/)
-target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(accordcliclient accordshared)
-target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
+#target_include_directories(accordcliclient
+#    PUBLIC include/)
+#target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
+#target_link_libraries(accordcliclient accordshared)
+#target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 
 target_include_directories(accordclient
     PUBLIC include/)
@@ -124,12 +124,14 @@ target_link_libraries(accordclient Qt5::QuickWidgets)
 target_link_libraries(accordclient Qt5::Network)
 
 #install
-install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)
-install(TARGETS accordshared LIBRARY DESTINATION lib)
+if (LINUX)
+	install(TARGETS accordserver accordcliclient accordclient RUNTIME DESTINATION bin)
+	install(TARGETS accordshared LIBRARY DESTINATION lib)
 
-#packaging
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Geert Custers")
-set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+	#packaging
+	SET(CPACK_GENERATOR "DEB")
+	SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Geert Custers")
+	set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-INCLUDE(CPack)
+	INCLUDE(CPack)
+endif()
