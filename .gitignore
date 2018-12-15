@@ -5,3 +5,4 @@ CMakeLists.txt.user
 CMakeLists.txt.user.*
 *.swp
 Session.vim
+.DS_Store
