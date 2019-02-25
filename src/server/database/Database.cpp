@@ -660,6 +660,9 @@ std::vector<table_messages> Database::getMessagesForChannel(uint64_t id)
     return ret;
 }
 
+/*
+ * currently unused, maybe useful sometime in the future?
+*/
 std::vector<table_users> Database::getUsersForChannel(uint64_t id)
 {
     std::vector<table_users> ret;

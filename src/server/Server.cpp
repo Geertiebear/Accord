@@ -11,6 +11,7 @@
 #include <accordserver/util/CryptoUtil.h>
 #include <accordserver/network/PacketHandlers.h>
 #include <accordshared/network/PacketDecoder.h>
+#include <accordshared/network/packet/SerializationPacket.h>
 
 namespace accord {
     
@@ -90,7 +91,8 @@ std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
     return ret;
 }
 
-void Server::registerOnlineMember(uint64_t channel, const types::UserData &user)
+void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
+                                  thread::Client *client)
 {
     auto list = onlineMap[channel];
     auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
@@ -98,10 +100,12 @@ void Server::registerOnlineMember(uint64_t channel, const types::UserData &user)
     });
     if (it == list.end()) {
         OnlineUser onlineUser(1, user);
+        onlineUser.clients.push_back(client);
         list.push_back(onlineUser);
     } else {
         OnlineUser onlineUser = *it;
         onlineUser.refCount++;
+        onlineUser.clients.push_back(client);
         *it = onlineUser;
     }
     onlineMap[channel] = list;
@@ -122,6 +126,25 @@ void Server::removeOnlineMember(uint64_t channel, uint64_t user)
         return;
     }
     *it = onlineUser;
+}
+
+void Server::notifyOnline(uint64_t id, thread::Client *client)
+{
+    const auto channels = client->thread.database.getChannelsForUser(id);
+    for (database::table_channels channel : channels) {
+        const auto &list = onlineMap.at(channel.id());
+        for (OnlineUser user : list) {
+            if (user.user.id == id)
+                continue;
+
+            const auto listToSend = getOnlineList(channel.id());
+            types::OnlineListRet ret(listToSend, channel.id());
+            network::SerializationPacket packet;
+            const auto json = util::Serialization::serialize(ret);
+            const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
+            client->write(msg);
+        }
+    }
 }
 
 void Server::verifyDatabase(const Arguments &args)
