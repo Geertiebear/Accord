@@ -93,7 +93,7 @@ ClientForm {
                     onClicked: {
                         var id = modelData.id;
                         selectedChannel = id;
-                        backend.loadMessages(id);
+                        backend.loadChannel(id);
                     }
 
                     width: 50
@@ -197,6 +197,16 @@ ClientForm {
                         messageMenu.popup(this);
                     }
             }
+        }
+    }
+
+    Component {
+        id: onlineDelegate
+        Text {
+            text: modelData.name
+            color: "red"
+            width: 50
+            height: 20
         }
     }
 

@@ -28,6 +28,7 @@ enum RequestIds {
     USER_REQUEST = 12,
     SEND_INVITE_REQUEST = 13, //request to be added to community
     INVITE_REQUEST = 14, //request invite generation
+    ONLINE_LIST_REQUEST = 15, //get online list for channel
 };
 
 class Communities {
@@ -145,6 +146,21 @@ class Invite {
 public:
     Invite () { }
     Invite(uint64_t id, const std::string &token) : id(id), token(token) { }
+    uint64_t id;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, token);
+    }
+};
+
+class OnlineList {
+public:
+    OnlineList() { }
+    OnlineList(uint64_t id, const std::string &token) : id(id), token(token)
+    { }
     uint64_t id;
     std::string token;
 

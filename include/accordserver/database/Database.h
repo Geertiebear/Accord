@@ -135,6 +135,7 @@ public:
     std::vector<table_communities> getCommunitiesForUser(uint64_t id);
     std::vector<table_channels> getChannelsForCommunity(uint64_t id);
     std::vector<table_messages> getMessagesForChannel(uint64_t id);
+    std::vector<table_channels> getChannelsForUser(uint64_t id);
     mysqlpp::Query query(std::string statement);
 
     //helper functions

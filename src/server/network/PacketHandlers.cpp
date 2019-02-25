@@ -33,7 +33,8 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::ADD_CHANNEL_REQUEST, &PacketHandlers::handleAddChannel },
     { types::USER_REQUEST, &PacketHandlers::handleUser },
     { types::SEND_INVITE_REQUEST, &PacketHandlers::handleSendInvite },
-    { types::INVITE_REQUEST, &PacketHandlers::handleGenInvite }
+    { types::INVITE_REQUEST, &PacketHandlers::handleGenInvite },
+    { types::ONLINE_LIST_REQUEST, &PacketHandlers::handleOnlineList }
 };
 
 bool checkLoggedIn(thread::Client *client, const std::string &token)
@@ -104,6 +105,12 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     }
     client->user = client->thread.database.getUser(strings[0]);
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
+
+    auto channelList = client->thread.database.getChannelsForUser(client->user.id());
+    for (auto channel : channelList) {
+        types::UserData userData(client->user.id(), client->user.name(), "");
+        client->server.registerOnlineMember(channel.id(), userData);
+    }
 
     //send token to client
     network::SerializationPacket packet;
@@ -512,6 +519,27 @@ bool PacketHandlers::handleGenInvite(PacketData *data,
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::INVITE_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleOnlineList(PacketData *data,
+                                      const std::vector<char> &body)
+{
+    auto client = (thread::Client*) data;
+    const auto request = util::Serialization::deserealize<
+            types::OnlineList>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
+
+    /* TODO: permission and stuff q.q like checking
+     * if they are in the channel */
+
+    const auto onlineList = client->server.getOnlineList(request.id);
+    types::OnlineListRet ret(onlineList, request.id);
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
     client->write(msg);
     return true;
 }

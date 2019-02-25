@@ -3,8 +3,10 @@
 
 #include <vector>
 #include <ctime>
+#include <list>
 
 #include <cereal/types/vector.hpp>
+#include <cereal/types/list.hpp>
 
 #include <accordshared/types/Database.h>
 
@@ -107,6 +109,22 @@ public:
     void serialize(Archive &archive)
     {
         archive(id, invite);
+    }
+};
+
+class OnlineListRet {
+public:
+    OnlineListRet() { }
+    OnlineListRet(std::list<types::UserData> list, uint64_t id) :
+        list(list), id(id)
+    { }
+    std::list<types::UserData> list;
+    uint64_t id;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(list, id);
     }
 };
 

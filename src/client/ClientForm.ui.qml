@@ -6,6 +6,8 @@ import QtGraphicalEffects 1.0
 Page {
     id: page
     height: 720
+    property alias onlineView: onlineView
+    property alias onlineList: onlineList
     width: 1280
     property alias inviteInput: inviteInput
     property alias addChannelButton: addChannelButton
@@ -154,7 +156,7 @@ Page {
         width: parent.width * 0.4
         height: screen.height * 0.43
         anchors.right: parent.right
-        anchors.rightMargin: 57
+        anchors.rightMargin: 110
         anchors.bottomMargin: 204
         anchors.topMargin: 50
         anchors.left: channelView.right
@@ -200,5 +202,20 @@ Page {
         anchors.top: parent.bottom
         anchors.topMargin: -100
         font.pixelSize: 12
+    }
+
+    ScrollView {
+        id: onlineView
+        x: 1200
+        y: 50
+        width: 69
+        height: 590
+
+        ListView {
+            id: onlineList
+            anchors.fill: parent
+            model: onlineMap[selectedChannel].data
+            delegate: onlineDelegate
+        }
     }
 }

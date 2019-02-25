@@ -600,6 +600,22 @@ std::vector<table_channels> Database::getChannelsForCommunity(uint64_t id)
     return ret;
 }
 
+std::vector<table_channels> Database::getChannelsForUser(uint64_t id)
+{
+    std::vector<table_channels> ret;
+    std::vector<channels> res;
+    auto query = connection.query("SELECT * FROM channels WHERE community IN"
+                                  " (SELECT community_members.id FROM "
+                                  "community_members WHERE user=" +
+                                  std::to_string(id) + ");");
+    query.storein(res);
+    for (size_t i = 0; i < res.size(); i++) {
+        auto channel = std::make_shared<channels>(res[i]);
+        ret.emplace_back(channel);
+    }
+    return ret;
+}
+
 std::vector<table_messages> Database::getMessagesForChannel(uint64_t id)
 {
     std::vector<table_messages> ret;

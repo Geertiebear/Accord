@@ -81,6 +81,18 @@ void Server::insertInvite(uint64_t communityId, const std::string &invite)
     inviteMap.insert(std::make_pair(invite, communityId));
 }
 
+std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
+{
+    return onlineMap[channelId];
+}
+
+void Server::registerOnlineMember(uint64_t channel, const types::UserData &user)
+{
+    auto list = onlineMap[channel];
+    list.push_back(user);
+    onlineMap[channel] = list;
+}
+
 void Server::verifyDatabase(const Arguments &args)
 {
     database::Database database(config.database);

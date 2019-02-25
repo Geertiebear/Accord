@@ -31,6 +31,7 @@ public:
     static bool handleUser(PacketData *data, const std::vector<char> &body);
     static bool handleSendInvite(PacketData *data, const std::vector<char> &body);
     static bool handleGenInvite(PacketData *data, const std::vector<char> &body);
+    static bool handleOnlineList(PacketData *data, const std::vector<char> &body);
 };
 
 } /* namespace network */

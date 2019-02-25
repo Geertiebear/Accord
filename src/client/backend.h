@@ -185,6 +185,14 @@ public:
         for (T item : list)
             data.append(QVariant::fromValue(item));
     }
+
+    template<typename T>
+    void fromList(std::list<T> list)
+    {
+        for (T item: list)
+            data.append(QVariant::fromValue(item));
+    }
+
     QVariantList data;
 signals:
     void dataChanged();
@@ -216,7 +224,7 @@ public:
     static bool handleChannel(PacketData *data, const std::vector<char> &body);
     static bool handleUser(PacketData *data, const std::vector<char> &body);
     static bool handleInvite(PacketData *data, const std::vector<char> &body);
-
+    static bool handleOnlineList(PacketData *data, const std::vector<char> &body);
 
     void retryFailedRequest();
 
@@ -224,6 +232,7 @@ public:
     QVariantMap channelsMap;
     QVariantMap messagesMap;
     QVariantMap userMap;
+    QVariantMap onlineMap;
     QVector<quint64> pendingUserRequests;
     QQmlContext *qmlContext;
     std::vector<char> lastRequest;
@@ -241,7 +250,9 @@ public slots:
     bool authenticate(QString email, QString password);
     bool regist(QString name, QString email, QString password); //register but register is a keyword >.>
     bool loadChannels(QString id);
+    bool loadChannel(QString id);
     bool loadMessages(QString id);
+    bool loadOnlineList(QString id);
     bool loadUser(QString id);
     bool sendMessage(QString message, QString channel);
     bool sendInvite(QString invite);

@@ -42,7 +42,8 @@ accord::util::FunctionMap BackEnd::serializationMap = {
     { accord::types::MESSAGE_SUCCESS, &BackEnd::handleMessageSuccess },
     { accord::types::CHANNEL_REQUEST, &BackEnd::handleChannel },
     { accord::types::USER_REQUEST, &BackEnd::handleUser },
-    { accord::types::INVITE_REQUEST, &BackEnd::handleInvite }
+    { accord::types::INVITE_REQUEST, &BackEnd::handleInvite },
+    { accord::types::ONLINE_LIST_REQUEST, &BackEnd::handleOnlineList }
 };
 
 BackEnd::BackEnd(QObject *parent) : QObject(parent), state(*this)
@@ -300,6 +301,16 @@ bool BackEnd::loadChannels(QString id)
     return write(Util::convertCharVectorToQt(msg));
 }
 
+bool BackEnd::loadChannel(QString id)
+{
+    bool ret = true;
+    ret = loadMessages(id);
+    if (!ret)
+        return ret;
+    ret = loadOnlineList(id);
+    return ret;
+}
+
 bool BackEnd::loadMessages(QString id)
 {
     quint64 intId = id.toULongLong();
@@ -307,6 +318,17 @@ bool BackEnd::loadMessages(QString id)
     accord::network::SerializationPacket packet;
     const auto json = accord::util::Serialization::serialize(request);
     const auto msg = packet.construct(accord::types::MESSAGES_REQUEST, json);
+    lastRequest = msg;
+    return write(Util::convertCharVectorToQt(msg));
+}
+
+bool BackEnd::loadOnlineList(QString id)
+{
+    quint64 intId = id.toULongLong();
+    accord::types::OnlineList request(intId, state.token.token);
+    accord::network::SerializationPacket packet;
+    const auto json = accord::util::Serialization::serialize(request);
+    const auto msg = packet.construct(accord::types::ONLINE_LIST_REQUEST, json);
     lastRequest = msg;
     return write(Util::convertCharVectorToQt(msg));
 }
@@ -513,7 +535,7 @@ bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
 }
 bool BackEnd::handleMessageSuccess(PacketData *data, const std::vector<char> &body)
 {
-    /* TODO */
+    /* TODO wtf is this actually for?*/
     return true;
 }
 
@@ -564,6 +586,24 @@ bool BackEnd::handleInvite(PacketData *data, const std::vector<char> &body)
     const auto invite = QString::fromStdString(ret.invite);
     const auto id = QString::fromStdString(std::to_string(ret.id));
     server->backend.inviteReady(id, invite);
+    return true;
+}
+
+bool BackEnd::handleOnlineList(PacketData *data, const std::vector<char> &body)
+{
+    auto server = (Server*) data;
+    const auto ret = accord::util::Serialization::deserealize<
+            accord::types::OnlineListRet>(body);
+
+    std::list<UserData*> ownList;
+    for (accord::types::UserData user : ret.list)
+        ownList.push_back(new UserData(user));
+
+    const auto channelString = QString::fromStdString(std::to_string(ret.id));
+    auto list = server->backend.onlineMap[channelString];
+    list.value<DataList*>()->fromList(ownList);
+    server->backend.qmlContext->setContextProperty("onlineMap",
+                                            server->backend.onlineMap);
     return true;
 }
 

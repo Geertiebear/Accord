@@ -12,6 +12,7 @@
 #include <accordserver/Config.h>
 #include <accordshared/network/PacketHandler.h>
 #include <accordshared/util/Serialization.h>
+#include <accordshared/types/Return.h>
 
 namespace accord {
 
@@ -27,6 +28,8 @@ public:
     bool isInviteValid(const std::string &invite);
     uint64_t getCommunityForInvite(const std::string &invite);
     void insertInvite(uint64_t communityId, const std::string &invite);
+    std::list<types::UserData> getOnlineList(uint64_t channelId);
+    void registerOnlineMember(uint64_t channel, const types::UserData &user);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;
@@ -47,6 +50,7 @@ private:
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
     std::map<std::string, uint64_t> inviteMap;
+    std::map<uint64_t, std::list<types::UserData>> onlineMap;
 
     static std::vector<network::ReceiveHandler> handlers;
 };
