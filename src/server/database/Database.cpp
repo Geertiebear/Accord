@@ -38,7 +38,7 @@ sql_create_4(channels, 1, 4,
              mysqlpp::sql_varchar, name,
              mysqlpp::sql_varchar, description);
 
-sql_create_2(channel_members, 1, 4,
+sql_create_2(channel_members, 1, 2,
              mysqlpp::sql_bigint_unsigned, id,
              mysqlpp::sql_bigint_unsigned, user);
 
