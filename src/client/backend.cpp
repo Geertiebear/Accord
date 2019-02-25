@@ -600,6 +600,7 @@ bool BackEnd::handleOnlineList(PacketData *data, const std::vector<char> &body)
         ownList.push_back(new UserData(user));
 
     const auto channelString = QString::fromStdString(std::to_string(ret.id));
+    server->backend.onlineMap.insert(channelString, QVariant::fromValue(new DataList()));
     auto list = server->backend.onlineMap[channelString];
     list.value<DataList*>()->fromList(ownList);
     server->backend.qmlContext->setContextProperty("onlineMap",
