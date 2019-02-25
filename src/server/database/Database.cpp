@@ -38,6 +38,10 @@ sql_create_4(channels, 1, 4,
              mysqlpp::sql_varchar, name,
              mysqlpp::sql_varchar, description);
 
+sql_create_2(channel_members, 1, 4,
+             mysqlpp::sql_bigint_unsigned, id,
+             mysqlpp::sql_bigint_unsigned, user);
+
 sql_create_5(messages, 1, 5,
              mysqlpp::sql_bigint_unsigned, id,
              mysqlpp::sql_bigint_unsigned, channel,
@@ -173,6 +177,19 @@ mysqlpp::sql_varchar &table_channels::description()
     return table->description;
 }
 
+table_channel_members::table_channel_members(std::shared_ptr<channel_members>
+                                             table) : table(table) { }
+
+mysqlpp::sql_bigint_unsigned &table_channel_members::id()
+{
+    return table->id;
+}
+
+mysqlpp::sql_bigint_unsigned &table_channel_members::user()
+{
+    return table->user;
+}
+
 table_messages::table_messages(std::shared_ptr<messages> table)
     : table(table) { }
 
@@ -249,6 +266,10 @@ bool Database::verify()
     if (res = query.store())
         if (res.empty())
             return false;
+    query = connection.query("SHOW TABLES LIKE 'channel_members'");
+    if (res = query.store())
+        if (res.empty())
+            return false;
     query = connection.query("SHOW TABLES LIKE 'messages'");
     if (res = query.store())
         if (res.empty())
@@ -288,6 +309,11 @@ bool Database::initDatabase()
                     "CREATE TABLE channels (id BIGINT UNSIGNED, "
                     "community BIGINT UNSIGNED, name VARCHAR(255),"
                     "description VARCHAR(255))");
+        if (!query.execute())
+            return false;
+        query = connection.query(
+                    "CREATE TABLE channel_members (id BIGINT UNSIGNED, "
+                    "user BIGINT UNSIGNED)");
         if (!query.execute())
             return false;
         query = connection.query(
@@ -407,6 +433,12 @@ bool Database::addMember(uint64_t id, uint64_t user)
 
     community_members community_member(id, user);
     query.insert(community_member);
+
+    std::vector<table_channels> channels = getChannelsForCommunity(id);
+    for (table_channels &channel : channels) {
+        channel_members channel_member(channel.id(), user);
+        query.insert(channel_member);
+    }
 
     return query.execute();
 }
@@ -604,9 +636,9 @@ std::vector<table_channels> Database::getChannelsForUser(uint64_t id)
 {
     std::vector<table_channels> ret;
     std::vector<channels> res;
-    auto query = connection.query("SELECT * FROM channels WHERE community IN"
-                                  " (SELECT community_members.id FROM "
-                                  "community_members WHERE user=" +
+    auto query = connection.query("SELECT * FROM channels WHERE id IN"
+                                  " (SELECT channel_members.id FROM "
+                                  "channel_members WHERE user=" +
                                   std::to_string(id) + ");");
     query.storein(res);
     for (size_t i = 0; i < res.size(); i++) {
@@ -627,6 +659,23 @@ std::vector<table_messages> Database::getMessagesForChannel(uint64_t id)
         ret.emplace_back(std::make_shared<messages>(message));
     return ret;
 }
+
+std::vector<table_users> Database::getUsersForChannel(uint64_t id)
+{
+    std::vector<table_users> ret;
+    std::vector<users> res;
+    auto query = connection.query("SELECT * FROM users WHERE id IN "
+                                  "(SELECT channel_members.user FROM "
+                                  "channel_members WHERE id=" +
+                                  std::to_string(id) + ");");
+    query.storein(res);
+    for (users user : res) {
+        auto user_ptr = std::make_shared<users>(user);
+        ret.emplace_back(user_ptr);
+    }
+    return ret;
+}
+
 
 types::CommunitiesTable Database::communityServerToShared(table_communities community)
 {
