@@ -110,6 +110,7 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     for (auto channel : channelList) {
         types::UserData userData(client->user.id(), client->user.name(), "");
         client->server.registerOnlineMember(channel.id(), userData);
+        client->channelList.push_back(channel.id());
     }
 
     //send token to client

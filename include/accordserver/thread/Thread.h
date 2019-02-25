@@ -37,15 +37,17 @@ struct PacketBuffer {
 struct Client : public PacketData {
     Client(Server &server, Thread &thread) : server(server), thread(thread) { }
 	Server &server;
-	Thread &thread;
+    Thread &thread;
 	struct bufferevent* bufferEvent;
 	int channel;
     database::table_users user;
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;
+    std::list<uint64_t> channelList;
 
     void write(const std::vector<char> &msg);
+    void markOffline();
 };
 
 class Thread {

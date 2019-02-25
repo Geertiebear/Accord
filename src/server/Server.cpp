@@ -83,14 +83,45 @@ void Server::insertInvite(uint64_t communityId, const std::string &invite)
 
 std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
 {
-    return onlineMap[channelId];
+    auto &list = onlineMap[channelId];
+    std::list<types::UserData> ret;
+    for (OnlineUser user : list)
+        ret.push_back(user.user);
+    return ret;
 }
 
 void Server::registerOnlineMember(uint64_t channel, const types::UserData &user)
 {
     auto list = onlineMap[channel];
-    list.push_back(user);
+    auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
+        return s.user == user;
+    });
+    if (it == list.end()) {
+        OnlineUser onlineUser(1, user);
+        list.push_back(onlineUser);
+    } else {
+        OnlineUser onlineUser = *it;
+        onlineUser.refCount++;
+        *it = onlineUser;
+    }
     onlineMap[channel] = list;
+}
+
+void Server::removeOnlineMember(uint64_t channel, uint64_t user)
+{
+    auto list = onlineMap[channel];
+    auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
+        return s.user.id == user;
+    });
+    if (it == list.end())
+        return;
+    OnlineUser onlineUser = *it;
+    onlineUser.refCount--;
+    if (onlineUser.refCount <= 0) {
+        list.erase(it);
+        return;
+    }
+    *it = onlineUser;
 }
 
 void Server::verifyDatabase(const Arguments &args)

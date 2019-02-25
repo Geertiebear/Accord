@@ -90,6 +90,11 @@ public:
     uint64_t id;
     std::string name, profilepic;
 
+    bool operator== (const UserData &rhs) const
+    {
+        return rhs.id == id;
+    }
+
     template<class Archive>
     void serialize(Archive &archive)
     {

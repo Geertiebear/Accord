@@ -18,6 +18,13 @@ namespace accord {
 
 struct Arguments;
 
+struct OnlineUser {
+    OnlineUser(int refCount, const types::UserData &user) : refCount(refCount),
+        user(user) {}
+    types::UserData user;
+    int refCount = 0;
+};
+
 class Server {
 public:
     Server(Arguments args);
@@ -30,6 +37,7 @@ public:
     void insertInvite(uint64_t communityId, const std::string &invite);
     std::list<types::UserData> getOnlineList(uint64_t channelId);
     void registerOnlineMember(uint64_t channel, const types::UserData &user);
+    void removeOnlineMember(uint64_t channel, uint64_t user);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;
@@ -50,7 +58,7 @@ private:
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
     std::map<std::string, uint64_t> inviteMap;
-    std::map<uint64_t, std::list<types::UserData>> onlineMap;
+    std::map<uint64_t, std::list<OnlineUser>> onlineMap;
 
     static std::vector<network::ReceiveHandler> handlers;
 };

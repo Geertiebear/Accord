@@ -95,6 +95,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
 
 void Thread::removeClient(Client *client)
 {
+    client->markOffline();
 	auto it = std::find(clients.begin(), clients.end(), client);
 	clients.erase(it);
 	util::LibEventUtil::freeBufferEvent(client->bufferEvent);
@@ -266,6 +267,12 @@ void Client::write(const std::vector<char> &msg)
     if (size > written)
         std::copy(msg.begin() + written, msg.end(), std::back_inserter(
                       writeBuffer));
+}
+
+void Client::markOffline()
+{
+    for (uint64_t channel : channelList)
+        server.removeOnlineMember(channel, user.id());
 }
 
 } /* namespace thread */
