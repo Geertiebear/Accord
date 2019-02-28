@@ -433,14 +433,18 @@ bool Database::addMember(uint64_t id, uint64_t user)
 
     community_members community_member(id, user);
     query.insert(community_member);
+    if(!query.execute())
+        return false;
 
     std::vector<table_channels> channels = getChannelsForCommunity(id);
     for (table_channels &channel : channels) {
         channel_members channel_member(channel.id(), user);
         query.insert(channel_member);
+        if (!query.execute())
+            return false;
     }
 
-    return query.execute();
+    return true;
 }
 
 bool Database::addChannel(uint64_t id)
