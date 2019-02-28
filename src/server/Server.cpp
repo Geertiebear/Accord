@@ -142,7 +142,8 @@ void Server::notifyOnline(uint64_t id, thread::Client *client)
             network::SerializationPacket packet;
             const auto json = util::Serialization::serialize(ret);
             const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
-            client->write(msg);
+            for (auto client : user.clients)
+                client->write(msg);
         }
     }
 }
