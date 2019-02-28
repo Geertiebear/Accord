@@ -272,7 +272,8 @@ void Client::write(const std::vector<char> &msg)
 void Client::markOffline()
 {
     for (uint64_t channel : channelList)
-        server.removeOnlineMember(channel, user.id());
+        server.removeOnlineMember(channel, user.id(), this);
+    server.notifyStatusChange(user.id(), this);
 }
 
 } /* namespace thread */

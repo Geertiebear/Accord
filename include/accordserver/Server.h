@@ -39,8 +39,8 @@ public:
     std::list<types::UserData> getOnlineList(uint64_t channelId);
     void registerOnlineMember(uint64_t channel, const types::UserData &user,
                               thread::Client *client);
-    void removeOnlineMember(uint64_t channel, uint64_t user);
-    void notifyOnline(uint64_t id, thread::Client *client);
+    void removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client);
+    void notifyStatusChange(uint64_t id, thread::Client *client);
 private:
     struct sockaddr_in serverAddr;
     int numThreads;

@@ -112,7 +112,7 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         client->server.registerOnlineMember(channel.id(), userData, client);
         client->channelList.push_back(channel.id());
     }
-    client->server.notifyOnline(client->user.id(), client);
+    client->server.notifyStatusChange(client->user.id(), client);
 
     //send token to client
     network::SerializationPacket packet;

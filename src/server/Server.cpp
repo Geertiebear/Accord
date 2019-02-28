@@ -111,7 +111,7 @@ void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
     onlineMap[channel] = list;
 }
 
-void Server::removeOnlineMember(uint64_t channel, uint64_t user)
+void Server::removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client)
 {
     auto &list = onlineMap[channel];
     auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
@@ -125,10 +125,12 @@ void Server::removeOnlineMember(uint64_t channel, uint64_t user)
         list.erase(it);
         return;
     }
+    auto &clients = onlineUser.clients;
+    clients.erase(std::remove(clients.begin(), clients.end(), client), clients.end());
     *it = onlineUser;
 }
 
-void Server::notifyOnline(uint64_t id, thread::Client *client)
+void Server::notifyStatusChange(uint64_t id, thread::Client *client)
 {
     const auto channels = client->thread.database.getChannelsForUser(id);
     for (database::table_channels channel : channels) {
