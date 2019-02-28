@@ -113,7 +113,7 @@ void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
 
 void Server::removeOnlineMember(uint64_t channel, uint64_t user)
 {
-    auto list = onlineMap[channel];
+    auto &list = onlineMap[channel];
     auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
         return s.user.id == user;
     });
