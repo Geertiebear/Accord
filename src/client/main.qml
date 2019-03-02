@@ -7,7 +7,7 @@ import accord.types 1.0
 Window {
     visible: true
     title: qsTr("Accord")
-    color: "#5d5959"
+    color: "#4f4b4b"
     id: main
     objectName: "main"
     width: screenGeometry.width

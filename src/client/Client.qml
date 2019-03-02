@@ -5,7 +5,7 @@ import QtGraphicalEffects 1.0
 
 ClientForm {
     background: Rectangle {
-        color: "#5d5959"
+        color: "#4f4b4b"
     }
 
     addCommunityButton.onClicked: {
@@ -40,6 +40,7 @@ ClientForm {
         Component {
             id: communityDelegate
             RoundButton {
+                id: communityButton
                 background: Image {
                     source: "image://communityImageProvider/" + modelData.id
                     sourceSize.width: 65
@@ -80,6 +81,15 @@ ClientForm {
                 }
 
                 text: modelData.name
+
+
+                contentItem: Text {
+                    text: modelData.name
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
                 radius: 50
                 width: 65
                 height: 65
@@ -96,11 +106,9 @@ ClientForm {
                         backend.loadChannel(id);
                     }
 
-                    width: 50
                     height: 20
                 }
                 color: "red"
-                width: 50
                 height: 20
             }
         }
@@ -138,16 +146,17 @@ ClientForm {
         Component {
             id: messageDelegate
             Item {
-                width: parent.width
+                width: messagesView.width
                 height: text.height
             Text {
                 id: text
+                width: parent.width
                 color: {
                     if (modelData.pending)
                         return "#ff8c00";
                     if (modelData.failure)
                         return "#ff0000"
-                    return "#000000";
+                    return "white";
                 }
 
                 text: {
@@ -161,6 +170,7 @@ ClientForm {
                     backend.loadUser(modelData.sender);
                     return "";
                 }
+                wrapMode: Text.Wrap
             }
             MouseArea {
                 anchors.fill: parent
@@ -204,7 +214,7 @@ ClientForm {
         id: onlineDelegate
         Text {
             text: modelData.name
-            color: "red"
+            color: "white"
             width: 50
             height: 20
         }
