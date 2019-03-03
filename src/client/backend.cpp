@@ -513,9 +513,12 @@ bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
                 table.id, ownTable->profilepic); */
 
     auto &messagesMap = server->backend.messagesMap;
+    if (!server->backend.messagesMap[channelString].value<DataList*>())
+        server->backend.messagesMap.insert(channelString,
+                                           QVariant::fromValue(new DataList()));
     auto &messagesList = messagesMap[channelString].value<DataList*>()->data;
     auto it = messagesList.end();
-    while (it != messagesList.begin()) {
+    while (it != messagesList.begin() && !messagesList.empty()) {
         it--;
         const auto variant = *it;
         const auto message = variant.value<MessagesTable*>();
@@ -523,9 +526,6 @@ bool BackEnd::handleMessage(PacketData *data, const std::vector<char> &body)
             messagesList.erase(it);
     }
 
-    if (!server->backend.messagesMap[channelString].value<DataList*>())
-        server->backend.messagesMap.insert(channelString,
-                                           QVariant::fromValue(new DataList()));
     server->backend.messagesMap[channelString].
             value<DataList*>()->data.append(
                 QVariant::fromValue(ownTable));
