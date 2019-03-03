@@ -150,7 +150,7 @@ ClientForm {
                 height: text.height
             Text {
                 id: text
-                width: parent.width
+                width: parent.width - 60
                 color: {
                     if (modelData.pending)
                         return "#ff8c00";
@@ -174,6 +174,8 @@ ClientForm {
             }
             MouseArea {
                 anchors.fill: parent
+                width: parent.width
+                height: parent.height
                 hoverEnabled: true
                 onEntered: {
                     options.visible = true;

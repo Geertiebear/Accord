@@ -212,6 +212,7 @@ Page {
             color: "white"
             horizontalAlignment: Text.AlignLeft
             font.pixelSize: 14
+            wrapMode: Text.Wrap
         }
     }
 
@@ -246,6 +247,8 @@ Page {
 
             ListView {
                 id: onlineList
+                anchors.topMargin: 0.01 * parent.height
+                anchors.leftMargin: 0.03 * parent.width
                 anchors.fill: parent
                 model: onlineMap[selectedChannel].data
                 delegate: onlineDelegate
@@ -260,6 +263,18 @@ Page {
         color: "white"
         anchors.bottom: channelView.top
         anchors.top: parent.top
+        font.pixelSize: 24
+    }
+
+    Text {
+        id: text2
+        y: 17
+        color: "#ffffff"
+        text: qsTr("Members")
+        anchors.left: onlineView.left
+        anchors.leftMargin: 0
+        anchors.bottomMargin: 0.01 * parent.height
+        anchors.bottom: onlineView.top
         font.pixelSize: 24
     }
 }
