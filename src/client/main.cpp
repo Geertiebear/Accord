@@ -12,6 +12,8 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     QApplication::addLibraryPath("./");
+    QFont font("DIN Alternate", 10, QFont::Bold);
+    app.setFont(font);
 
     QQmlApplicationEngine engine;
     BackEnd *backend = new BackEnd(engine.rootContext());
