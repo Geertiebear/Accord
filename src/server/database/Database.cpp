@@ -382,6 +382,14 @@ bool Database::initChannel(uint64_t id, const types::AddChannel &request,
         return false;
     if (!addChannel(request.community))
         return false;
+
+    auto users = getUsersForCommunity(request.community);
+    for (auto user : users) {
+        channel_members channel_member(id, user.id());
+        query.insert(channel_member);
+        if (!query.execute())
+            return false;
+    }
     *ret = table_channels(std::make_shared<channels>(channel));
     return true;
 }
@@ -683,6 +691,21 @@ std::vector<table_users> Database::getUsersForChannel(uint64_t id)
     return ret;
 }
 
+std::vector<table_users> Database::getUsersForCommunity(uint64_t id)
+{
+    std::vector<table_users> ret;
+    std::vector<users> res;
+    auto query = connection.query("SELECT * FROM users WHERE id IN "
+                                  "(SELECT community_members.user FROM "
+                                  "community_members WHERE id=" +
+                                  std::to_string(id) + ");");
+    query.storein(res);
+    for (auto user: res) {
+        auto user_ptr = std::make_shared<users>(user);
+        ret.emplace_back(user_ptr);
+    }
+    return ret;
+}
 
 types::CommunitiesTable Database::communityServerToShared(table_communities community)
 {
