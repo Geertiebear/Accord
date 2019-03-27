@@ -3,6 +3,7 @@
 #include <accordserver/log/Logger.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
+#include <string.h>
 #include <stdlib.h>
 #include <vector>
 
@@ -82,8 +83,7 @@ uint64_t CryptoUtil::getRandomUINT64()
 {
     uint64_t ret;
     std::vector<unsigned char> buffer = getRandomBytes(8);
-    for (unsigned int i = 0; i < buffer.size(); i++)
-        ret += (int) buffer[i];
+    memcpy(&ret, buffer.data(), 8);
     return ret;
 }
 
