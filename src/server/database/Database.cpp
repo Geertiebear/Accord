@@ -457,11 +457,13 @@ bool Database::addMember(uint64_t id, uint64_t user)
 
 bool Database::addChannel(uint64_t id)
 {
-    auto query = connection.query();
-
     table_communities community = getCommunity(id);
+    if (!community.table)
+        return false;
     communities originalCommunity = *community.table;
     community.channels()++;
+
+    auto query = connection.query();
     query.update(originalCommunity, *community.table);
     return query.execute();
 }
