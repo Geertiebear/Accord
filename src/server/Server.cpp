@@ -68,23 +68,28 @@ void Server::broadcast(const std::vector<char> &data)
 
 bool Server::isInviteValid(const std::string &invite)
 {
+    std::unique_lock<std::mutex> lock(inviteMapMutex);
     auto it = inviteMap.find(invite);
     return it != inviteMap.end();
 }
 
 uint64_t Server::getCommunityForInvite(const std::string &invite)
 {
+    std::unique_lock<std::mutex> lock(inviteMapMutex);
     return inviteMap[invite];
 }
 
 void Server::insertInvite(uint64_t communityId, const std::string &invite)
 {
+    std::unique_lock<std::mutex> lock(inviteMapMutex);
     inviteMap.insert(std::make_pair(invite, communityId));
 }
 
 std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
 {
-    auto &list = onlineMap[channelId];
+    std::unique_lock<std::mutex> lock(onlineMapMutex);
+    const auto &list = onlineMap[channelId];
+    lock.unlock();
     std::list<types::UserData> ret;
     for (OnlineUser user : list)
         ret.push_back(user.user);
@@ -94,6 +99,7 @@ std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
 void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
                                   thread::Client *client)
 {
+    std::unique_lock<std::mutex> lock(onlineMapMutex);
     auto list = onlineMap[channel];
     auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
         return s.user == user;
@@ -113,6 +119,7 @@ void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
 
 void Server::removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client)
 {
+    std::unique_lock<std::mutex> lock(onlineMapMutex);
     auto &list = onlineMap[channel];
     auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
         return s.user.id == user;
@@ -134,7 +141,9 @@ void Server::notifyStatusChange(uint64_t id, thread::Client *client)
 {
     const auto channels = client->thread.database.getChannelsForUser(id);
     for (database::table_channels channel : channels) {
+        std::unique_lock<std::mutex> lock(onlineMapMutex);
         const auto &list = onlineMap.at(channel.id());
+        lock.unlock();
         for (OnlineUser user : list) {
             if (user.user.id == id)
                 continue;

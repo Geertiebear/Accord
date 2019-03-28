@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <mutex>
 
 #include <accordserver/thread/Thread.h>
 #include <accordserver/Config.h>
@@ -61,7 +62,9 @@ private:
     
     std::vector<std::shared_ptr<thread::Thread>> threads;
     std::map<std::string, uint64_t> inviteMap;
+    std::mutex inviteMapMutex;
     std::map<uint64_t, std::list<OnlineUser>> onlineMap;
+    std::mutex onlineMapMutex;
 
     static std::vector<network::ReceiveHandler> handlers;
 };
