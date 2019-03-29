@@ -41,6 +41,7 @@ ClientForm {
             id: communityDelegate
             RoundButton {
                 id: communityButton
+                anchors.horizontalCenter: parent.horizontalCenter
                 background: Image {
                     source: "image://communityImageProvider/" + modelData.id
                     sourceSize.width: 65
@@ -67,6 +68,7 @@ ClientForm {
                 }
 
                 MouseArea {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onClicked: {

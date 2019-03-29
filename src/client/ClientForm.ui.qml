@@ -6,6 +6,7 @@ import QtGraphicalEffects 1.0
 Page {
     id: page
     height: 720
+    property alias communityRectangle: communityRectangle
     property alias onlineView: onlineView
     property alias onlineList: onlineList
     width: 1280
@@ -21,8 +22,10 @@ Page {
     property string selectedCommunity
     property string selectedChannel
 
-    ScrollView {
-        id: communityView
+    Rectangle {
+        id: communityRectangle
+        visible: true
+        color: "#5d5858"
         width: 200
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50
@@ -31,20 +34,17 @@ Page {
         anchors.left: parent.left
         anchors.leftMargin: 0
 
-        Rectangle {
-            visible: true
-            anchors.fill: parent
-            color: "#5d5858"
+        ScrollView {
+            id: communityView
             width: parent.width
             height: parent.height
+            anchors.fill: parent
 
             ListView {
                 id: listView
                 y: 0
-                width: 100
+                width: parent.width
                 height: parent.height
-                anchors.leftMargin: 70
-                anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 anchors.top: parent.top
                 anchors.topMargin: 10
@@ -53,6 +53,7 @@ Page {
                 focus: true
 
                 RoundButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     id: addCommunityButton
                     background: Rectangle {
                         color: "red"
@@ -83,9 +84,9 @@ Page {
 
     Row {
         id: row
-        anchors.rightMargin: -communityView.width
-        anchors.right: communityView.left
-        anchors.bottom: communityView.top
+        anchors.rightMargin: -200
+        anchors.right: communityRectangle.left
+        anchors.bottom: communityRectangle.top
         anchors.bottomMargin: 0
         anchors.top: parent.top
         anchors.topMargin: 0
@@ -116,29 +117,28 @@ Page {
         }
     }
 
-    ScrollView {
-        id: channelView
-        x: 1
+    Rectangle {
+        id: channelRectangle
+        color: "#5d5858"
         width: 200
         anchors.bottomMargin: 0
         anchors.top: parent.top
-        anchors.left: communityView.right
+        anchors.left: communityRectangle.right
         anchors.leftMargin: 10
         anchors.topMargin: 50
         anchors.bottom: parent.bottom
 
-        Rectangle {
-            id: rectangle
-            anchors.fill: parent
-            anchors.margins: 0
-            color: "#5d5858"
+        ScrollView {
+            id: channelView
             width: parent.width
             height: parent.height
+            anchors.fill: parent
+            anchors.margins: 0
 
             ListView {
                 id: channelList
                 y: 0
-                width: 100
+                width: parent.width
                 height: parent.height
                 anchors.leftMargin: 0.025 * parent.width
                 anchors.left: parent.left
@@ -170,13 +170,12 @@ Page {
 
     ScrollView {
         id: messagesView
-        x: 2
         y: 2
         width: parent.width * 0.55
         height: screen.height * 0.43
         anchors.bottomMargin: 204
         anchors.topMargin: 50
-        anchors.left: channelView.right
+        anchors.left: channelRectangle.right
         anchors.top: parent.top
         ListView {
             id: messagesList
@@ -261,7 +260,7 @@ Page {
         x: 210
         text: qsTr("Channels")
         color: "white"
-        anchors.bottom: channelView.top
+        anchors.bottom: channelRectangle.top
         anchors.top: parent.top
         font.pixelSize: 24
     }
