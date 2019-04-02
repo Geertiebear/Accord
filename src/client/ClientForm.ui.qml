@@ -11,14 +11,12 @@ Page {
     property alias onlineList: onlineList
     width: 1280
     property alias inviteInput: inviteInput
-    property alias addChannelButton: addChannelButton
     property alias messageInput: messageInput
     property alias messagesList: messagesList
     property alias messagesView: messagesView
     property alias channelList: channelList
     property alias channelView: channelView
     property alias listView: listView
-    property alias addCommunityButton: addCommunityButton
     property string selectedCommunity
     property string selectedChannel
 
@@ -51,33 +49,7 @@ Page {
                 model: communitiesList.data
                 delegate: communityDelegate
                 focus: true
-
-                RoundButton {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    id: addCommunityButton
-                    background: Rectangle {
-                        color: "red"
-                        radius: 50
-                        Image {
-                            source: "qrc:/plus.png"
-                            sourceSize.width: 65
-                            sourceSize.height: 65
-                            layer.enabled: true
-                            layer.effect: OpacityMask {
-                                maskSource: Rectangle {
-                                    radius: 50
-                                    width: 65
-                                    height: 65
-                                    visible: false
-                                }
-                            }
-                        }
-                    }
-                    anchors.top: parent.top
-                    radius: 50
-                    width: 65
-                    height: 65
-                }
+                footer: addCommunityButtonComponent
             }
         }
     }
@@ -148,20 +120,7 @@ Page {
                 model: channelsMap[selectedCommunity].data
                 delegate: channelDelegate
                 focus: true
-
-                Button {
-                    id: addChannelButton
-                    background: Rectangle {
-                        Image {
-                            source: "qrc:/plus.png"
-                            sourceSize.width: 50
-                            sourceSize.height: 20
-                        }
-                    }
-                    anchors.top: parent.top
-                    height: 20
-                    anchors.left: parent.left
-                }
+                footer: addChannelButtonComponent
             }
             anchors.top: parent.top
             anchors.bottomMargin: 50

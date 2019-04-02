@@ -8,14 +8,6 @@ ClientForm {
         color: "#4f4b4b"
     }
 
-    addCommunityButton.onClicked: {
-        addCommunityPopup.open();
-    }
-
-    addChannelButton.onClicked: {
-        addChannelPopup.open();
-    }
-
     listView.onCountChanged: {
         addCommunityButton.anchors.topMargin = (65 * listView.count)
     }
@@ -211,6 +203,61 @@ ClientForm {
                         messageMenu.popup(this);
                     }
             }
+        }
+    }
+
+    Component {
+        id: addCommunityButtonComponent
+        RoundButton {
+            anchors.horizontalCenter: parent.horizontalCenter
+            id: addCommunityButton
+            background: Rectangle {
+                color: "red"
+                radius: 50
+                Image {
+                    source: "qrc:/plus.png"
+                    sourceSize.width: 65
+                    sourceSize.height: 65
+                    layer.enabled: true
+                    layer.effect: OpacityMask {
+                        maskSource: Rectangle {
+                            radius: 50
+                            width: 65
+                            height: 65
+                            visible: false
+                        }
+                    }
+                }
+            }
+            onClicked: {
+                addCommunityPopup.open();
+            }
+
+            anchors.top: parent.top
+            radius: 50
+            width: 65
+            height: 65
+        }
+    }
+    Component {
+        id: addChannelButtonComponent
+        Button {
+            id: addChannelButton
+            background: Rectangle {
+                Image {
+                    source: "qrc:/plus.png"
+                    sourceSize.width: 50
+                    sourceSize.height: 20
+                }
+            }
+            anchors.top: parent.top
+            height: 20
+            anchors.left: parent.left
+
+            onClicked: {
+                addChannelPopup.open();
+            }
+
         }
     }
 
