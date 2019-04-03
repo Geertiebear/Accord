@@ -2,8 +2,6 @@
 #define ACCORD_DATABASE_DATABASE_H
 
 #include <string>
-#include <mysql++.h>
-#include <ssqls.h>
 #include <memory>
 
 #include <accordshared/types/Database.h>
@@ -11,91 +9,6 @@
 
 namespace accord {
 namespace database {
-
-/*
- * mysql++ has an annoying fucking bug where you can't include generated
- * structures twice. So I create my own wrapper which circumvents this...
- */
-
-struct users;
-struct friends;
-struct communities;
-struct community_members;
-struct channels;
-struct channel_members;
-struct messages;
-
-struct table_users {
-    table_users() {}
-    table_users(std::shared_ptr<users> table);
-    std::shared_ptr<users> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_varchar &name();
-    mysqlpp::sql_blob_null &profilepic();
-    mysqlpp::sql_int &friends();
-    mysqlpp::sql_int &communities();
-    mysqlpp::sql_varchar &email();
-    mysqlpp::sql_varchar &password();
-    mysqlpp::sql_varchar &salt();
-};
-
-struct table_friends {
-    table_friends() {}
-    table_friends(std::shared_ptr<friends> table);
-    std::shared_ptr<friends> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_bigint_unsigned &user1();
-    mysqlpp::sql_bigint_unsigned &user2();
-    mysqlpp::sql_enum &status();
-};
-
-struct table_communities {
-    table_communities() {}
-    table_communities(std::shared_ptr<communities> table);
-    std::shared_ptr<communities> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_varchar &name();
-    mysqlpp::sql_blob_null &profilepic();
-    mysqlpp::sql_int &members();
-    mysqlpp::sql_int &channels();
-};
-
-struct table_community_members {
-    table_community_members() {}
-    table_community_members(std::shared_ptr<community_members> table);
-    std::shared_ptr<community_members> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_bigint_unsigned &user();
-};
-
-struct table_channels {
-    table_channels() {}
-    table_channels(std::shared_ptr<channels> table);
-    std::shared_ptr<channels> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_bigint_unsigned &community();
-    mysqlpp::sql_varchar &name();
-    mysqlpp::sql_varchar &description();
-};
-
-struct table_channel_members {
-    table_channel_members() {}
-    table_channel_members(std::shared_ptr<channel_members> table);
-    std::shared_ptr<channel_members> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_bigint_unsigned &user();
-};
-
-struct table_messages {
-    table_messages() {}
-    table_messages(std::shared_ptr<messages> table);
-    std::shared_ptr<messages> table;
-    mysqlpp::sql_bigint_unsigned &id();
-    mysqlpp::sql_bigint_unsigned &channel();
-    mysqlpp::sql_bigint_unsigned &sender();
-    mysqlpp::sql_varchar &contents();
-    mysqlpp::sql_bigint_unsigned &timestamp();
-};
 
 struct DatabaseOptions {
     DatabaseOptions() {}
@@ -157,7 +70,6 @@ public:
     static mysqlpp::sql_blob_null vectorChartoSqlBlobNullable(const std::vector<char> &vector);
 private:
     const DatabaseOptions &options;
-    mysqlpp::Connection connection;
 };
 
 } /* namespace database */
