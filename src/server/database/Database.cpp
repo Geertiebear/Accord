@@ -7,21 +7,27 @@ namespace database {
 
 Database::~Database()
 {
-    if (connection.connected())
-        connection.disconnect();
+    if (connected)
+        mysql_close(mysql);
 }
 
 int Database::connect()
 {
-    connection.set_option(new mysqlpp::ReconnectOption(true));
-    return connection.connect(options.name.c_str(), options.address.c_str(),
-                              options.user.c_str(),
-                       options.password.c_str(), options.port);
+    mysql = mysql_init(nullptr);
+    if (!mysql_real_connect(mysql, options.address.c_str(),
+                            options.user.c_str(),
+                            options.password.c_str(), options.name.c_str(),
+                            static_cast<unsigned int>(options.port),
+                            nullptr, 0)) {
+        return 0;
+    }
+    connected = true;
+    return 1;
 }
 
 void Database::disconnect()
 {
-    connection.disconnect();
+    mysql_close(mysql);
 }
 
 bool Database::verify()

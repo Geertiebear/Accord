@@ -2,6 +2,7 @@
 #define ACCORD_DATABASE_DATABASE_H
 
 #include <string>
+#include <mysql.h>
 #include <memory>
 
 #include <accordshared/types/Database.h>
@@ -70,6 +71,8 @@ public:
     static mysqlpp::sql_blob_null vectorChartoSqlBlobNullable(const std::vector<char> &vector);
 private:
     const DatabaseOptions &options;
+    MYSQL *mysql;
+    bool connected = false;
 };
 
 } /* namespace database */
