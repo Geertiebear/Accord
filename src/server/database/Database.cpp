@@ -163,11 +163,13 @@ Result Database::query(std::string query) {
     if (mysql_real_query(mysql, query.c_str(), query.length()))
         goto error;
 
-    MYSQL_RES *res = mysql_store_result(mysql);
-    if (!res)
-        goto error;
+    {
+        MYSQL_RES *res = mysql_store_result(mysql);
+        if (!res)
+            goto error;
 
-    return Result(res);
+        return Result(res);
+    }
 
 error:
     const char *errorString = mysql_error(mysql);
