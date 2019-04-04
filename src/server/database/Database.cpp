@@ -20,7 +20,8 @@ static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
 
         if (*it == '%') {
             it++;
-            if (*it == 's') {
+            switch (*it) {
+            case 's': {
                 /* escape the string */
                 std::string string = va_arg(va, std::string);
                 char *escaped_string = new char[(string.length() * 2) + 1];
@@ -28,8 +29,19 @@ static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
                                                string.c_str(), string.length(),
                                                '\'');
                 res += std::string(escaped_string);
-            } else if (*it == '%') {
+                break;
+            }
+            case '%':
                 res += *it;
+                break;
+            }
+            case 'u': {
+                if (*(it + 1) == 'l') {
+                    res += std::to_string(va_arg(va, uint64_t));
+                    break;
+                }
+                res += std::to_string(va_arg(va, uint32_t));
+                break;
             }
         }
     }
@@ -379,7 +391,7 @@ bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
 
 boost::optional<TableUsers> Database::getUser(const std::string &login)
 {
-    std::string statement = escaped_printf(mysql, "SELECT * FROM users WHERE"
+    const auto statement = escaped_printf(mysql, "SELECT * FROM users WHERE"
                                                   " name='%s' OR email='%s'",
                                            login, login);
     Result result = query(statement);
@@ -394,20 +406,20 @@ boost::optional<TableUsers> Database::getUser(const std::string &login)
     return res[0];
 }
 
-table_users Database::getUser(uint64_t id)
+boost::optional<TableUsers> Database::getUser(uint64_t id)
 {
-    mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
-                                          " id=" + std::to_string(id));
-    std::vector<users> res;
-    query.storein(res);
+    const auto statement = escaped_printf(mysql, "SELECT * FROM users WHERE"
+                                                 " id='%ul'", id);
+    Result result = query(statement);
+    const auto res = result.store();
     if (res.size() != 1) {
-        log::Logger::log(log::WARNING, "User Id " + std::to_string(id) +
-                         " has multiple entries!");
-        return table_users(NULL);
+        if (res.size() > 1) {
+            log::Logger::log(log::ERROR, "Login " + login + "has multiple "
+                                                            "entries!");
+        }
+        return boost::none;
     }
-    auto user = std::make_shared<users>(res[0]);
-    table_users table(user);
-    return table;
+    return res[0];
 }
 
 table_channels Database::getChannel(uint64_t id)
