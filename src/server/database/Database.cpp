@@ -12,39 +12,40 @@ static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
     va_list va;
     va_start(va, stmt);
     std::string res = "";
-    for (auto it = stmt.begin(); it != stmt.end(); i++) {
+    for (auto it = stmt.begin(); it != stmt.end(); it++) {
         if (*it != '%') {
             res += *it;
             continue;
         }
 
         if (*it == '%') {
-            it++;
-            switch (*it) {
-            case 's': {
-                /* escape the string */
-                std::string string = va_arg(va, std::string);
-                char *escaped_string = new char[(string.length() * 2) + 1];
-                mysql_real_escape_string_quote(mysql, escaped_string,
+                it++;
+                switch (*it) {
+                case 's': {
+                    /* escape the string */
+                    std::string string = va_arg(va, std::string);
+                    char *escaped_string = new char[(string.length() * 2) + 1];
+                    mysql_real_escape_string_quote(mysql, escaped_string,
                                                string.c_str(), string.length(),
                                                '\'');
-                res += std::string(escaped_string);
-                break;
-            }
-            case '%':
-                res += *it;
-                break;
-            }
-            case 'u': {
-                if (*(it + 1) == 'l') {
-                    res += std::to_string(va_arg(va, uint64_t));
+                    res += std::string(escaped_string);
                     break;
                 }
-                res += std::to_string(va_arg(va, uint32_t));
-                break;
+                case '%':
+                    res += *it;
+                    break;
+                case 'u': {
+                    if (*(it + 1) == 'l') {
+                        res += std::to_string(va_arg(va, uint64_t));
+                        break;
+                    }
+                    res += std::to_string(va_arg(va, uint32_t));
+                    break;
+                }
             }
         }
     }
+    return res;
 }
 
 Database::~Database()
