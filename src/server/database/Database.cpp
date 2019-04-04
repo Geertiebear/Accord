@@ -588,17 +588,5 @@ types::MessagesTable Database::messageServerToShared(table_messages message)
                                 (uint64_t) message.timestamp());
 }
 
-std::vector<char> Database::sqlBlobNullableToVectorChar(mysqlpp::sql_blob_null blob)
-{
-    return blob.is_null ? std::vector<char>() : std::vector<char>(blob.data.begin(), blob.data.end());
-}
-
-mysqlpp::sql_blob_null Database::vectorChartoSqlBlobNullable(const std::vector<char> &vector)
-{
-    mysqlpp::String string(std::string(vector.begin(), vector.end()),
-                     mysqlpp::mysql_type_info::string_type, vector.empty());
-    return mysqlpp::sql_blob_null(string);
-}
-
 } /* namespace database */
 } /* namespace accord */
