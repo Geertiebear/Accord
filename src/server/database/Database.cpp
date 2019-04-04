@@ -395,7 +395,7 @@ boost::optional<TableUsers> Database::getUser(const std::string &login)
                                                   " name='%s' OR email='%s'",
                                            login, login);
     Result result = query(statement);
-    const auto res = result.store();
+    const auto res = result.store<TableUsers>();
     if (res.size() != 1) {
         if (res.size() > 1) {
             log::Logger::log(log::ERROR, "Login " + login + "has multiple "
@@ -411,7 +411,7 @@ boost::optional<TableUsers> Database::getUser(uint64_t id)
     const auto statement = escaped_printf(mysql, "SELECT * FROM users WHERE"
                                                  " id='%ul'", id);
     Result result = query(statement);
-    const auto res = result.store();
+    const auto res = result.store<TableUsers>();
     if (res.size() != 1) {
         if (res.size() > 1) {
             log::Logger::log(log::ERROR, "User " + std::to_string(id) +
@@ -427,7 +427,7 @@ boost::optional<TableChannels> Database::getChannel(uint64_t id)
     const auto statement = escaped_printf(mysql, "SELECT * FROM channels WHERE "
                                                  "id='%ul'", id);
     Result result = query(statement);
-    const auto res = result.store();
+    const auto res = result.store<TableChannels>();
     if (res.size() != 1) {
         if (res.size() > 1) {
             log::Logger::log(log::ERROR, "Channel " + std::to_string(id) +
@@ -438,32 +438,36 @@ boost::optional<TableChannels> Database::getChannel(uint64_t id)
     return res[0];
 }
 
-table_communities Database::getCommunity(uint64_t id)
+boost::optional<TableCommunities> Database::getCommunity(uint64_t id)
 {
-    mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE "
-                                            "id=" + std::to_string(id));
-    std::vector<communities> res;
-    query.storein(res);
+    const auto statement = escaped_printf(mysql, "SELECT * FROM communities"
+                                                 "WHERE id='%ul'", id);
+    Result result = query(statement);
+    const auto res = result.store<TableCommunities>();
     if (res.size() != 1) {
-        log::Logger::log(log::WARNING, "Community Id " + std::to_string(id) +
-                         " has multiple entries!");
-        return table_communities(NULL);
+        if (res.size() > 1) {
+            log::Logger::log(log::ERROR, "Community " + std::to_string(id) +
+                             " has multiple entries!");
+        }
+        return boost::none;
     }
-    auto community = std::make_shared<communities>(res[0]);
-    table_communities table(community);
-    return table;
+    return res[0];
 }
 
-table_messages Database::getMessage(uint64_t id)
+boost::optional<TableMessages> Database::getMessage(uint64_t id)
 {
-    auto query = connection.query("SELECT * FROM messages WHERE "
-                                  "id=" + std::to_string(id));
-    std::vector<messages> res;
-    query.storein(res);
-    if (res.size() != 1)
-        return table_messages(nullptr);
-    table_messages table(std::make_shared<messages>(res[0]));
-    return table;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM messages WHERE"
+                                                 " id='%ul'", id);
+    Result result = query(statement);
+    const auto res = result.store<TableMessages>();
+    if (res.size() != 1) {
+        if (res.size() > 1) {
+            log::Logger::log(log::ERROR, "Message " + std::to_string(id) +
+                             " has multiple entries!");
+        }
+        return boost::none;
+    }
+    return res[0];
 }
 
 std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)

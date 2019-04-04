@@ -69,6 +69,47 @@ struct TableChannels {
     static constexpr unsigned int numFields = 4;
 };
 
+struct TableCommunities {
+    uint64_t id;
+    std::string name;
+    std::vector<char> profilepic;
+    int members;
+    int channels;
+
+    static TableCommunities fromRow(MYSQL_ROW row, unsigned long *lengths)
+    {
+        TableCommunities res;
+        res.id = std::stoull(std::string(row[0]));
+        res.name = std::string(row[1]);
+        res.profilepic = std::vector<char>(row[2], row[2] + lengths[2]);
+        res.members = std::stoull(row[3]);
+        res.channels = std::stoull(row[4]);
+        return res;
+    }
+
+    static constexpr unsigned int numFields = 5;
+};
+
+struct TableMessages {
+    uint64_t id;
+    uint64_t channel;
+    uint64_t sender;
+    std::string contents;
+    uint64_t timestamp;
+
+    static TableMessages fromRow(MYSQL_ROW row, unsigned long *lengths)
+    {
+        TableMessages res;
+        res.id = std::stoull(std::string(row[0]));
+        res.channel = std::stoull(std::string(row[1]));
+        res.sender = std::stoull(std::string(row[2]));
+        res.contents = std::string(row[3]);
+        res.timestamp = std::stoull(std::string(row[4]));
+    }
+
+    static constexpr unsigned int numFields = 5;
+};
+
 class Result {
 public:
     Result(MYSQL_RES *res) : res(res) { }
@@ -128,9 +169,9 @@ public:
     boost::optional<TableUsers> getUser(const std::string &login);
     boost::optional<TableUsers> getUser(uint64_t id);
     boost::optional<TableChannels> getChannel(uint64_t id);
+    boost::optional<TableCommunities> getCommunity(uint64_t id);
+    boost::optional<TableMessages> getMessage(uint64_t id);
     /*
-    table_communities getCommunity(uint64_t id);
-    table_messages getMessage(uint64_t id);
     std::vector<table_communities> getCommunitiesForUser(uint64_t id);
     std::vector<table_channels> getChannelsForCommunity(uint64_t id);
     std::vector<table_messages> getMessagesForChannel(uint64_t id);
