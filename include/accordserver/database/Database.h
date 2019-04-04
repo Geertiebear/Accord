@@ -49,6 +49,26 @@ struct TableUsers {
     static constexpr unsigned int numFields = 8;
 };
 
+struct TableChannels {
+    uint64_t id;
+    uint64_t community;
+    std::string name;
+    std::string description;
+
+    static TableChannels fromRow(MYSQL_ROW row, unsigned long *lengths)
+    {
+        TableChannels res;
+        (void) lengths;
+        res.id = std::stoull(std::string(row[0]));
+        res.community = std::stoull(std::string(row[1]));
+        res.name = std::string(row[2]);
+        res.description = std::string(row[3]);
+        return res;
+    }
+
+    static constexpr unsigned int numFields = 4;
+};
+
 class Result {
 public:
     Result(MYSQL_RES *res) : res(res) { }
@@ -106,9 +126,9 @@ public:
     bool canUserViewChannel(uint64_t userId, uint64_t channelId);
     */
     boost::optional<TableUsers> getUser(const std::string &login);
+    boost::optional<TableUsers> getUser(uint64_t id);
+    boost::optional<TableChannels> getChannel(uint64_t id);
     /*
-    table_users getUser(uint64_t id);
-    table_channels getChannel(uint64_t id);
     table_communities getCommunity(uint64_t id);
     table_messages getMessage(uint64_t id);
     std::vector<table_communities> getCommunitiesForUser(uint64_t id);

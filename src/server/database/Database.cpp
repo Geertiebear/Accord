@@ -414,26 +414,28 @@ boost::optional<TableUsers> Database::getUser(uint64_t id)
     const auto res = result.store();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "Login " + login + "has multiple "
-                                                            "entries!");
+            log::Logger::log(log::ERROR, "User " + std::to_string(id) +
+                             " has multiple entries!");
         }
         return boost::none;
     }
     return res[0];
 }
 
-table_channels Database::getChannel(uint64_t id)
+boost::optional<TableChannels> Database::getChannel(uint64_t id)
 {
-    auto query = connection.query("SELECT * FROM channels WHERE "
-                                  "id=" + std::to_string(id));
-    std::vector<channels> res;
-    query.storein(res);
-    if (res.size() != 1)
-        return table_channels(nullptr);
-
-    auto channel = std::make_shared<channels>(res[0]);
-    table_channels table(channel);
-    return table;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM channels WHERE "
+                                                 "id='%ul'", id);
+    Result result = query(statement);
+    const auto res = result.store();
+    if (res.size() != 1) {
+        if (res.size() > 1) {
+            log::Logger::log(log::ERROR, "Channel " + std::to_string(id) +
+                             " has multiple entries!");
+        }
+        return boost::none;
+    }
+    return res[0];
 }
 
 table_communities Database::getCommunity(uint64_t id)
