@@ -2,8 +2,38 @@
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/CryptoUtil.h>
 
+#include <cstdarg>
+
 namespace accord {
 namespace database {
+
+static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
+{
+    va_list va;
+    va_start(va, stmt);
+    std::string res = "";
+    for (auto it = stmt.begin(); it != stmt.end(); i++) {
+        if (*it != '%') {
+            res += *it;
+            continue;
+        }
+
+        if (*it == '%') {
+            it++;
+            if (*it == 's') {
+                /* escape the string */
+                std::string string = va_arg(va, std::string);
+                char *escaped_string = new char[(string.length() * 2) + 1];
+                mysql_real_escape_string_quote(mysql, escaped_string,
+                                               string.c_str(), string.length(),
+                                               '\'');
+                res += std::string(escaped_string);
+            } else if (*it == '%') {
+                res += *it;
+            }
+        }
+    }
+}
 
 Database::~Database()
 {
@@ -117,9 +147,28 @@ bool Database::initDatabase()
     return true;
 }
 
-mysqlpp::Query Database::query(std::string statement)
-{
-    return connection.query(statement.c_str());
+Result Database::query(std::string query) {
+    if (mysql_real_query(mysql, query.c_str(), query.length()))
+        goto error;
+
+    MYSQL_RES *res = mysql_store_result(mysql);
+    if (!res)
+        goto error;
+
+    return Result(res);
+
+error:
+    const char *errorString = mysql_error(mysql);
+    if (!errorString[0]) {
+        log::Logger::log(log::ERROR, "Error executing query " + query +
+                                     " without mysql error. Maybe the query does"
+                                     " not return a result set...");
+    } else {
+        const auto stdErrorString = std::string(errorString);
+        log::Logger::log(log::ERROR, "Error executuing query " + query +
+                                     " with mysql error " + stdErrorString);
+    }
+    return Result(nullptr);
 }
 
 bool Database::initUser(uint64_t id, const std::string &name,
@@ -182,7 +231,7 @@ bool Database::initChannel(uint64_t id, const types::AddChannel &request,
 }
 
 bool Database::initMessage(uint64_t id, uint64_t channel, uint64_t sender,
-                           const std::string&msg, uint64_t timestamp,
+                           const std::string &msg, uint64_t timestamp,
                            table_messages *ret)
 {
     table_messages check = getMessage(id);
@@ -328,21 +377,21 @@ bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
     return true;
 }
 
-table_users Database::getUser(const std::string &login)
+boost::optional<TableUsers> Database::getUser(const std::string &login)
 {
-    mysqlpp::Query query = connection.query("SELECT * FROM users WHERE"
-                                          " name='" + login + "' OR"
-                                          " email='" + login + "'");
-    std::vector<users> res;
-    query.storein(res);
+    std::string statement = escaped_printf(mysql, "SELECT * FROM users WHERE"
+                                                  " name='%s' OR email='%s'",
+                                           login, login);
+    Result result = query(statement);
+    const auto res = result.store();
     if (res.size() != 1) {
-        log::Logger::log(log::WARNING, "Login " + login + " has multiple"
-                                                          " entries!");
-        return table_users(NULL);
+        if (res.size() > 1) {
+            log::Logger::log(log::ERROR, "Login " + login + "has multiple "
+                                                            "entries!");
+        }
+        return boost::none;
     }
-    auto user = std::make_shared<users>(res[0]);
-    table_users table(user);
-    return table;
+    return res[0];
 }
 
 table_users Database::getUser(uint64_t id)
