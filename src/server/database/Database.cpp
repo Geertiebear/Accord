@@ -563,29 +563,30 @@ std::vector<table_users> Database::getUsersForCommunity(uint64_t id)
     return ret;
 }
 
-types::CommunitiesTable Database::communityServerToShared(table_communities community)
+types::CommunitiesTable Database::communityServerToShared(TableCommunities community)
 {
-    return types::CommunitiesTable((uint64_t) community.id(), (std::string) community.name(),
-                                   sqlBlobNullableToVectorChar(community.profilepic()),
-                                   (int) community.members(),
-                                   (int) community.channels());
+    return types::CommunitiesTable(community.id,
+                                   community.name,
+                                   community.profilepic,
+                                   community.members,
+                                   community.channels);
 }
 
-types::ChannelsTable Database::channelServerToShared(table_channels channel)
+types::ChannelsTable Database::channelServerToShared(TableChannels channel)
 {
-    return types::ChannelsTable((uint64_t) channel.id(), (uint64_t)
-                                channel.community(), (std::string)
-                                channel.name(), (std::string)
-                                channel.description());
+    return types::ChannelsTable(channel.id,
+                                channel.community,
+                                channel.name,
+                                channel.description);
 }
 
-types::MessagesTable Database::messageServerToShared(table_messages message)
+types::MessagesTable Database::messageServerToShared(TableMessages message)
 {
-    return types::MessagesTable((uint64_t) message.id(),
-                                (uint64_t) message.channel(),
-                                (uint64_t) message.sender(),
-                                (std::string) message.contents(),
-                                (uint64_t) message.timestamp());
+    return types::MessagesTable(message.id,
+                                message.channel,
+                                message.sender,
+                                message.contents,
+                                message.timestamp);
 }
 
 } /* namespace database */

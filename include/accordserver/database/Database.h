@@ -178,12 +178,12 @@ public:
     std::vector<table_channels> getChannelsForUser(uint64_t id);
     std::vector<table_users> getUsersForChannel(uint64_t id);
     std::vector<table_users> getUsersForCommunity(uint64_t id);
-    mysqlpp::Query query(std::string statement);
+    mysqlpp::Query query(std::string statement); */
 
     //helper functions
-    static types::CommunitiesTable communityServerToShared(table_communities community);
-    static types::ChannelsTable channelServerToShared(table_channels channel);
-    static types::MessagesTable messageServerToShared(table_messages message); */
+    static types::CommunitiesTable communityServerToShared(TableCommunities community);
+    static types::ChannelsTable channelServerToShared(TableChannels channel);
+    static types::MessagesTable messageServerToShared(TableMessages message);
 
 private:
     const DatabaseOptions &options;
