@@ -163,22 +163,20 @@ public:
     bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
+    */
     bool isUserInCommunity(uint64_t userId, uint64_t communityId);
     bool canUserViewChannel(uint64_t userId, uint64_t channelId);
-    */
     boost::optional<TableUsers> getUser(const std::string &login);
     boost::optional<TableUsers> getUser(uint64_t id);
     boost::optional<TableChannels> getChannel(uint64_t id);
     boost::optional<TableCommunities> getCommunity(uint64_t id);
     boost::optional<TableMessages> getMessage(uint64_t id);
-    /*
-    std::vector<table_communities> getCommunitiesForUser(uint64_t id);
-    std::vector<table_channels> getChannelsForCommunity(uint64_t id);
-    std::vector<table_messages> getMessagesForChannel(uint64_t id);
-    std::vector<table_channels> getChannelsForUser(uint64_t id);
-    std::vector<table_users> getUsersForChannel(uint64_t id);
-    std::vector<table_users> getUsersForCommunity(uint64_t id);
-    mysqlpp::Query query(std::string statement); */
+    std::vector<TableCommunities> getCommunitiesForUser(uint64_t id);
+    std::vector<TableChannels> getChannelsForCommunity(uint64_t id);
+    std::vector<TableMessages> getMessagesForChannel(uint64_t id);
+    std::vector<TableChannels> getChannelsForUser(uint64_t id);
+    std::vector<TableUsers> getUsersForChannel(uint64_t id);
+    std::vector<TableUsers> getUsersForCommunity(uint64_t id);
 
     //helper functions
     static types::CommunitiesTable communityServerToShared(TableCommunities community);

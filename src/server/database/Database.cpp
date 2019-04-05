@@ -350,11 +350,12 @@ bool Database::acceptFriendRequest(uint64_t id)
 
 bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
 {
-    auto query = connection.query("SELECT * FROM community_members WHERE"
-                                  " id=" + std::to_string(communityId) +
-                                  " AND user=" + std::to_string(userId));
-    std::vector<community_members> res;
-    query.storein(res);
+    const auto statement = escaped_printf(mysql, "SELECT * FROM "
+                                                 "community_members WHERE "
+                                                 "id='%ul' AND user='%ul'",
+                                          communityId, userId);
+    Result result = query(statement);
+    const auto res = result.store<TableUsers>();
     if (res.size() > 1) {
         /* there is something wrong with the database,
          * assume that the user is in there
@@ -374,12 +375,14 @@ bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
 
 bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
 {
-    auto query = connection.query("SELECT * FROM community_members WHERE id="
-                                  "(SELECT community FROM channels WHERE id="
-                                  + std::to_string(channelId) + ")"
-                                  " AND user=" + std::to_string(userId));
-    std::vector<community_members> res;
-    query.storein(res);
+    const auto statement = escaped_printf(mysql, "SELECT * FROM "
+                                                 "community_members WHERE id="
+                                                 "(SELECT community FROM "
+                                                 "channels WHERE id='%ul') AND "
+                                                 "user='%ul'", channelId,
+                                          userId);
+    Result result = query(statement);
+    const auto res = result.store<TableCommunities>();
     if (res.size() > 1) {
         /* same deal as above */
         log::Logger::log(log::WARNING, "There are multiple entries"
@@ -473,97 +476,67 @@ boost::optional<TableMessages> Database::getMessage(uint64_t id)
     return res[0];
 }
 
-std::vector<table_communities> Database::getCommunitiesForUser(uint64_t id)
+std::vector<TableCommunities> Database::getCommunitiesForUser(uint64_t id)
 {
-    std::vector<table_communities> ret;
-    std::vector<communities> res;
-    mysqlpp::Query query = connection.query("SELECT * FROM communities WHERE id IN"
-                                            " (SELECT community_members.id FROM"
-                                            " community_members WHERE user=" +
-                                            std::to_string(id) + ");");
-    query.storein(res);
-    for (size_t i = 0; i < res.size(); i++) {
-        auto community = std::make_shared<communities>(res[i]);
-        ret.emplace_back(community);
-    }
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM communities "
+                                                 "WHERE id IN (SELECT "
+                                                 "community_members.id FROM "
+                                                 "community_members WHERE user="
+                                                 "'%ul')", id);
+    Result result = query(statement);
+    return result.store<TableCommunities>();
 }
 
-std::vector<table_channels> Database::getChannelsForCommunity(uint64_t id)
+std::vector<TableChannels> Database::getChannelsForCommunity(uint64_t id)
 {
-    std::vector<table_channels> ret;
-    std::vector<channels> res;
-    auto query = connection.query("SELECT * FROM channels WHERE community="
-                                  + std::to_string(id));
-    query.storein(res);
-    for (size_t i = 0; i < res.size(); i++) {
-        auto channel = std::make_shared<channels>(res[i]);
-        ret.emplace_back(channel);
-    }
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM channels where"
+                                                 " community='%ul'", id);
+    Result result = query(statement);
+    return result.store<TableChannels>();
 }
 
-std::vector<table_channels> Database::getChannelsForUser(uint64_t id)
+std::vector<TableChannels> Database::getChannelsForUser(uint64_t id)
 {
-    std::vector<table_channels> ret;
-    std::vector<channels> res;
-    auto query = connection.query("SELECT * FROM channels WHERE id IN"
-                                  " (SELECT channel_members.id FROM "
-                                  "channel_members WHERE user=" +
-                                  std::to_string(id) + ");");
-    query.storein(res);
-    for (size_t i = 0; i < res.size(); i++) {
-        auto channel = std::make_shared<channels>(res[i]);
-        ret.emplace_back(channel);
-    }
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM channels "
+                                                 "WHERE id IN (SELECT "
+                                                 "channel_members.id FROM "
+                                                 "channel_members WHERE user="
+                                                 "'%ul')", id);
+    Result result = query(statement);
+    return result.store<TableChannels>();
 }
 
-std::vector<table_messages> Database::getMessagesForChannel(uint64_t id)
+std::vector<TableMessages> Database::getMessagesForChannel(uint64_t id)
 {
-    std::vector<table_messages> ret;
-    std::vector<messages> res;
-    auto query = connection.query("SELECT * FROM messages WHERE channel="
-                                  + std::to_string(id));
-    query.storein(res);
-    for (auto message : res)
-        ret.emplace_back(std::make_shared<messages>(message));
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM messages "
+                                                 "WHERE channel='%ul'", id);
+    Result result = query(statement);
+    return result.store<TableMessages>();
 }
 
 /*
  * currently unused, maybe useful sometime in the future?
 */
-std::vector<table_users> Database::getUsersForChannel(uint64_t id)
+std::vector<TableUsers> Database::getUsersForChannel(uint64_t id)
 {
-    std::vector<table_users> ret;
-    std::vector<users> res;
-    auto query = connection.query("SELECT * FROM users WHERE id IN "
-                                  "(SELECT channel_members.user FROM "
-                                  "channel_members WHERE id=" +
-                                  std::to_string(id) + ");");
-    query.storein(res);
-    for (users user : res) {
-        auto user_ptr = std::make_shared<users>(user);
-        ret.emplace_back(user_ptr);
-    }
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM users WHERE "
+                                                 "id IN (SELECT "
+                                                 "channel_members.user FROM "
+                                                 "channel_members WHERE id="
+                                                 "'%ul')", id);
+    Result result = query(statement);
+    return result.store<TableUsers>();
 }
 
-std::vector<table_users> Database::getUsersForCommunity(uint64_t id)
+std::vector<TableUsers> Database::getUsersForCommunity(uint64_t id)
 {
-    std::vector<table_users> ret;
-    std::vector<users> res;
-    auto query = connection.query("SELECT * FROM users WHERE id IN "
-                                  "(SELECT community_members.user FROM "
-                                  "community_members WHERE id=" +
-                                  std::to_string(id) + ");");
-    query.storein(res);
-    for (auto user: res) {
-        auto user_ptr = std::make_shared<users>(user);
-        ret.emplace_back(user_ptr);
-    }
-    return ret;
+    const auto statement = escaped_printf(mysql, "SELECT * FROM users WHERE id "
+                                                 "IN (SELECT "
+                                                 "community_members.user FROM "
+                                                 "community_members WHERE id="
+                                                 "'%ul')", id);
+    Result result = query(statement);
+    return result.store<TableUsers>();
 }
 
 types::CommunitiesTable Database::communityServerToShared(TableCommunities community)
