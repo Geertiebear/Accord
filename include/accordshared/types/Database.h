@@ -55,9 +55,9 @@ public:
     MessagesTable(uint64_t id, uint64_t channel, uint64_t sender,
                   const std::string &msg, uint64_t timestamp)
         : id(id), channel(channel), sender(sender),
-          message(msg), timestamp(timestamp)
+          timestamp(timestamp), message(msg)
     { }
-    uint64_t id, channel, timestamp, sender;
+    uint64_t id, channel, sender, timestamp;
     std::string message;
 
     template<class Archive>

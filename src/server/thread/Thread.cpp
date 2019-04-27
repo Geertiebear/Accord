@@ -26,9 +26,8 @@
 namespace accord {
 namespace thread {
 
-Thread::Thread(Server &server, const Config &config) : server(server),
-    config(config), thread(),
-    database(config.database)
+Thread::Thread(Server &server, const Config &config) :database(config.database),
+    server(server), config(config), thread()
 {
 	eventBase = event_base_new();
 }

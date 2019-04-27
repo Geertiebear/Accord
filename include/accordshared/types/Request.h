@@ -100,7 +100,7 @@ public:
     SendMessage() { }
     SendMessage(uint64_t channel, const std::string &msg,
                 uint64_t timestamp, const std::string &token)
-        : channel(channel), message(msg), timestamp(timestamp),
+        : channel(channel), timestamp(timestamp),  message(msg),
           token(token) { }
     uint64_t channel, timestamp;
     std::string message, token;

@@ -58,6 +58,7 @@ static bool checkLoggedIn(thread::Client *client, const std::string &token)
 bool PacketHandlers::receiveSendMessagePacket(const std::vector<char> &body, PacketData *data)
 {
 	thread::Client *client = (thread::Client*) data;
+    (void) client;
     //client->server.broadcast(std::string(body.begin(), body.end()), client->channel);
     log::Logger::log(log::DEBUG, "Received send message packet with body: " +
                      std::string(body.begin(), body.end()));

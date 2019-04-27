@@ -22,8 +22,8 @@ struct Arguments;
 struct OnlineUser {
     OnlineUser(int refCount, const types::UserData &user) : refCount(refCount),
         user(user) {}
-    types::UserData user;
     int refCount = 0;
+    types::UserData user;
     std::vector<thread::Client*> clients;
 };
 
