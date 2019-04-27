@@ -7,14 +7,21 @@
 namespace accord {
 namespace database {
 
-static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
+const std::string TableUsers::tableName = "users";
+const std::string TableChannels::tableName = "channels";
+const std::string TableCommunities::tableName = "communities";
+const std::string TableMessages::tableName = "messages";
+const std::string TableFriends::tableName = "friends";
+const std::string TableCommunityMembers::tableName = "community_members";
+const std::string TableChannelMembers::tableName = "channel_members";
+
+static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
+                                                  std::string stmt, va_list va)
 {
-    va_list va;
-    va_start(va, stmt);
-    std::string res = "";
+    std::vector<char> res;
     for (auto it = stmt.begin(); it != stmt.end(); it++) {
         if (*it != '%') {
-            res += *it;
+            res.push_back(*it);
             continue;
         }
 
@@ -28,24 +35,101 @@ static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
                     mysql_real_escape_string_quote(mysql, escaped_string,
                                                string.c_str(), string.length(),
                                                '\'');
-                    res += std::string(escaped_string);
+                    const auto escaped_string_std = std::string(escaped_string);
+                    std::copy(escaped_string_std.begin(),
+                              escaped_string_std.end(),
+                              std::back_inserter(res));
                     break;
                 }
+                case 'c': {
+                    if (*(it + 1) == 'v') {
+                        const auto vector = va_arg(va, std::vector<char>);
+                        char *escaped = new char[(vector.size() * 2) + 1];
+                        int bytes = mysql_real_escape_string_quote(mysql,
+                                                                   escaped,
+                                                       vector.data(),
+                                                       vector.size(),
+                                                       '\'');
+                        const auto escaped_vector = std::vector<char>(
+                                    escaped,escaped + bytes);
+                        std::copy(escaped_vector.begin(),
+                                  escaped_vector.end(),
+                                  std::back_inserter(res));
+                        break;
+                    }
+                }
                 case '%':
-                    res += *it;
+                    res.push_back(*it);
                     break;
                 case 'u': {
                     if (*(it + 1) == 'l') {
-                        res += std::to_string(va_arg(va, uint64_t));
+                        const auto string = std::to_string(
+                                    va_arg(va, uint64_t));
+                        std::copy(string.begin(), string.end(),
+                                  std::back_inserter(res));
                         break;
                     }
-                    res += std::to_string(va_arg(va, uint32_t));
+                    const auto string = std::to_string(
+                                va_arg(va, uint32_t));
+                    std::copy(string.begin(), string.end(),
+                              std::back_inserter(res));
+                    break;
+                }
+                case 'i': {
+                    const auto string = std::to_string(
+                                va_arg(va, int));
+                    std::copy(string.begin(), string.end(),
+                              std::back_inserter(res));
                     break;
                 }
             }
         }
     }
     return res;
+}
+
+static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
+{
+    va_list va;
+    va_start(va, stmt);
+    const auto res = escaped_printf_vector_va(mysql, stmt, va);
+    va_end(va);
+    return std::string(res.begin(), res.end());
+}
+
+static std::vector<char> escaped_printf_vector(MYSQL *mysql, std::string stmt, ...)
+{
+    va_list va;
+    va_start(va, stmt);
+    const auto res = escaped_printf_vector_va(mysql, stmt, va);
+    va_end(va);
+    return res;
+}
+
+std::vector<char> TableUsers::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%s', '%cv', '%i', '%i', '%s',"
+                                        " '%s', '%s'",
+                                 id, name, profilepic, friends, communities,
+                                 email, password, salt);
+}
+
+std::vector<char> TableChannels::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul', '%s', '%s'", id,
+                                 community, name, description);
+}
+
+std::vector<char> TableCommunities::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%s', '%cv', '%i', '%i'",
+                                 id, name, profilepic, members, channels);
+}
+
+std::vector<char> TableMessages::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul', '%ul', '%s', '%ul'",
+                                 id, channel, sender, contents, timestamp);
 }
 
 Database::~Database()
@@ -73,90 +157,84 @@ void Database::disconnect()
     mysql_close(mysql);
 }
 
+static bool tableExists(MYSQL *mysql, const std::string &tableName)
+{
+    const std::string query = "SHOW TABLES LIKE '" + tableName + "'";
+    if (mysql_real_query(mysql, query.c_str(), query.length()))
+        return false;
+    if (!mysql_field_count(mysql))
+        return false;
+    return true;
+}
+
 bool Database::verify()
 {
-    mysqlpp::Query query = connection.query("SHOW TABLES LIKE 'users'");
-    mysqlpp::StoreQueryResult res;
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'communities'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'friends'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'community_members'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'channels'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'channel_members'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
-    query = connection.query("SHOW TABLES LIKE 'messages'");
-    if (res = query.store())
-        if (res.empty())
-            return false;
+    if (!tableExists(mysql, "users"))
+        return false;
+    if (!tableExists(mysql, "communities"))
+        return false;
+    if (!tableExists(mysql, "friends"))
+        return false;
+    if (!tableExists(mysql, "community_members"))
+        return false;
+    if (!tableExists(mysql, "channels"))
+        return false;
+    if (!tableExists(mysql, "channel_members"))
+        return false;
+    if (!tableExists(mysql, "messages"))
+        return false;
     return true;
 }
 
 bool Database::initDatabase()
 {
-    try {
-        mysqlpp::Query query = connection.
-                query("CREATE TABLE users (id BIGINT UNSIGNED, "
-                      "name VARCHAR(255), profilepic "
-                      "VARBINARY(65535), friends INT,"
-                      "communities INT, email VARCHAR(255),"
-                      "password VARCHAR(255), salt VARCHAR(255))");
-        if (!query.execute())
+    const std::string users = "CREATE TABLE users (id BIGINT UNSIGNED, "
+                                "name VARCHAR(255), profilepic "
+                                "VARBINARY(65535), friends INT,"
+                                "communities INT, email VARCHAR(255),"
+                                "password VARCHAR(255), salt VARCHAR(255))";
+    if (!mysql_real_query(mysql, users.c_str(), users.length()))
+        return false;
+    const std::string communties = "CREATE TABLE communities "
+                                   "(id BIGINT UNSIGNED,"
+                                   "name VARCHAR(255), profilepic "
+                                   "VARBINARY(65535),"
+                                   "members INT, channels INT)";
+    if (!mysql_real_query(mysql, communties.c_str(), communties.length()))
+        return false;
+    const std::string friends = "CREATE TABLE friends (id BIGINT UNSIGNED, "
+                                "user1 BIGINT UNSIGNED, user2 BIGINT UNSIGNED,"
+                                "status ENUM('pending', 'accepted'))";
+    if (!mysql_real_query(mysql, friends.c_str(), friends.length()))
             return false;
-        query = connection.query(
-                "CREATE TABLE communities (id BIGINT UNSIGNED,"
-                "name VARCHAR(255), profilepic VARBINARY(65535),"
-                "members INT, channels INT)");
-        if (!query.execute())
+
+    const std::string communityMembers = "CREATE TABLE community_members "
+                                            "(id BIGINT UNSIGNED, "
+                                            "user BIGINT UNSIGNED)";
+    if (!mysql_real_query(mysql, communityMembers.c_str(),
+                          communityMembers.length()))
             return false;
-        query = connection.query(
-                "CREATE TABLE friends (id BIGINT UNSIGNED, "
-                "user1 BIGINT UNSIGNED, user2 BIGINT UNSIGNED,"
-                "status ENUM('pending', 'accepted'))");
-        if (!query.execute())
-            return false;
-        query = connection.query(
-                "CREATE TABLE community_members (id BIGINT UNSIGNED, "
-                "user BIGINT UNSIGNED)");
-        if (!query.execute())
-            return false;
-        query = connection.query(
-                    "CREATE TABLE channels (id BIGINT UNSIGNED, "
+
+    const std::string channels = "CREATE TABLE channels (id BIGINT UNSIGNED, "
                     "community BIGINT UNSIGNED, name VARCHAR(255),"
-                    "description VARCHAR(255))");
-        if (!query.execute())
-            return false;
-        query = connection.query(
-                    "CREATE TABLE channel_members (id BIGINT UNSIGNED, "
-                    "user BIGINT UNSIGNED)");
-        if (!query.execute())
-            return false;
-        query = connection.query(
-                    "CREATE TABLE messages (id BIGINT UNSIGNED, "
+                    "description VARCHAR(255))";
+    if (!mysql_real_query(mysql, channels.c_str(), channels.length()))
+        return false;
+
+    const std::string channelMembers = "CREATE TABLE channel_members "
+                                       "(id BIGINT UNSIGNED, "
+                                       "user BIGINT UNSIGNED)";
+    if (!mysql_real_query(mysql, channelMembers.c_str(),
+                          channelMembers.length()))
+        return false;
+
+    const std::string messages = "CREATE TABLE messages (id BIGINT UNSIGNED, "
                     "channel BIGINT UNSIGNED, sender BIGINT UNSIGNED,"
                     " contents VARCHAR(2000),"
-                    "timestamp BIGINT UNSIGNED)");
-        if (!query.execute())
-            return false;
-    } catch (mysqlpp::BadQuery &e) {
-        log::Logger::log(log::WARNING, "Bad query made in database init: " +
-                         std::string(e.what()));
-    }
+                    "timestamp BIGINT UNSIGNED)";
+    if (!mysql_real_query(mysql, messages.c_str(), messages.length()))
+        return false;
+
     return true;
 }
 
@@ -192,114 +270,106 @@ bool Database::initUser(uint64_t id, const std::string &name,
                         const std::string &salt)
 {
 
-    mysqlpp::Query query = connection.query();
-    users user(id, name, mysqlpp::null, 0, 0, email, password, salt);
-    query.insert(user);
-    return query.execute();
+    TableUsers user(id, name, std::vector<char>(), 0, 0, email, password, salt);
+    return insert(user);
 }
 
-bool Database::initCommunity(uint64_t id, uint64_t user,
-                             const types::AddCommunity &request,
-                             table_communities *ret)
+boost::optional<TableCommunities> Database::initCommunity(uint64_t id,
+                                                          uint64_t user,
+                             const types::AddCommunity &request)
 {
-    table_communities check = getCommunity(id);
-    if (check.table != NULL)
-        return false;
+    auto check = getCommunity(id);
+    if (check)
+        return boost::none;
 
-    mysqlpp::Query query = connection.query();
-    communities community(id, request.name,
-                          vectorChartoSqlBlobNullable(request.profilepic), 0, 0);
-    query.insert(community);
-    if(!query.execute())
-        return false;
+    TableCommunities community(id, request.name,
+                          request.profilepic, 0, 0);
+    if(!insert(community))
+        return boost::none;
     if(!addMember(id, user))
-        return false;
+        return boost::none;
 
-    *ret = table_communities(std::make_shared<communities>(community));
-    return true;
+    return community;
 }
 
-bool Database::initChannel(uint64_t id, const types::AddChannel &request,
-                           table_channels *ret)
+boost::optional<TableChannels> Database::initChannel(uint64_t id,
+                                            const types::AddChannel &request)
 {
-    table_channels check = getChannel(id);
-    if (check.table != nullptr)
-        return false;
+    auto check = getChannel(id);
+    if (check)
+        return boost::none;
 
-    auto query = connection.query();
-    channels channel(id, request.community, request.name, request.description);
-    query.insert(channel);
-    if (!query.execute())
-        return false;
+    TableChannels channel(id, request.community, request.name,
+                          request.description);
+    if (insert(channel))
+        return boost::none;
     if (!addChannel(request.community))
-        return false;
+        return boost::none;
 
     auto users = getUsersForCommunity(request.community);
     for (auto user : users) {
-        channel_members channel_member(id, user.id());
-        query.insert(channel_member);
-        if (!query.execute())
-            return false;
+        TableChannelMembers channelMember(id, user.id);
+        if(!insert(channelMember))
+            return boost::none;
     }
-    *ret = table_channels(std::make_shared<channels>(channel));
-    return true;
+    return channel;
 }
 
-bool Database::initMessage(uint64_t id, uint64_t channel, uint64_t sender,
-                           const std::string &msg, uint64_t timestamp,
-                           table_messages *ret)
+boost::optional<TableMessages> Database::initMessage(uint64_t id,
+                                                     uint64_t channel,
+                                                     uint64_t sender,
+                                                     const std::string &msg,
+                                                     uint64_t timestamp)
 {
-    table_messages check = getMessage(id);
-    if (check.table != nullptr) {
+    auto check = getMessage(id);
+    if (check) {
         log::Logger::log(log::WARNING, "Message already exists!");
-        return false;
+        return boost::none;
     }
 
-    auto query = connection.query();
-    messages message(id, channel, sender, msg, timestamp);
-    query.insert(message);
-    if (!query.execute())
-        return false;
-    *ret = table_messages(std::make_shared<messages>(message));
-    return true;
+    TableMessages message(id, channel, sender, msg, timestamp);
+    if (!insert(message))
+        return boost::none;
+    return message;
 }
 
-bool Database::submitMessage(uint64_t channel, uint64_t sender,
-                             const std::string &msg,
-                             uint64_t timestamp, table_messages *ret)
+boost::optional<TableMessages> Database::submitMessage(uint64_t channel,
+                                                       uint64_t sender,
+                                                       const std::string &msg,
+                                                       uint64_t timestamp)
 {
     auto id = util::CryptoUtil::getRandomUINT64();
-    return initMessage(id, channel, sender, msg, timestamp, ret);
+    return initMessage(id, channel, sender, msg, timestamp);
 }
 
 bool Database::addMember(uint64_t id, uint64_t user)
 {
-    mysqlpp::Query query = connection.query();
-
-    table_communities community = getCommunity(id);
-    communities originalCommunity = *community.table;
-    community.members()++;
-    query.update(originalCommunity, *community.table);
-    if(!query.execute())
+    auto community = getCommunity(id);
+    if (!community)
+        return false;
+    const std::string memberUpdate = "UPDATE 'communities' SET 'members'=" +
+            std::to_string(community.get().members + 1) + "' WHERE 'id'='" +
+            std::to_string(community.get().id) + "'";
+    if(!mysql_real_query(mysql, memberUpdate.c_str(), memberUpdate.length()))
         return false;
 
-    table_users userTable = getUser(user);
-    users originalUser = *userTable.table;
-    userTable.communities()++;
-    query.update(originalUser, *userTable.table);
-    if (!query.execute())
+    auto userTable = getUser(user);
+    if (!userTable)
+        return false;
+    const std::string userUpdate = "UPDATE 'users' SET 'communties'=" +
+            std::to_string(userTable.get().communities + 1) + "' WHERE 'id'='" +
+            std::to_string(userTable.get().id) + "'";
+    if (mysql_real_query(mysql, userUpdate.c_str(), userUpdate.length()))
         return false;
 
-    community_members community_member(id, user);
-    query.insert(community_member);
-    if(!query.execute())
+    TableCommunityMembers communityMember(id, user);
+    if (!insert(communityMember))
         return false;
 
-    std::vector<table_channels> channels = getChannelsForCommunity(id);
-    for (table_channels &channel : channels) {
-        channel_members channel_member(channel.id(), user);
-        query.insert(channel_member);
-        if (!query.execute())
+    auto channels = getChannelsForCommunity(id);
+    for (auto &channel : channels) {
+        TableChannelMembers channelMember(channel.id, user);
+        if(!insert(channelMember))
             return false;
     }
 
@@ -308,44 +378,38 @@ bool Database::addMember(uint64_t id, uint64_t user)
 
 bool Database::addChannel(uint64_t id)
 {
-    table_communities community = getCommunity(id);
-    if (!community.table)
+    auto community = getCommunity(id);
+    if (!community)
         return false;
-    communities originalCommunity = *community.table;
-    community.channels()++;
-
-    auto query = connection.query();
-    query.update(originalCommunity, *community.table);
-    return query.execute();
+    const std::string update = "UPDATE 'communties' SET 'channels'='" +
+            std::to_string(community.get().channels + 1) + "' WHERE id='" +
+            std::to_string(community.get().id) + "'";
+    return mysql_real_query(mysql, update.c_str(), update.length());
 }
 
 bool Database::sendFriendRequest(uint64_t from, uint64_t to)
 {
-    mysqlpp::Query query = connection.query();
-
     uint64_t id = util::CryptoUtil::getRandomUINT64();
-    friends request(id, from, to, "pending");
-    query.insert(request);
-    return query.execute();
+    TableFriends request(id, from, to, "pending");
+    return insert(request);
 }
 
 bool Database::acceptFriendRequest(uint64_t id)
 {
-    mysqlpp::Query query = connection.query("SELECT * FROM friends WHERE"
-                                            " id=" + std::to_string(id));
-    std::vector<friends> res;
-    query.storein(res);
+    const auto statement = escaped_printf(mysql, "SELECT * FROM friends WHERE"
+                                            " id='%ul'");
+    Result result = query(statement);
+    auto res = result.store<TableFriends>();
     if (res.size() != 1) {
         //what
         log::Logger::log(log::WARNING, "Friend request id " +
                          std::to_string(id) + " has multiple entries..?");
         return false;
     }
-    friends request = res[0];
-    friends original = res[0];
-    request.status = "accepted";
-    query.update(original, request);
-    return query.execute();
+
+    const std::string update = "UPDATE 'friends' SET 'status'='accepted' WHERE"
+                        " id='" + std::to_string(res[0].id) + "'";
+    return mysql_real_query(mysql, update.c_str(), update.length());
 }
 
 bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)

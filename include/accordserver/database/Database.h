@@ -22,6 +22,37 @@ struct DatabaseOptions {
     int port;
 };
 
+template<typename T>
+static std::enable_if_t<std::is_same<T, uint64_t>::value, T> get(
+        const char *data, unsigned long length = 0)
+{
+    (void) length;
+    return std::stoull(std::string(data));
+}
+
+template<typename T>
+static std::enable_if_t<std::is_same<T, int>::value, T> get(
+        const char *data, unsigned long length = 0)
+{
+    (void) length;
+    return std::stoi(std::string(data));
+}
+
+template<typename T>
+static std::enable_if_t<std::is_same<T, std::string>::value, T> get(
+        const char *data, unsigned long length = 0)
+{
+    (void) length;
+    return std::string(data);
+}
+
+template<typename T>
+static std::enable_if_t<std::is_same<T, std::vector<char>>::value, T> get(
+        const char *data, unsigned long length = 0)
+{
+    return std::vector<char>(data, data + length);
+}
+
 struct TableUsers {
     uint64_t id;
     std::string name;
@@ -32,21 +63,29 @@ struct TableUsers {
     std::string password;
     std::string salt;
 
-    static TableUsers fromRow(MYSQL_ROW row, unsigned long *lengths)
-    {
-        TableUsers res;
-        res.id = std::stoull(std::string(row[0]));
-        res.name = std::string(row[1]);
-        res.profilepic = std::vector<char>(row[2], row[2] + lengths[2]);
-        res.friends = std::stoi(std::string(row[3]));
-        res.communities = std::stoi(std::string(row[4]));
-        res.email = std::string(row[5]);
-        res.password = std::string(row[6]);
-        res.salt = std::string(row[7]);
-        return res;
-    }
+    TableUsers(uint64_t id, const std::string &name,
+               const std::vector<char> &profilepic, int friends,
+               int communities, const std::string &email,
+               const std::string &password, const std::string &salt) :
+        id(id), name(name), profilepic(profilepic), friends(friends),
+        communities(communities), email(email), password(password), salt(salt)
+    { }
+
+    TableUsers (MYSQL_ROW row, unsigned long *lengths) :
+        id(get<uint64_t>(row[0])),
+        name(get<std::string>(row[1])),
+        profilepic(get<std::vector<char>>(row[2], lengths[2])),
+        friends(get<int>(row[3])),
+        communities(get<int>(row[4])),
+        email(get<std::string>(row[5])),
+        password(get<std::string>(row[6])),
+        salt(get<std::string>(row[7]))
+    { }
+
+    std::vector<char> insertList(MYSQL *mysql);
 
     static constexpr unsigned int numFields = 8;
+    static const std::string tableName;
 };
 
 struct TableChannels {
@@ -55,18 +94,23 @@ struct TableChannels {
     std::string name;
     std::string description;
 
-    static TableChannels fromRow(MYSQL_ROW row, unsigned long *lengths)
-    {
-        TableChannels res;
-        (void) lengths;
-        res.id = std::stoull(std::string(row[0]));
-        res.community = std::stoull(std::string(row[1]));
-        res.name = std::string(row[2]);
-        res.description = std::string(row[3]);
-        return res;
-    }
+    TableChannels(uint64_t id, uint64_t community,
+                  const std::string &name,
+                  const std::string &description) :
+        id(id), community(community), name(name), description(description)
+    {}
+
+    TableChannels (MYSQL_ROW row, unsigned long *lengths) :
+        id(get<uint64_t>(row[0])),
+        community(get<uint64_t>(row[1])),
+        name(get<std::string>(row[2])),
+        description(get<std::string>(row[3]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
 
     static constexpr unsigned int numFields = 4;
+    static const std::string tableName;
 };
 
 struct TableCommunities {
@@ -76,18 +120,25 @@ struct TableCommunities {
     int members;
     int channels;
 
-    static TableCommunities fromRow(MYSQL_ROW row, unsigned long *lengths)
-    {
-        TableCommunities res;
-        res.id = std::stoull(std::string(row[0]));
-        res.name = std::string(row[1]);
-        res.profilepic = std::vector<char>(row[2], row[2] + lengths[2]);
-        res.members = std::stoull(row[3]);
-        res.channels = std::stoull(row[4]);
-        return res;
-    }
+    TableCommunities(uint64_t id, const std::string &name,
+                     const std::vector<char> &profilepic,
+                     int members, int channels) :
+        id(id), name(name), profilepic(profilepic),
+        members(members), channels(channels)
+    { }
+
+    TableCommunities (MYSQL_ROW row, unsigned long *lengths) :
+        id(get<uint64_t>(row[0])),
+        name(get<std::string>(row[1])),
+        profilepic(get<std::vector<char>>(row[2], lengths[2])),
+        members(get<int>(row[3])),
+        channels(get<int>(row[4]))
+    { }
+
+    std::vector<char> insertList(MYSQL *mysql);
 
     static constexpr unsigned int numFields = 5;
+    static const std::string tableName;
 };
 
 struct TableMessages {
@@ -97,17 +148,86 @@ struct TableMessages {
     std::string contents;
     uint64_t timestamp;
 
-    static TableMessages fromRow(MYSQL_ROW row, unsigned long *lengths)
-    {
-        TableMessages res;
-        res.id = std::stoull(std::string(row[0]));
-        res.channel = std::stoull(std::string(row[1]));
-        res.sender = std::stoull(std::string(row[2]));
-        res.contents = std::string(row[3]);
-        res.timestamp = std::stoull(std::string(row[4]));
-    }
+    TableMessages(uint64_t id, uint64_t channel, uint64_t sender,
+                  const std::string &contents, uint64_t timestamp) :
+        id(id), channel(channel), sender(sender), contents(contents),
+        timestamp(timestamp)
+    { }
+
+    TableMessages (MYSQL_ROW row, unsigned long *lengths) :
+        id(get<uint64_t>(row[0])),
+        channel(get<uint64_t>(row[1])),
+        sender(get<uint64_t>(row[2])),
+        contents(get<std::string>(row[3])),
+        timestamp(get<uint64_t>(row[4]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
 
     static constexpr unsigned int numFields = 5;
+    static const std::string tableName;
+};
+
+struct TableFriends {
+    uint64_t id;
+    uint64_t user1;
+    uint64_t user2;
+    std::string status;
+
+    TableFriends(uint64_t id, uint64_t user1, uint64_t user2,
+                 const std::string &status) : id(id), user1(user1),
+        user2(user2), status(status)
+    { }
+
+    TableFriends(MYSQL_ROW row, unsigned long *lengths) :
+        id(get<uint64_t>(row[0])),
+        user1(get<uint64_t>(row[1])),
+        user2(get<uint64_t>(row[2])),
+        status(get<std::string>(row[3]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 4;
+    static const std::string tableName;
+};
+
+struct TableCommunityMembers {
+    uint64_t id;
+    uint64_t user;
+
+    TableCommunityMembers(uint64_t id, uint64_t user) : id(id),
+        user(user)
+    { }
+
+    TableCommunityMembers(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          user(get<uint64_t>(row[1]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 2;
+    static const std::string tableName;
+};
+
+struct TableChannelMembers {
+    uint64_t id;
+    uint64_t user;
+
+    TableChannelMembers(uint64_t id, uint64_t user) : id(id),
+        user(user)
+    { }
+
+    TableChannelMembers(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          user(get<uint64_t>(row[1]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 2;
+    static const std::string tableName;
 };
 
 class Result {
@@ -128,7 +248,7 @@ public:
         unsigned long *lengths = mysql_fetch_lengths(res);
         for (unsigned int i = 0; i < numRows; i++) {
             MYSQL_ROW row = mysql_fetch_row(res);
-            store[i] = T::fromRow(row, lengths);
+            store[i] = T(row, lengths);
         }
         return store;
     }
@@ -144,26 +264,41 @@ public:
     void disconnect();
     bool verify();
     bool initDatabase();
+
+    template<typename T>
+    bool insert(T &row) {
+        const std::string begin = "INSERT INTO " + T::tableName + " VALUES(";
+        const auto middle = row.insertList(mysql);
+        const std::string end = ")";
+        const std::vector<char> statement;
+
+        std::copy(begin.begin(), begin.end(), std::back_inserter(statement));
+        std::copy(middle.begin(), middle.end(), std::back_inserter(statement));
+        std::copy(end.begin(), end.end(), std::back_inserter(statement));
+
+        return !mysql_real_query(mysql, statement.data(), statement.size());
+    }
+
     Result query(std::string query);
     bool initUser(uint64_t id, const std::string &name,
                   const std::string &email,
                   const std::string &password,
                   const std::string &salt);
-    /*bool initCommunity(uint64_t id, uint64_t user, const types::AddCommunity &request,
-                       table_communities *ret = nullptr);
-    bool initChannel(uint64_t id, const types::AddChannel &request,
-                     table_channels *ret = nullptr);
-    bool initMessage(uint64_t id, uint64_t channel,
+    boost::optional<TableCommunities> initCommunity(uint64_t id, uint64_t user,
+                                            const types::AddCommunity &request);
+    boost::optional<TableChannels> initChannel(uint64_t id,
+                                            const types::AddChannel &request);
+    boost::optional<TableMessages> initMessage(uint64_t id, uint64_t channel,
                      uint64_t sender, const std::string &msg,
-                     uint64_t timestamp, table_messages *ret = nullptr);
-    bool submitMessage(uint64_t channel, uint64_t sender,
-                       const std::string &msg, uint64_t timestamp,
-                       table_messages *ret = nullptr);
+                     uint64_t timestamp);
+    boost::optional<TableMessages> submitMessage(uint64_t channel,
+                                                 uint64_t sender,
+                                                 const std::string &msg,
+                                                 uint64_t timestamp);
     bool addMember(uint64_t id, uint64_t user);
     bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
-    */
     bool isUserInCommunity(uint64_t userId, uint64_t communityId);
     bool canUserViewChannel(uint64_t userId, uint64_t channelId);
     boost::optional<TableUsers> getUser(const std::string &login);
