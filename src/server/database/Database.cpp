@@ -132,6 +132,27 @@ std::vector<char> TableMessages::insertList(MYSQL *mysql)
                                  id, channel, sender, contents, timestamp);
 }
 
+std::vector<char> TableChannelMembers::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul'",
+                                 id, user);
+}
+
+std::vector<char> TableCommunityMembers::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul'",
+                                 id, user);
+}
+
+std::vector<char> TableFriends::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul', '%ul', '%s'",
+                                 id, user1, user2, status);
+}
+
+Database::Database(const DatabaseOptions &options) : options(options)
+{ }
+
 Database::~Database()
 {
     if (connected)

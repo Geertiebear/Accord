@@ -37,7 +37,7 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::ONLINE_LIST_REQUEST, &PacketHandlers::handleOnlineList }
 };
 
-bool checkLoggedIn(thread::Client *client, const std::string &token)
+static bool checkLoggedIn(thread::Client *client, const std::string &token)
 {
     if (!Authentication::checkToken(token)) {
         network::ErrorPacket packet;
@@ -46,7 +46,7 @@ bool checkLoggedIn(thread::Client *client, const std::string &token)
         return false;
     }
 
-    if (!client->user.table) {
+    if (!client->isLoggedIn) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
         client->write(msg);
@@ -103,16 +103,18 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
         client->write(msg);
         return false;
     }
-    client->user = client->thread.database.getUser(strings[0]);
+    client->user = client->thread.database.getUser(strings[0]).get();
+    client->isLoggedIn = true;
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
-    auto channelList = client->thread.database.getChannelsForUser(client->user.id());
+    auto channelList = client->thread.database.getChannelsForUser(
+                client->user.id);
     for (auto channel : channelList) {
-        types::UserData userData(client->user.id(), client->user.name(), "");
-        client->server.registerOnlineMember(channel.id(), userData, client);
-        client->channelList.push_back(channel.id());
+        types::UserData userData(client->user.id, client->user.name, "");
+        client->server.registerOnlineMember(channel.id, userData, client);
+        client->channelList.push_back(channel.id);
     }
-    client->server.notifyStatusChange(client->user.id(), client);
+    client->server.notifyStatusChange(client->user.id, client);
 
     //send token to client
     network::SerializationPacket packet;
@@ -144,7 +146,8 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
 
     const auto token = Authentication::authUser(client->thread.database,
                                                  strings[0], strings[2]);
-    client->user = client->thread.database.getUser(strings[0]);
+    client->user = client->thread.database.getUser(strings[0]).get();
+    client->isLoggedIn = true;
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(token);
     std::vector<char> message = packet.construct(types::AUTH_REQUEST, json);
@@ -156,7 +159,7 @@ bool PacketHandlers::receiveRegisterPacket(const std::vector<char> &body, Packet
 bool PacketHandlers::receiveNoopPacket(const std::vector<char> &body, PacketData *data)
 {
     thread::Client *client = (thread::Client*) data;
-    log::Logger::log(log::WARNING, "Received packet NOOP from " + client->user.name());
+    log::Logger::log(log::WARNING, "Received packet NOOP from " + client->user.name);
     return true;
 }
 
@@ -182,22 +185,11 @@ bool PacketHandlers::handleCommunitiesTable(PacketData *data, const std::vector<
     const auto request = util::Serialization::deserealize<
             types::Communities>(body);
     thread::Client *client = (thread::Client*) data;
-    if (!Authentication::checkToken(request.token)) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(AUTH_ERR);
-        client->write(msg);
+    if (!checkLoggedIn(client, request.token))
         return false;
-    }
-
-    if (!client->user.table) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
-        client->write(msg);
-        return false;
-    }
 
     const auto communities = client->thread.database.getCommunitiesForUser(
-                client->user.id());
+                client->user.id);
     std::vector<types::CommunitiesTable> shared;
     for (auto community : communities)
         shared.push_back(database::Database::communityServerToShared(community));
@@ -215,19 +207,8 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
             types::AddCommunity>(body);
     thread::Client *client = (thread::Client*) data;
 
-    if (!Authentication::checkToken(request.token)) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(AUTH_ERR);
-        client->write(msg);
+    if (!checkLoggedIn(client, request.token))
         return false;
-    }
-
-    if (!client->user.table) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
-        client->write(msg);
-        return false;
-    }
 
     //compress the image to a 200x200 jpg first and put it in the request
     auto &profilepic = request.profilepic;
@@ -244,10 +225,9 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     log::Logger::log(log::DEBUG, "profilepic.size(): " + std::to_string(profilepic.size()));
 
     uint64_t communityId = util::CryptoUtil::getRandomUINT64();
-    database::table_communities community;
-    if (!client->thread.database.initCommunity(communityId,
-                                               client->user.id(),
-                                               request, &community)) {
+    auto community = client->thread.database.initCommunity(communityId,
+                                               client->user.id, request);
+    if (!community) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
@@ -255,7 +235,7 @@ bool PacketHandlers::handleAddCommunityRequest(PacketData *data, const std::vect
     }
 
     //we added a community, now let's send it back so that they can add it to their list
-    types::CommunitiesTable table = database::Database::communityServerToShared(community);
+    types::CommunitiesTable table = community.get().toShared();
     network::SerializationPacket packet;
     auto json = util::Serialization::serialize(table);
     auto msg = packet.construct(types::COMMUNITY_TABLE_REQUEST, json);
@@ -271,20 +251,9 @@ bool PacketHandlers::handleChannels(PacketData *data,
     thread::Client *client = (thread::Client*) data;
     const auto request = util::Serialization::deserealize<
             types::Channels>(body);
-    /* check if token is valid */
-    if (!Authentication::checkToken(request.token)) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(AUTH_ERR);
-        client->write(msg);
-        return false;
-    }
 
-    if (!client->user.table) {
-        network::ErrorPacket packet;
-        const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
-        client->write(msg);
+    if (!checkLoggedIn(client, request.token))
         return false;
-    }
 
     const auto &community = request.community;
 
@@ -292,7 +261,7 @@ bool PacketHandlers::handleChannels(PacketData *data,
      * we don't want random users querying for channels
      */
     if (!client->thread.database.isUserInCommunity(
-                client->user.id(), community)) {
+                client->user.id, community)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
         client->write(msg);
@@ -319,6 +288,7 @@ bool PacketHandlers::handleTokenAuth(PacketData *data, const std::vector<char> &
     auto client = (thread::Client*) data;
     const auto request = util::Serialization::deserealize<
             types::Token>(body);
+
     if (!Authentication::authUser(request)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(AUTH_ERR);
@@ -328,7 +298,8 @@ bool PacketHandlers::handleTokenAuth(PacketData *data, const std::vector<char> &
 
     /* token is valid we can log the user in */
     client->user = client->thread.database.getUser(
-                request.id);
+                request.id).get();
+    client->isLoggedIn = true;
     return true;
 }
 
@@ -341,7 +312,7 @@ bool PacketHandlers::handleMessagesRequest(PacketData *data, const std::vector<c
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    if (!client->thread.database.canUserViewChannel(client->user.id(),
+    if (!client->thread.database.canUserViewChannel(client->user.id,
                                                     request.channel)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
@@ -372,12 +343,11 @@ bool PacketHandlers::handleSubmitMessage(PacketData *data,
             types::SendMessage>(body);
     if (!checkLoggedIn(client, request.token))
         return false;
-    database::table_messages message;
-    if (!client->thread.database.submitMessage(request.channel,
-                                               client->user.id(),
+    auto message = client->thread.database.submitMessage(request.channel,
+                                               client->user.id,
                                                request.message,
-                                               request.timestamp,
-                                               &message)) {
+                                               request.timestamp);
+    if (!message) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
@@ -386,11 +356,11 @@ bool PacketHandlers::handleSubmitMessage(PacketData *data,
 
     network::SerializationPacket packet;
     auto json = util::Serialization::serialize(types::MessageSuccess(
-                                                         message.id()));
+                                                         message.get().id));
     auto msg = packet.construct(types::MESSAGE_SUCCESS, json);
     client->write(msg);
 
-    types::MessagesTable toSend = database::Database::messageServerToShared(message);
+    types::MessagesTable toSend = message.get().toShared();
     json = util::Serialization::serialize(toSend);
     msg = packet.construct(types::MESSAGE_REQUEST, json);
     client->server.broadcast(msg);
@@ -406,9 +376,9 @@ bool PacketHandlers::handleAddChannel(PacketData *data,
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    database::table_channels channel;
     const auto id = util::CryptoUtil::getRandomUINT64();
-    if (!client->thread.database.initChannel(id, request, &channel)) {
+    auto channel = client->thread.database.initChannel(id, request);
+    if (!channel) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
@@ -416,8 +386,7 @@ bool PacketHandlers::handleAddChannel(PacketData *data,
     }
 
     network::SerializationPacket packet;
-    types::ChannelsTable table = database::Database::channelServerToShared(
-                channel);
+    types::ChannelsTable table = channel.get().toShared();
     const auto json = util::Serialization::serialize(table);
     const auto msg = packet.construct(types::CHANNEL_REQUEST, json);
     client->write(msg);
@@ -436,15 +405,15 @@ bool PacketHandlers::handleUser(PacketData *data,
      * TODO: determine if we want to check if user is associated
      *  with requestor
      */
-    database::table_users user = client->thread.database.getUser(request.id);
-    if (!user.table) {
+    auto user = client->thread.database.getUser(request.id);
+    if (!user) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
         return false;
     }
 
-    types::UserData ret(user.id(), user.name(), "");
+    types::UserData ret(user.get().id, user.get().name, "");
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::USER_REQUEST, json);
@@ -457,7 +426,7 @@ bool PacketHandlers::handleSendInvite(PacketData *data,
 {
     auto client = (thread::Client*) data;
     const auto invite = util::Serialization::deserealize<std::string>(body);
-    if (!client->user.table) {
+    if (!client->isLoggedIn) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(NOT_LOGGED_IN_ERR);
         client->write(msg);
@@ -474,7 +443,7 @@ bool PacketHandlers::handleSendInvite(PacketData *data,
     }
 
     const auto communityId = client->thread.getCommunityForInvite(invite);
-    if (client->thread.database.isUserInCommunity(client->user.id(),
+    if (client->thread.database.isUserInCommunity(client->user.id,
                                                   communityId)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(ALREADY_IN_ERR);
@@ -482,15 +451,21 @@ bool PacketHandlers::handleSendInvite(PacketData *data,
         return false;
     }
 
-    if (!client->thread.database.addMember(communityId, client->user.id())) {
+    if (!client->thread.database.addMember(communityId, client->user.id)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(REQUEST_ERR);
         client->write(msg);
         return false;
     }
 
-    types::CommunitiesTable ret = database::Database::communityServerToShared(
-                client->thread.database.getCommunity(communityId));
+    auto community = client->thread.database.getCommunity(communityId);
+    if(!community) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(REQUEST_ERR);
+        client->write(msg);
+        return false;
+    }
+    types::CommunitiesTable ret = community.get().toShared();
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::COMMUNITY_TABLE_REQUEST, json);
@@ -509,7 +484,7 @@ bool PacketHandlers::handleGenInvite(PacketData *data,
 
     /* TODO: permission and stuff q.q */
     if (!client->thread.database.isUserInCommunity(
-                client->user.id(), request.id)) {
+                client->user.id, request.id)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
         client->write(msg);

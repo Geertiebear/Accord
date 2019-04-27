@@ -63,6 +63,7 @@ struct TableUsers {
     std::string password;
     std::string salt;
 
+    TableUsers() = default;
     TableUsers(uint64_t id, const std::string &name,
                const std::vector<char> &profilepic, int friends,
                int communities, const std::string &email,
@@ -94,6 +95,8 @@ struct TableChannels {
     std::string name;
     std::string description;
 
+    TableChannels() = default;
+
     TableChannels(uint64_t id, uint64_t community,
                   const std::string &name,
                   const std::string &description) :
@@ -109,6 +112,11 @@ struct TableChannels {
 
     std::vector<char> insertList(MYSQL *mysql);
 
+    types::ChannelsTable toShared()
+    {
+        return types::ChannelsTable(id, community, name, description);
+    }
+
     static constexpr unsigned int numFields = 4;
     static const std::string tableName;
 };
@@ -119,6 +127,8 @@ struct TableCommunities {
     std::vector<char> profilepic;
     int members;
     int channels;
+
+    TableCommunities() = default;
 
     TableCommunities(uint64_t id, const std::string &name,
                      const std::vector<char> &profilepic,
@@ -137,6 +147,11 @@ struct TableCommunities {
 
     std::vector<char> insertList(MYSQL *mysql);
 
+    types::CommunitiesTable toShared()
+    {
+        return types::CommunitiesTable(id, name, profilepic, members, channels);
+    }
+
     static constexpr unsigned int numFields = 5;
     static const std::string tableName;
 };
@@ -147,6 +162,8 @@ struct TableMessages {
     uint64_t sender;
     std::string contents;
     uint64_t timestamp;
+
+    TableMessages() = default;
 
     TableMessages(uint64_t id, uint64_t channel, uint64_t sender,
                   const std::string &contents, uint64_t timestamp) :
@@ -164,6 +181,11 @@ struct TableMessages {
 
     std::vector<char> insertList(MYSQL *mysql);
 
+    types::MessagesTable toShared()
+    {
+        return types::MessagesTable(id, channel, sender, contents, timestamp);
+    }
+
     static constexpr unsigned int numFields = 5;
     static const std::string tableName;
 };
@@ -173,6 +195,8 @@ struct TableFriends {
     uint64_t user1;
     uint64_t user2;
     std::string status;
+
+    TableFriends() = default;
 
     TableFriends(uint64_t id, uint64_t user1, uint64_t user2,
                  const std::string &status) : id(id), user1(user1),
@@ -196,6 +220,8 @@ struct TableCommunityMembers {
     uint64_t id;
     uint64_t user;
 
+    TableCommunityMembers() = default;
+
     TableCommunityMembers(uint64_t id, uint64_t user) : id(id),
         user(user)
     { }
@@ -214,6 +240,8 @@ struct TableCommunityMembers {
 struct TableChannelMembers {
     uint64_t id;
     uint64_t user;
+
+    TableChannelMembers() = default;
 
     TableChannelMembers(uint64_t id, uint64_t user) : id(id),
         user(user)
@@ -270,7 +298,7 @@ public:
         const std::string begin = "INSERT INTO " + T::tableName + " VALUES(";
         const auto middle = row.insertList(mysql);
         const std::string end = ")";
-        const std::vector<char> statement;
+        std::vector<char> statement;
 
         std::copy(begin.begin(), begin.end(), std::back_inserter(statement));
         std::copy(middle.begin(), middle.end(), std::back_inserter(statement));

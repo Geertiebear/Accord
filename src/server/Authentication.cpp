@@ -23,8 +23,8 @@ bool Authentication::registerUser(database::Database &database,
      * 4. gen hash
      * 5. store all in database
      */
-    database::table_users user = database.getUser(email);
-    if (user.table != NULL)
+    auto user = database.getUser(email);
+    if (user)
         return false;
     uint64_t id = util::CryptoUtil::getRandomUINT64();
     log::Logger::log(log::INFO, std::to_string(id));
@@ -48,12 +48,12 @@ types::Token Authentication::authUser(database::Database &database,
                               std::string login, std::string password)
 {
     log::Logger::log(log::DEBUG, "Authenticating user!");
-    database::table_users user = database.getUser(login);
-    if (user.table == NULL)
+    auto user = database.getUser(login);
+    if (!user)
         return types::Token();
 
-    std::string storedHash(user.password());
-    std::string salt(user.salt());
+    std::string storedHash(user.get().password);
+    std::string salt(user.get().salt);
     if (salt.length() != SALT_LEN) {
         log::Logger::log(log::ERROR, "Login " + login + " has invalid salt!");
         return types::Token();
@@ -75,13 +75,13 @@ types::Token Authentication::authUser(database::Database &database,
     std::time_t expiration = currentTime + TOKEN_LIFETIME;
 
     std::vector<char> token = constructVectorFromTokenData(
-                key, user.id(), expiration);
+                key, user.get().id, expiration);
 
     std::string tokenHash = util::CryptoUtil::sha256(token);
     std::unique_lock<std::mutex> lock(tokensMutex);
     tokens.push_back(tokenHash);
 
-    types::Token res(tokenHash, key, user.id(), expiration);
+    types::Token res(tokenHash, key, user.get().id, expiration);
     log::Logger::log(log::DEBUG, "Successfly authenticated user!");
     return res;
 }

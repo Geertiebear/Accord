@@ -83,6 +83,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
     Client *client = new Client(server, *this);
     client->channel = 0;
 	client->bufferEvent = bufferEvent;
+    client->isLoggedIn = false;
     client->hasPartialPacket = false;
     client->writeBuffer.clear();
 
@@ -271,11 +272,11 @@ void Client::write(const std::vector<char> &msg)
 
 void Client::markOffline()
 {
-    if (!user.table)
+    if (!isLoggedIn)
         return;
     for (uint64_t channel : channelList)
-        server.removeOnlineMember(channel, user.id(), this);
-    server.notifyStatusChange(user.id(), this);
+        server.removeOnlineMember(channel, user.id, this);
+    server.notifyStatusChange(user.id, this);
 }
 
 } /* namespace thread */
