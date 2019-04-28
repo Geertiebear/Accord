@@ -273,9 +273,9 @@ public:
             return store;
         unsigned int numRows = mysql_num_rows(res);
         store.resize(numRows);
-        unsigned long *lengths = mysql_fetch_lengths(res);
         for (unsigned int i = 0; i < numRows; i++) {
             MYSQL_ROW row = mysql_fetch_row(res);
+            unsigned long *lengths = mysql_fetch_lengths(res);
             store[i] = T(row, lengths);
         }
         return store;
