@@ -176,6 +176,7 @@ int Database::connect()
 void Database::disconnect()
 {
     mysql_close(mysql);
+    connected = false;
 }
 
 static bool tableExists(MYSQL *mysql, const std::string &tableName)
