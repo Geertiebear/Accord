@@ -40,7 +40,8 @@ struct Client : public PacketData {
     Thread &thread;
 	struct bufferevent* bufferEvent;
 	int channel;
-    database::table_users user;
+    database::TableUsers user;
+    bool isLoggedIn;
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;

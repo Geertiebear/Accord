@@ -140,16 +140,16 @@ void Server::removeOnlineMember(uint64_t channel, uint64_t user, thread::Client 
 void Server::notifyStatusChange(uint64_t id, thread::Client *client)
 {
     const auto channels = client->thread.database.getChannelsForUser(id);
-    for (database::table_channels channel : channels) {
+    for (auto channel : channels) {
         std::unique_lock<std::mutex> lock(onlineMapMutex);
-        const auto &list = onlineMap.at(channel.id());
+        const auto &list = onlineMap.at(channel.id);
         lock.unlock();
         for (OnlineUser user : list) {
             if (user.user.id == id)
                 continue;
 
-            const auto listToSend = getOnlineList(channel.id());
-            types::OnlineListRet ret(listToSend, channel.id());
+            const auto listToSend = getOnlineList(channel.id);
+            types::OnlineListRet ret(listToSend, channel.id);
             network::SerializationPacket packet;
             const auto json = util::Serialization::serialize(ret);
             const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
