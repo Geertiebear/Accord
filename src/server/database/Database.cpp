@@ -447,7 +447,7 @@ bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
                                                  "id='%ul' AND user='%ul'",
                                           communityId, userId);
     Result result = query(statement);
-    const auto res = result.store<TableUsers>();
+    const auto res = result.store<TableCommunityMembers>();
     if (res.size() > 1) {
         /* there is something wrong with the database,
          * assume that the user is in there
