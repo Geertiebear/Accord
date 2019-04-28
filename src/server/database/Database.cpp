@@ -474,7 +474,7 @@ bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
                                                  "user='%ul'", channelId,
                                           userId);
     Result result = query(statement);
-    const auto res = result.store<TableCommunities>();
+    const auto res = result.store<TableCommunityMembers>();
     if (res.size() > 1) {
         /* same deal as above */
         log::Logger::log(log::WARNING, "There are multiple entries"
