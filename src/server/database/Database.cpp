@@ -183,8 +183,14 @@ static bool tableExists(MYSQL *mysql, const std::string &tableName)
     const std::string query = "SHOW TABLES LIKE '" + tableName + "'";
     if (mysql_real_query(mysql, query.c_str(), query.length()))
         return false;
-    if (!mysql_field_count(mysql))
+    MYSQL_RES *res = mysql_store_result(mysql);
+    if (!res)
         return false;
+    if (!mysql_num_rows(res)) {
+        mysql_free_result(res);
+        return false;
+    }
+    mysql_free_result(res);
     return true;
 }
 
