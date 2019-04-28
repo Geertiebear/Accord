@@ -36,6 +36,7 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                                                string.c_str(), string.length(),
                                                '\'');
                     const auto escaped_string_std = std::string(escaped_string);
+                    delete escaped_string;
                     std::copy(escaped_string_std.begin(),
                               escaped_string_std.end(),
                               std::back_inserter(res));
@@ -52,6 +53,7 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                                                        '\'');
                         const auto escaped_vector = std::vector<char>(
                                     escaped,escaped + bytes);
+                        delete escaped;
                         std::copy(escaped_vector.begin(),
                                   escaped_vector.end(),
                                   std::back_inserter(res));
