@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 project(accord)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -45,6 +45,11 @@ set(SOURCES_SHARED
     src/shared/util/BinUtil.cpp
     )
 #libraries
+
+if (MSYS)
+	set(CMAKE_PREFIX_PATH /mingw64/)
+endif(MSYS)
+
 find_package(Qt5Core CONFIG REQUIRED Qml Quick Gui QuickWidgets Network)
 find_package(Qt5Qml REQUIRED)
 find_package(Qt5Quick REQUIRED)
@@ -58,7 +63,7 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(ImageMagick COMPONENTS Magick++ REQUIRED)
+find_package(ImageMagick COMPONENTS Magick++ convert REQUIRED)
 pkg_search_module(argon2 libargon2)
 
 add_library(accordshared SHARED ${SOURCES_SHARED})
@@ -86,6 +91,7 @@ endif (MSVC)
 target_include_directories(accordshared
     PUBLIC include/)
 target_link_libraries(accordshared ${LIBEVENT_LIBRARIES})
+target_include_directories(accordshared PRIVATE ${Boost_INCLUDE_DIR})
 
 target_include_directories(accordserver 
     PUBLIC include/)
@@ -94,6 +100,11 @@ target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
 target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_include_directories(accordserver PUBLIC ${MYSQL_INCLUDE_DIRS})
 target_include_directories(accordserver PUBLIC ${ImageMagick_INCLUDE_DIRS})
+
+if(WIN32)
+	target_link_libraries(accordserver ws2_32)
+endif(WIN32)
+
 target_link_libraries(accordserver ${MYSQL_LIBRARIES})
 target_link_libraries(accordserver ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(accordserver ${Boost_LIBRARIES})
@@ -103,12 +114,16 @@ target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
 target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
 target_link_libraries(accordserver ${argon2_LIBRARIES})
 target_link_libraries(accordserver ${ImageMagick_LIBRARIES})
+message(${ImageMagick_LIBRARIES})
 target_link_libraries(accordserver accordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)
 target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordcliclient accordshared)
+if(WIN32)
+	target_link_libraries(accordcliclient ws2_32)
+endif(WIN32)
 target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 
 target_include_directories(accordclient
@@ -116,6 +131,8 @@ target_include_directories(accordclient
 target_include_directories(accordclient PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordclient accordshared)
 target_link_libraries(accordclient ${OPENSSL_LIBRARIES})
+target_link_libraries(accordclient Qt5::Core)
+target_link_libraries(accordclient Qt5::Widgets)
 target_link_libraries(accordclient Qt5::Qml)
 target_link_libraries(accordclient Qt5::Quick)
 target_link_libraries(accordclient Qt5::QuickWidgets)

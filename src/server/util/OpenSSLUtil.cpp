@@ -25,7 +25,7 @@ SSL_CTX *OpenSSLUtil::getContext(const Config &config)
     if (!SSL_CTX_use_certificate_chain_file(ctx, config.openssl.cert.c_str())
             || !SSL_CTX_use_PrivateKey_file(ctx, config.openssl.pkey.c_str(),
                                          SSL_FILETYPE_PEM)) {
-		log::Logger::log(log::ERROR, "Could not find private key or certificate!");
+		log::Logger::log(log::FATAL, "Could not find private key or certificate!");
 		throw std::runtime_error("");
 	}
 	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);

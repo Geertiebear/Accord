@@ -7,7 +7,7 @@ namespace accord {
 namespace log {
 
 enum LogLevel {
-    ERROR = 0,
+    FATAL = 0,
     WARNING = 1,
     INFO = 2,
     DEBUG = 3,

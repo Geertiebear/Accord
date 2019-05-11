@@ -16,7 +16,7 @@ std::vector<unsigned char> CryptoUtil::getRandomBytes(int length)
     buffer.resize(length);
     int n = RAND_bytes(&buffer[0], length);
     if (n != 1) {
-        log::Logger::log(log::ERROR, "Error getting random bytes!");
+        log::Logger::log(log::FATAL, "Error getting random bytes!");
         return std::vector<unsigned char>();
     }
     return buffer;

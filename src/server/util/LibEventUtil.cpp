@@ -46,8 +46,8 @@ void LibEventUtil::logCallback(int severity, const char *message)
       case _EVENT_LOG_DEBUG: log::Logger::log(log::DEBUG, std::string(message)); break;
       case _EVENT_LOG_MSG: log::Logger::log(log::INFO, std::string(message)); break;
       case _EVENT_LOG_WARN: log::Logger::log(log::WARNING, std::string(message)); break;
-      case _EVENT_LOG_ERR: log::Logger::log(log::ERROR, std::string(message)); break;
-      default: log::Logger::log(log::ERROR, std::string(message)); break;
+      case _EVENT_LOG_ERR: log::Logger::log(log::FATAL, std::string(message)); break;
+      default: log::Logger::log(log::FATAL, std::string(message)); break;
    }
 }
 
@@ -113,10 +113,6 @@ int LibEventUtil::waitCondition(void *condition, void *lock, const struct timeva
 
 void LibEventUtil::freeBufferEvent(struct bufferevent *bufferEvent)
 {
-   evutil_socket_t socket = event_get_fd(&bufferEvent->ev_read);
-   SSL *ssl = bufferevent_openssl_get_ssl(bufferEvent);
-   SSL_free(ssl);
-   close(socket);
    bufferevent_free(bufferEvent);
 }
 

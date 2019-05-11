@@ -1,8 +1,8 @@
 #ifndef ACCORD_SERVER_H
 #define ACCORD_SERVER_H
 
+#include <accordserver/util/Network.h>
 #include <openssl/ssl.h>
-#include <netinet/in.h>
 #include <string>
 #include <vector>
 #include <memory>
@@ -43,7 +43,7 @@ public:
     void removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client);
     void notifyStatusChange(uint64_t id, thread::Client *client);
 private:
-    struct sockaddr_in serverAddr;
+    ACCORD_SOCKADDR serverAddr;
     int numThreads;
     int port;
     int serverSocket;

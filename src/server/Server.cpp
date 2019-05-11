@@ -1,7 +1,6 @@
 #include <accordserver/Server.h>
 
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <memory>
 
 #include <accordserver/log/Logger.h>
@@ -167,7 +166,7 @@ void Server::verifyDatabase(const Arguments &args)
         log::Logger::log(log::INFO, "Initializing database!");
         database.initDatabase();
     } else if (!database.verify()) {
-        log::Logger::log(log::ERROR, "Database is not complete!");
+        log::Logger::log(log::FATAL, "Database is not complete!");
         throw std::runtime_error("");
     }
     database.disconnect();
@@ -196,7 +195,7 @@ void Server::setupSocket()
 {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
-        log::Logger::log(log::ERROR, "Error opening server socket!");
+        log::Logger::log(log::FATAL, "Error opening server socket!");
         throw std::runtime_error("");
     }
     
@@ -206,7 +205,7 @@ void Server::setupSocket()
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     
     if (bind(serverSocket, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) < 0 ) {
-        log::Logger::log(log::ERROR, "Error binding to socket!");
+        log::Logger::log(log::FATAL, "Error binding to socket!");
         throw std::runtime_error("");
     }
     
@@ -216,7 +215,7 @@ void Server::setupSocket()
 
 void Server::closeSocket()
 {
-    close(serverSocket);
+    ACCORD_CLOSESOCKET(serverSocket);
 }
 
 void Server::acceptClients()
@@ -228,7 +227,7 @@ void Server::acceptClients()
 
         evutil_socket_t clientSocket = accept(serverSocket, NULL, NULL);
         if (clientSocket < 0) {
-            log::Logger::log(log::ERROR, "Error on accept!");
+            log::Logger::log(log::FATAL, "Error on accept!");
             throw std::runtime_error("");
         }
         

@@ -6,6 +6,7 @@
 #include <memory>
 #include <boost/optional.hpp>
 
+#include <accordserver/log/Logger.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/types/Request.h>
 
@@ -304,7 +305,19 @@ public:
         std::copy(middle.begin(), middle.end(), std::back_inserter(statement));
         std::copy(end.begin(), end.end(), std::back_inserter(statement));
 
-        return !mysql_real_query(mysql, statement.data(), statement.size());
+        if(mysql_real_query(mysql, statement.data(), statement.size())) {
+			const char *errorString = mysql_error(mysql);
+			if (!errorString[0]) {
+				log::Logger::log(log::FATAL, "Error executing insert"
+                                     " without mysql error.");
+			} else {
+				const auto stdErrorString = std::string(errorString);
+				log::Logger::log(log::FATAL, "Error executuing insert"
+                                     " with mysql error " + stdErrorString);
+			}
+			return false;
+		}
+		return true;
     }
 
     Result query(std::string query);

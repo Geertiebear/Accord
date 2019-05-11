@@ -31,7 +31,7 @@ std::string ConfigLoader::readString(YAML::Node *node, std::string name)
     YAML::Node derefNode = *node;
     if (derefNode[name])
         return derefNode[name].as<std::string>();
-    log::Logger::log(log::ERROR, "Missing config entry!");
+    log::Logger::log(log::FATAL, "Missing config entry!");
     throw std::runtime_error(name);
 }
 
@@ -40,7 +40,7 @@ int ConfigLoader::readInt(YAML::Node *node, std::string name)
     YAML::Node derefNode = *node;
     if (derefNode[name])
         return derefNode[name].as<int>();
-    log::Logger::log(log::ERROR, "Missing config entry!");
+    log::Logger::log(log::FATAL, "Missing config entry!");
     throw std::runtime_error(name);
 }
 

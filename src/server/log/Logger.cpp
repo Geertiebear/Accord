@@ -27,8 +27,8 @@ void Logger::log(LogLevel plevel, const std::string &message)
 std::string Logger::logLeveLString(LogLevel level)
 {
     switch(level) {
-        case ERROR:
-            return "ERROR";
+        case FATAL:
+            return "FATAL";
         case WARNING:
             return "WARNING";
         case INFO:

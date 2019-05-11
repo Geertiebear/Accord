@@ -3,8 +3,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
 
 #include <accordshared/network/packet/SendMessagePacket.h>
 #include <accordshared/network/packet/DisconnectPacket.h>
@@ -40,10 +38,6 @@ std::string Commands::sendMessage(std::vector<std::string> args, SSL *ssl)
 std::string Commands::recv(std::vector<std::string> args, SSL *ssl)
 {
     char buffer[256];
-    int n;
-    ioctl(SSL_get_fd(ssl), FIONREAD, &n);
-    if (!n)
-        return "No message to be read!";
     SSL_read(ssl, &buffer, sizeof(buffer));
     return std::string(buffer);
 }

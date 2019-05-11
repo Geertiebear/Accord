@@ -32,9 +32,8 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                     /* escape the string */
                     std::string string = va_arg(va, std::string);
                     char *escaped_string = new char[(string.length() * 2) + 1];
-                    mysql_real_escape_string_quote(mysql, escaped_string,
-                                               string.c_str(), string.length(),
-                                               '\'');
+                    mysql_real_escape_string(mysql, escaped_string,
+                                               string.c_str(), string.length());
                     const auto escaped_string_std = std::string(escaped_string);
                     delete escaped_string;
                     std::copy(escaped_string_std.begin(),
@@ -43,14 +42,13 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                     break;
                 }
                 case 'c': {
-                    if (*(it + 1) == 'v') {
+                    if (*(it += 1) == 'v') {
                         const auto vector = va_arg(va, std::vector<char>);
                         char *escaped = new char[(vector.size() * 2) + 1];
-                        int bytes = mysql_real_escape_string_quote(mysql,
+                        int bytes = mysql_real_escape_string(mysql,
                                                                    escaped,
                                                        vector.data(),
-                                                       vector.size(),
-                                                       '\'');
+                                                       vector.size());
                         const auto escaped_vector = std::vector<char>(
                                     escaped,escaped + bytes);
                         delete escaped;
@@ -64,7 +62,7 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                     res.push_back(*it);
                     break;
                 case 'u': {
-                    if (*(it + 1) == 'l') {
+                    if (*(it += 1) == 'l') {
                         const auto string = std::to_string(
                                     va_arg(va, uint64_t));
                         std::copy(string.begin(), string.end(),
@@ -169,6 +167,12 @@ int Database::connect()
                             options.password.c_str(), options.name.c_str(),
                             static_cast<unsigned int>(options.port),
                             nullptr, 0)) {
+		log::Logger::log(log::FATAL, "Error connecting to database!");
+		const char *error = mysql_error(mysql);
+		if (error) {
+			auto stdError = std::string(error);
+			log::Logger::log(log::FATAL, "MYSQL error: " + stdError);
+		}
         return 0;
     }
     connected = true;
@@ -220,7 +224,7 @@ bool Database::initDatabase()
 {
     const std::string users = "CREATE TABLE users (id BIGINT UNSIGNED, "
                                 "name VARCHAR(255), profilepic "
-                                "VARBINARY(65535), friends INT,"
+                                "BLOB, friends INT,"
                                 "communities INT, email VARCHAR(255),"
                                 "password VARCHAR(255), salt VARCHAR(255))";
     if (!mysql_real_query(mysql, users.c_str(), users.length()))
@@ -228,7 +232,7 @@ bool Database::initDatabase()
     const std::string communties = "CREATE TABLE communities "
                                    "(id BIGINT UNSIGNED,"
                                    "name VARCHAR(255), profilepic "
-                                   "VARBINARY(65535),"
+                                   "BLOB,"
                                    "members INT, channels INT)";
     if (!mysql_real_query(mysql, communties.c_str(), communties.length()))
         return false;
@@ -283,12 +287,12 @@ Result Database::query(std::string query) {
 error:
     const char *errorString = mysql_error(mysql);
     if (!errorString[0]) {
-        log::Logger::log(log::ERROR, "Error executing query " + query +
+        log::Logger::log(log::FATAL, "Error executing query " + query +
                                      " without mysql error. Maybe the query does"
                                      " not return a result set...");
     } else {
         const auto stdErrorString = std::string(errorString);
-        log::Logger::log(log::ERROR, "Error executuing query " + query +
+        log::Logger::log(log::FATAL, "Error executuing query " + query +
                                      " with mysql error " + stdErrorString);
     }
     return Result(nullptr);
@@ -331,7 +335,7 @@ boost::optional<TableChannels> Database::initChannel(uint64_t id,
 
     TableChannels channel(id, request.community, request.name,
                           request.description);
-    if (insert(channel))
+    if (!insert(channel))
         return boost::none;
     if (!addChannel(request.community))
         return boost::none;
@@ -377,18 +381,19 @@ bool Database::addMember(uint64_t id, uint64_t user)
     auto community = getCommunity(id);
     if (!community)
         return false;
-    const std::string memberUpdate = "UPDATE 'communities' SET 'members'=" +
-            std::to_string(community.get().members + 1) + "' WHERE 'id'='" +
+    const std::string memberUpdate = "UPDATE communities SET members='" +
+            std::to_string(community.get().members + 1) + "' WHERE id='" +
             std::to_string(community.get().id) + "'";
-    if(!mysql_real_query(mysql, memberUpdate.c_str(), memberUpdate.length()))
+    if(mysql_real_query(mysql, memberUpdate.c_str(), memberUpdate.length()))
         return false;
 
     auto userTable = getUser(user);
     if (!userTable)
         return false;
-    const std::string userUpdate = "UPDATE 'users' SET 'communties'=" +
-            std::to_string(userTable.get().communities + 1) + "' WHERE 'id'='" +
+    const std::string userUpdate = "UPDATE users SET communities='" +
+            std::to_string(userTable.get().communities + 1) + "' WHERE id='" +
             std::to_string(userTable.get().id) + "'";
+	log::Logger::log(log::DEBUG, userUpdate);
     if (mysql_real_query(mysql, userUpdate.c_str(), userUpdate.length()))
         return false;
 
@@ -411,10 +416,10 @@ bool Database::addChannel(uint64_t id)
     auto community = getCommunity(id);
     if (!community)
         return false;
-    const std::string update = "UPDATE 'communties' SET 'channels'='" +
+    const std::string update = "UPDATE communities SET channels='" +
             std::to_string(community.get().channels + 1) + "' WHERE id='" +
             std::to_string(community.get().id) + "'";
-    return mysql_real_query(mysql, update.c_str(), update.length());
+    return !mysql_real_query(mysql, update.c_str(), update.length());
 }
 
 bool Database::sendFriendRequest(uint64_t from, uint64_t to)
@@ -498,7 +503,7 @@ boost::optional<TableUsers> Database::getUser(const std::string &login)
     const auto res = result.store<TableUsers>();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "Login " + login + "has multiple "
+            log::Logger::log(log::FATAL, "Login " + login + "has multiple "
                                                             "entries!");
         }
         return boost::none;
@@ -514,7 +519,7 @@ boost::optional<TableUsers> Database::getUser(uint64_t id)
     const auto res = result.store<TableUsers>();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "User " + std::to_string(id) +
+            log::Logger::log(log::FATAL, "User " + std::to_string(id) +
                              " has multiple entries!");
         }
         return boost::none;
@@ -530,7 +535,7 @@ boost::optional<TableChannels> Database::getChannel(uint64_t id)
     const auto res = result.store<TableChannels>();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "Channel " + std::to_string(id) +
+            log::Logger::log(log::FATAL, "Channel " + std::to_string(id) +
                              " has multiple entries!");
         }
         return boost::none;
@@ -540,17 +545,18 @@ boost::optional<TableChannels> Database::getChannel(uint64_t id)
 
 boost::optional<TableCommunities> Database::getCommunity(uint64_t id)
 {
-    const auto statement = escaped_printf(mysql, "SELECT * FROM communities"
+    const auto statement = escaped_printf(mysql, "SELECT * FROM communities "
                                                  "WHERE id='%ul'", id);
     Result result = query(statement);
     const auto res = result.store<TableCommunities>();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "Community " + std::to_string(id) +
+            log::Logger::log(log::FATAL, "Community " + std::to_string(id) +
                              " has multiple entries!");
         }
         return boost::none;
     }
+	log::Logger::log(log::DEBUG, "Got a community!");
     return res[0];
 }
 
@@ -562,7 +568,7 @@ boost::optional<TableMessages> Database::getMessage(uint64_t id)
     const auto res = result.store<TableMessages>();
     if (res.size() != 1) {
         if (res.size() > 1) {
-            log::Logger::log(log::ERROR, "Message " + std::to_string(id) +
+            log::Logger::log(log::FATAL, "Message " + std::to_string(id) +
                              " has multiple entries!");
         }
         return boost::none;

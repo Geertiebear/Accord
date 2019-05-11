@@ -3,9 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
-#include <sys/syscall.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <system_error>
 #include <event2/bufferevent_ssl.h>
 
@@ -26,7 +24,7 @@
 namespace accord {
 namespace thread {
 
-Thread::Thread(Server &server, const Config &config) :database(config.database),
+Thread::Thread(Server &server, const Config &config) : database(config.database),
     server(server), config(config), thread()
 {
 	eventBase = event_base_new();
@@ -55,12 +53,13 @@ void Thread::stop()
 
 void Thread::start()
 {
-    database.connect();
+    if (!database.connect())
+		return;
     thread = std::thread(&Thread::run, this);
     try {
         thread.detach();
     } catch (std::system_error &e) {
-		log::Logger::log(log::ERROR, "Error detatching thread!");
+		log::Logger::log(log::FATAL, "Error detatching thread!");
     }
 }
 
@@ -77,7 +76,7 @@ void Thread::acceptClient(evutil_socket_t clientSocket, SSL *ssl)
      */
 	struct bufferevent *bufferEvent = bufferevent_openssl_socket_new(eventBase,
             clientSocket, ssl, BUFFEREVENT_SSL_OPEN, BEV_OPT_THREADSAFE |
-                          BEV_OPT_DEFER_CALLBACKS);
+                          BEV_OPT_DEFER_CALLBACKS | BEV_OPT_CLOSE_ON_FREE);
     //TODO: move this to constructor
     Client *client = new Client(server, *this);
     client->channel = 0;

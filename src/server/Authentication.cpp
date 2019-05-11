@@ -55,7 +55,7 @@ types::Token Authentication::authUser(database::Database &database,
     std::string storedHash(user.get().password);
     std::string salt(user.get().salt);
     if (salt.length() != SALT_LEN) {
-        log::Logger::log(log::ERROR, "Login " + login + " has invalid salt!");
+        log::Logger::log(log::FATAL, "Login " + login + " has invalid salt!");
         return types::Token();
     }
     std::vector<char> buffer;

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <Magick++.h>
 #include <mysql.h>
 
 #include <accordserver/log/Logger.h>
@@ -7,6 +6,8 @@
 #include <accordserver/util/OpenSSLUtil.h>
 #include <accordserver/Arguments.h>
 #include <accordserver/Server.h>
+#include <Magick++.h>
+
 
 int main(int argc, char **argv) {
     accord::Arguments args = accord::ArgumentParser::parse(argc, argv);
@@ -15,12 +16,12 @@ int main(int argc, char **argv) {
     accord::util::LibEventUtil::init();
     accord::util::OpenSSLUtil::opensslInit();
     if (mysql_library_init(0, nullptr, nullptr)) {
-        accord::log::Logger::log(accord::log::ERROR, "Error init"
+        accord::log::Logger::log(accord::log::FATAL, "Error init"
                                                      "ializing libmysqlclient");
         exit(1);
 
         if (!mysql_thread_safe()) {
-            accord::log::Logger::log(accord::log::ERROR, "mysql library"
+            accord::log::Logger::log(accord::log::FATAL, "mysql library"
                                                          "is not thread-safe!");
             exit(1);
         }

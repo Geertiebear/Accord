@@ -4,10 +4,17 @@
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <sys/socket.h>
+#ifndef _WIN32
+	#include <arpa/inet.h>
+	#include <netinet/in.h>
+	#include <sys/socket.h>
+#else
+	#undef _WIN32_WINNT
+	#define _WIN32_WINNT 0x0600
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+#endif
 #include <stdlib.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <openssl/ssl.h>
 
 #include <accordcliclient/CommandParser.h>
@@ -25,17 +32,22 @@ int main(int argc, char **argv)
     CommandParser parser;
     std::string input;
     int socketfd;
+#ifndef _WIN32
     struct sockaddr_in serverAddress;
+#else
+	SOCKADDR_IN serverAddress;
+#endif
     SSL_CTX *ctx = initCTX();
-
-    signal(SIGPIPE, SIG_IGN);
     
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     memset((char*) &serverAddress, '\0', sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(6524);
-
+#ifndef _WIN32
     inet_pton(AF_INET, "127.0.0.1", &serverAddress.sin_addr);
+#else
+	InetPtonA(AF_INET, "127.0.0.1", &serverAddress.sin_addr);
+#endif
 
     connect(socketfd, (struct sockaddr*) &serverAddress, sizeof(serverAddress));
     SSL *ssl = SSL_new(ctx);
