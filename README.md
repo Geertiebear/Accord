@@ -25,6 +25,12 @@ To download all the required packages run the following command.
 `pacman -S git mingw-w64-x86_64-{cmake,make,gcc,qt5,cereal,libmariadbclient,libevent,boost
 ,openssl,yaml-cpp,argon2,imagemagick}`
 
+**Note:** To run the server on windows you will need to set the `MAGICK_CODER_MODULE_PATH` to the imagemagick
+coders folder for your system. For the mingw package it is roughly under `/mingw64/lib/ImageMagick-VERSION/modules/coders`.
+Not setting the environment variable to the coders folder will result in a crash when a user tries to create a community.
+As an example, if you wish to run the server your command may look like this
+`MAGICK_CODER_MODULE_PATH="/mingw64/lib/ImageMagick-7.0.7/modules-Q16HDRI/coders" ./accordserver`.
+
 ### General
 
 1. Clone the repo
