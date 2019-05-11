@@ -22,8 +22,7 @@ These are windows specific instructions for installing all required dependencies
 So far Accord has only been successfully built using msys2 (https://www.msys2.org/).
 Contributions for building with Visual Studio are welcome!
 To download all the required packages run the following command.
-`pacman -S git mingw-w64-x86_64-{cmake,make,gcc,qt5,cereal,libmariadbclient,libevent,boost
-,openssl,yaml-cpp,argon2,imagemagick}`
+`pacman -S git mingw-w64-x86_64-{cmake,make,gcc,qt5,cereal,libmariadbclient,libevent,boost,openssl,yaml-cpp,argon2,imagemagick}`
 
 **Note:** To run the server on windows you will need to set the `MAGICK_CODER_MODULE_PATH` to the imagemagick
 coders folder for your system. For the mingw package it is roughly under `/mingw64/lib/ImageMagick-VERSION/modules/coders`.
