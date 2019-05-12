@@ -1,9 +1,10 @@
 language: cpp
+os: linux
 dist: xenial
 
 matrix:
     include:
-        - os: linux
+        - compiler: gcc
           addons:
             apt:
               sources:
@@ -13,10 +14,11 @@ matrix:
           env:
             - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
-        - os: linux
+        - compiler: clang
           addons:
             apt:
               sources:
+                - ubuntu-toolchain-r-test
                 - llvm-toolchain-xenial-5.0
               packages:
                 - clang-5.0
