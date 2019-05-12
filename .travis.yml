@@ -17,7 +17,7 @@ matrix:
           addons:
             apt:
               sources:
-                - llvm-toolchain-trusty-5.0
+                - llvm-toolchain-trusty-7.0
               packages:
                 - clang-7.0
           env:
