@@ -12,6 +12,7 @@ addons:
             - qtbase5-dev
             - qml-module-qtquick-controls
             - qml-module-qtquick2
+            - qtdeclarative5-dev
             - libmysqlclient-dev
             - libevent-dev
             - libevent-openssl-2.0.5
@@ -20,6 +21,7 @@ addons:
             - libyaml-cpp-dev
             - pkg-config
             - libmagick++-dev
+            - libcereal-dev
 
 before_install:
     - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0_0~20161029-1.1_amd64.deb
