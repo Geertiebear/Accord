@@ -9,12 +9,9 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
             - g++-7
-            - libqt5core5a
-            - libqt5gui5
-            - libqt5network5
-            - libqt5qml5
-            - libqt5quick5
-            - libqt5widgets5
+            - qtbase5-dev
+            - qml-module-qtquick-controls
+            - qml-module-qtquick2
             - libmysqlclient-dev
             - libevent-dev
             - libevent-openssl-2.0.5
