@@ -239,38 +239,38 @@ bool Database::initDatabase()
                                 "BLOB, friends INT,"
                                 "communities INT, email VARCHAR(255),"
                                 "password VARCHAR(255), salt VARCHAR(255))";
-    if (!mysql_real_query(mysql, users.c_str(), users.length()))
+    if (mysql_real_query(mysql, users.c_str(), users.length()))
         return false;
     const std::string communties = "CREATE TABLE communities "
                                    "(id BIGINT UNSIGNED,"
                                    "name VARCHAR(255), profilepic "
                                    "BLOB,"
                                    "members INT, channels INT)";
-    if (!mysql_real_query(mysql, communties.c_str(), communties.length()))
+    if (mysql_real_query(mysql, communties.c_str(), communties.length()))
         return false;
     const std::string friends = "CREATE TABLE friends (id BIGINT UNSIGNED, "
                                 "user1 BIGINT UNSIGNED, user2 BIGINT UNSIGNED,"
                                 "status ENUM('pending', 'accepted'))";
-    if (!mysql_real_query(mysql, friends.c_str(), friends.length()))
+    if (mysql_real_query(mysql, friends.c_str(), friends.length()))
             return false;
 
     const std::string communityMembers = "CREATE TABLE community_members "
                                             "(id BIGINT UNSIGNED, "
                                             "user BIGINT UNSIGNED)";
-    if (!mysql_real_query(mysql, communityMembers.c_str(),
+    if (mysql_real_query(mysql, communityMembers.c_str(),
                           communityMembers.length()))
             return false;
 
     const std::string channels = "CREATE TABLE channels (id BIGINT UNSIGNED, "
                     "community BIGINT UNSIGNED, name VARCHAR(255),"
                     "description VARCHAR(255))";
-    if (!mysql_real_query(mysql, channels.c_str(), channels.length()))
+    if (mysql_real_query(mysql, channels.c_str(), channels.length()))
         return false;
 
     const std::string channelMembers = "CREATE TABLE channel_members "
                                        "(id BIGINT UNSIGNED, "
                                        "user BIGINT UNSIGNED)";
-    if (!mysql_real_query(mysql, channelMembers.c_str(),
+    if (mysql_real_query(mysql, channelMembers.c_str(),
                           channelMembers.length()))
         return false;
 
@@ -278,7 +278,7 @@ bool Database::initDatabase()
                     "channel BIGINT UNSIGNED, sender BIGINT UNSIGNED,"
                     " contents VARCHAR(2000),"
                     "timestamp BIGINT UNSIGNED)";
-    if (!mysql_real_query(mysql, messages.c_str(), messages.length()))
+    if (mysql_real_query(mysql, messages.c_str(), messages.length()))
         return false;
 
     return true;
