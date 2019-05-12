@@ -14,12 +14,6 @@ matrix:
             - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
         - os: linux
-          addons:
-            apt:
-              sources:
-                - llvm-toolchain-xenial-7.0
-              packages:
-                - clang-7.0
           env:
                 - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
 
