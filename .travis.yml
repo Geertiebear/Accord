@@ -14,7 +14,6 @@ addons:
             - qml-module-qtquick2
             - qtdeclarative5-dev
             - libmysqlclient-dev
-            - libevent-2.0-5
             - libboost-program-options-dev
             - libssl-dev
             - libyaml-cpp-dev
@@ -27,6 +26,18 @@ before_install:
     - sudo dpkg -i libargon2-0_0~20161029-1.1_amd64.deb
     - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0-dev_0~20161029-1.1_amd64.deb
     - sudo dpkg -i libargon2-0-dev_0~20161029-1.1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-core-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-core-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-extra-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-extra-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-openssl-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-openssl-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-pthreads-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-pthreads-2.1-6_2.1.8-stable-4build1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-dev_2.1.8-stable-4build1_amd64.deb
+    - sudo dpkg -i libevent-dev_2.1.8-stable-4build1_amd64.deb
 
 script:
     - export CC=gcc-7
