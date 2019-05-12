@@ -15,15 +15,20 @@ addons:
             - libqt5qml5
             - libqt5quick5
             - libqt5widgets5
-            - libmariadbclient-dev
+            - libmysqlclient-dev
             - libevent-dev
-            - libevent-openssl
+            - libevent-openssl-2.0.5
             - libboost-program-options-dev
             - libssl-dev
             - libyaml-cpp-dev
             - pkg-config
             - libmagick++-dev
-            - libargon2-dev
+
+before_install:
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0_0~20161029-1.1_amd64.deb
+    - sudo dpkg -i libargon2-0_0~20161029-1.1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0-dev_0~20161029-1.1_amd64.deb
+    - sudo dpkg -i libargon2-0-dev_0~20161029-1.1_amd64.deb
 
 script:
     - export CC=gcc-7
