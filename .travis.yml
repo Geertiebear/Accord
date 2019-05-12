@@ -14,7 +14,7 @@ addons:
             - qml-module-qtquick2
             - qtdeclarative5-dev
             - libmysqlclient-dev
-            - libevent-2.0.5
+            - libevent-2.0-5
             - libboost-program-options-dev
             - libssl-dev
             - libyaml-cpp-dev
