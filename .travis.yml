@@ -17,11 +17,11 @@ matrix:
           addons:
             apt:
               sources:
-                - llvm-toolchain-trusty-5.0
+                - llvm-toolchain-xenial-7.0
               packages:
-                - clang-5.0
+                - clang-7.0
           env:
-                - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+                - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
 
 before_install:
     - sudo apt-get install -y qtbase5-dev qml-module-qtquick-controls qml-module-qtquick2 qtdeclarative5-dev libmysqlclient-dev libboost-program-options-dev libyaml-cpp-dev pkg-config libmagick++-dev libcereal-dev
