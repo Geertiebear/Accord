@@ -20,8 +20,13 @@ addons:
             - libyaml-cpp-dev
             - pkg-config
             - libmagick++-dev
-            - libcereal-dev
-            - libargon2-0-dev
+r           - libcereal-dev
+
+before_install:
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0_0~20161029-1.1_amd64.deb
+    - sudo dpkg -i libargon2-0_0~20161029-1.1_amd64.deb
+    - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0-dev_0~20161029-1.1_amd64.deb
+    - sudo dpkg -i libargon2-0-dev_0~20161029-1.1_amd64.deb
 
 script:
     - export CC=gcc-7
