@@ -170,11 +170,23 @@ int Database::connect()
 		log::Logger::log(log::FATAL, "Error connecting to database!");
 		const char *error = mysql_error(mysql);
 		if (error) {
-			auto stdError = std::string(error);
+            const auto stdError = std::string(error);
 			log::Logger::log(log::FATAL, "MYSQL error: " + stdError);
 		}
         return 0;
     }
+
+    my_bool reconnect = 1;
+    if (mysql_options(mysql, MYSQL_OPT_RECONNECT, &reconnect)) {
+        log::Logger::log(log::FATAL, "Error setting reconnect option!");
+        const char *error = mysql_error(mysql);
+        if (error) {
+            const auto stdError = std::string(error);
+            log::Logger::log(log::FATAL, "MYSQL error: " + stdError);
+        }
+        return 0;
+    }
+
     connected = true;
     return 1;
 }
