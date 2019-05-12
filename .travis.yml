@@ -1,26 +1,29 @@
 language: cpp
-compiler: gcc
 dist: xenial
 
-os: linux
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        packages:
-            - g++-7
-            - qtbase5-dev
-            - qml-module-qtquick-controls
-            - qml-module-qtquick2
-            - qtdeclarative5-dev
-            - libmysqlclient-dev
-            - libboost-program-options-dev
-            - libyaml-cpp-dev
-            - pkg-config
-            - libmagick++-dev
-            - libcereal-dev
+matrix:
+    include:
+        - os: linux
+        addons:
+            apt:
+                sources:
+                    - ubuntu-toolchain-r-test
+                packages:
+                    - g++-7
+                env:
+                    - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - os: linux
+        addons:
+            apt:
+                sources:
+                    - llvm-toolchain-trusty-5.0
+                packages:
+                    - clang-7.0
+                env:
+                    - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
 
 before_install:
+    - sudo apt-get install -y qtbase5-dev qml-module-qtquick-controls qml-module-qtquick2 qtdeclarative5-dev libmysqlclient-dev libboost-program-options-dev libyaml-cpp-dev pkg-config libmagick++-dev libcereal-dev
     - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0_0~20161029-1.1_amd64.deb
     - sudo dpkg -i libargon2-0_0~20161029-1.1_amd64.deb
     - wget http://mirrors.kernel.org/ubuntu/pool/main/a/argon2/libargon2-0-dev_0~20161029-1.1_amd64.deb
@@ -41,6 +44,7 @@ before_install:
     - sudo dpkg -i libevent-pthreads-2.1-6_2.1.8-stable-4build1_amd64.deb
     - wget http://mirrors.kernel.org/ubuntu/pool/main/libe/libevent/libevent-dev_2.1.8-stable-4build1_amd64.deb
     - sudo dpkg -i libevent-dev_2.1.8-stable-4build1_amd64.deb
+    - eval "${MATRIX_EVAL}"
 
 script:
     - export CC=gcc-7
