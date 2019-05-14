@@ -32,6 +32,7 @@ matrix:
 
 before_install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./travis/travis_osx.sh; else ./travis/travis_linux.sh; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export CMAKE_PREFIX_PATH=/usr/local/Cellar/qt/5.12.2; fi
     - eval "${MATRIX_EVAL}"
 
 script:
