@@ -24,6 +24,11 @@ matrix:
                 - clang-5.0
           env:
                 - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+        - os: osx
+          osx_image: xcode10.2
+          compiler: clang
+          env:
+              - MATRIX_EVAL="CC=clang && CXX=clang++"
 
 before_install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./travis/travis_osx.sh; else ./travis/travis_linux.sh; fi
