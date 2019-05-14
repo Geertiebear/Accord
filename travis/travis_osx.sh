@@ -1,3 +1,3 @@
 #!/bin/bash
 
-brew install qt cereal mysql-connector-c libevent boost openssl yaml-cpp argon2 pkg-config imagemagick
+brew install cereal mysql-connector-c libevent openssl yaml-cpp argon2 pkg-config imagemagick
