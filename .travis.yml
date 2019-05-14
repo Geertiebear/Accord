@@ -26,7 +26,7 @@ matrix:
                 - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
 before_install:
-    - ./travis/travis_linux.sh
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./travis/travis_osx.sh; else ./travis/travis_linux.sh; fi
     - eval "${MATRIX_EVAL}"
 
 script:
