@@ -2,6 +2,7 @@
 #define NETWORK_PACKET_H
 
 #include <vector>
+#include <string>
 #include <type_traits>
 
 #include <accordshared/network/PacketHandler.h>
