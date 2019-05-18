@@ -64,6 +64,7 @@ find_package(OpenSSL REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(ImageMagick COMPONENTS Magick++ convert REQUIRED)
+find_package(Cereal REQUIRED)
 pkg_search_module(argon2 libargon2)
 
 add_library(accordshared SHARED ${SOURCES_SHARED})
@@ -91,6 +92,7 @@ endif (MSVC)
 target_include_directories(accordshared
     PUBLIC include/)
 target_link_libraries(accordshared ${LIBEVENT_LIBRARIES})
+target_include_directories(accordshared PUBLIC ${CEREAL_INCLUDE_DIRS})
 target_include_directories(accordshared PRIVATE ${Boost_INCLUDE_DIR})
 
 target_include_directories(accordserver 
@@ -100,6 +102,7 @@ target_include_directories(accordserver PUBLIC ${Boost_INCLUDE_DIR})
 target_include_directories(accordserver PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_include_directories(accordserver PUBLIC ${MYSQL_INCLUDE_DIRS})
 target_include_directories(accordserver PUBLIC ${ImageMagick_INCLUDE_DIRS})
+target_include_directories(accordserver PUBLIC ${CEREAL_INCLUDE_DIRS})
 
 if(WIN32)
 	target_link_libraries(accordserver ws2_32)
@@ -119,6 +122,7 @@ target_link_libraries(accordserver accordshared)
 
 target_include_directories(accordcliclient
     PUBLIC include/)
+target_include_directories(accordcliclient PUBLIC ${CEREAL_INCLUDE_DIRS})
 target_include_directories(accordcliclient PUBLIC ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(accordcliclient accordshared)
 if(WIN32)
@@ -129,6 +133,7 @@ target_link_libraries(accordcliclient ${OPENSSL_LIBRARIES})
 target_include_directories(accordclient
     PUBLIC include/)
 target_include_directories(accordclient PUBLIC ${OPENSSL_INCLUDE_DIR})
+target_include_directories(accordclient PUBLIC ${CEREAL_INCLUDE_DIRS})
 target_link_libraries(accordclient accordshared)
 target_link_libraries(accordclient ${OPENSSL_LIBRARIES})
 target_link_libraries(accordclient Qt5::Core)
