@@ -117,7 +117,7 @@ target_link_libraries(accordserver ${OPENSSL_LIBRARIES})
 target_link_libraries(accordserver ${YAML_CPP_LIBRARIES})
 target_link_libraries(accordserver ${argon2_LIBRARIES})
 target_link_libraries(accordserver ${ImageMagick_LIBRARIES})
-message(${ImageMagick_LIBRARIES})
+message(${argon2_LIBRARIES})
 target_link_libraries(accordserver accordshared)
 
 target_include_directories(accordcliclient
