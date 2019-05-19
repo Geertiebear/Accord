@@ -2,7 +2,7 @@
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/CryptoUtil.h>
 
-#include <cstdarg>
+#include <boost/variant.hpp>
 
 namespace accord {
 namespace database {
@@ -15,8 +15,12 @@ const std::string TableFriends::tableName = "friends";
 const std::string TableCommunityMembers::tableName = "community_members";
 const std::string TableChannelMembers::tableName = "channel_members";
 
+using EscpPrintfArg = boost::variant<uint64_t, uint32_t, std::string, char,
+        int, std::vector<char>>;
+
 static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
-                                                  std::string stmt, va_list va)
+                                                  std::string stmt,
+                                                  const EscpPrintfArg *args)
 {
     std::vector<char> res;
     for (auto it = stmt.begin(); it != stmt.end(); it++) {
@@ -30,7 +34,7 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                 switch (*it) {
                 case 's': {
                     /* escape the string */
-                    std::string string = va_arg(va, std::string);
+                    const auto string = boost::get<std::string>(*args++);
                     char *escaped_string = new char[(string.length() * 2) + 1];
                     mysql_real_escape_string(mysql, escaped_string,
                                                string.c_str(), string.length());
@@ -43,7 +47,8 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                 }
                 case 'c': {
                     if (*(it += 1) == 'v') {
-                        const auto vector = va_arg(va, std::vector<char>);
+                        const auto vector = boost::get<std::vector<
+                                char>>(*args++);
                         char *escaped = new char[(vector.size() * 2) + 1];
                         int bytes = mysql_real_escape_string(mysql,
                                                                    escaped,
@@ -64,20 +69,20 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
                 case 'u': {
                     if (*(it += 1) == 'l') {
                         const auto string = std::to_string(
-                                    va_arg(va, uint64_t));
+                                    boost::get<uint64_t>(*args++));
                         std::copy(string.begin(), string.end(),
                                   std::back_inserter(res));
                         break;
                     }
                     const auto string = std::to_string(
-                                va_arg(va, uint32_t));
+                                    boost::get<uint32_t>(*args++));
                     std::copy(string.begin(), string.end(),
                               std::back_inserter(res));
                     break;
                 }
                 case 'i': {
                     const auto string = std::to_string(
-                                va_arg(va, int));
+                                boost::get<int>(*args++));
                     std::copy(string.begin(), string.end(),
                               std::back_inserter(res));
                     break;
@@ -88,21 +93,21 @@ static std::vector<char> escaped_printf_vector_va(MYSQL *mysql,
     return res;
 }
 
-static std::string escaped_printf(MYSQL *mysql, std::string stmt, ...)
+template <typename... Args>
+static std::string escaped_printf(MYSQL *mysql, std::string stmt,
+                                  const Args&... args)
 {
-    va_list va;
-    va_start(va, stmt);
-    const auto res = escaped_printf_vector_va(mysql, stmt, va);
-    va_end(va);
+    EscpPrintfArg argArray[] = {args...};
+    const auto res = escaped_printf_vector_va(mysql, stmt, argArray);
     return std::string(res.begin(), res.end());
 }
 
-static std::vector<char> escaped_printf_vector(MYSQL *mysql, std::string stmt, ...)
+template <typename... Args>
+static std::vector<char> escaped_printf_vector(MYSQL *mysql, std::string stmt,
+                                               const Args&... args)
 {
-    va_list va;
-    va_start(va, stmt);
-    const auto res = escaped_printf_vector_va(mysql, stmt, va);
-    va_end(va);
+    EscpPrintfArg argArray[] = {args...};
+    const auto res = escaped_printf_vector_va(mysql, stmt, argArray);
     return res;
 }
 

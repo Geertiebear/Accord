@@ -1,0 +1,13 @@
+#libargon2 pkg-config info
+
+prefix=/usr/local/Cellar/argon2/20171227
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libargon2
+Description: Development libraries for libargon2
+Version: 20171227
+Libs: -L${libdir} -largon2
+Cflags:
+URL: https://github.com/P-H-C/phc-winner-argon2
