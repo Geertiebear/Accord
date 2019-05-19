@@ -45,7 +45,6 @@ struct Client : public PacketData {
     bool hasPartialPacket;
     PacketBuffer partialPacket;
     std::deque<char> writeBuffer;
-    std::list<uint64_t> channelList;
 
     void write(const std::vector<char> &msg);
     void markOffline();

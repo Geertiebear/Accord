@@ -272,8 +272,7 @@ void Client::markOffline()
 {
     if (!isLoggedIn)
         return;
-    for (uint64_t channel : channelList)
-        server.removeOnlineMember(channel, user.id, this);
+    server.removeOnlineUser(user.id, this);
     server.notifyStatusChange(user.id, this);
 }
 

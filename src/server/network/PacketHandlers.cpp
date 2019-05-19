@@ -108,13 +108,10 @@ bool PacketHandlers::receiveAuthPacket(const std::vector<char> &body, PacketData
     client->isLoggedIn = true;
     log::Logger::log(log::DEBUG, "Successfully authenticated client!");
 
-    auto channelList = client->thread.database.getChannelsForUser(
-                client->user.id);
-    for (auto channel : channelList) {
-        types::UserData userData(client->user.id, client->user.name, "");
-        client->server.registerOnlineMember(channel.id, userData, client);
-        client->channelList.push_back(channel.id);
-    }
+
+    types::UserData userData(client->user.id, client->user.name,
+                              std::vector<char>());
+    client->server.registerOnlineUser(userData, client);
     client->server.notifyStatusChange(client->user.id, client);
 
     //send token to client
@@ -414,7 +411,7 @@ bool PacketHandlers::handleUser(PacketData *data,
         return false;
     }
 
-    types::UserData ret(user.get().id, user.get().name, "");
+    types::UserData ret(user.get().id, user.get().name, std::vector<char>());
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::USER_REQUEST, json);
@@ -513,7 +510,7 @@ bool PacketHandlers::handleOnlineList(PacketData *data,
     /* TODO: permission and stuff q.q like checking
      * if they are in the channel */
 
-    const auto onlineList = client->server.getOnlineList(request.id);
+    const auto onlineList = client->server.getOnlineList(request.id, client);
     types::OnlineListRet ret(onlineList, request.id);
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);

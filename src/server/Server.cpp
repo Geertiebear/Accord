@@ -84,75 +84,77 @@ void Server::insertInvite(uint64_t communityId, const std::string &invite)
     inviteMap.insert(std::make_pair(invite, communityId));
 }
 
-std::list<types::UserData> Server::getOnlineList(uint64_t channelId)
+std::list<types::UserData> Server::getOnlineList(uint64_t channelId,
+                                                 thread::Client *client)
 {
-    std::unique_lock<std::mutex> lock(onlineMapMutex);
-    const auto &list = onlineMap[channelId];
-    lock.unlock();
+    /* TODO: maybe in the future we should cache this */
+    const auto members = client->thread.database.getUsersForChannel(channelId);
     std::list<types::UserData> ret;
-    for (OnlineUser user : list)
-        ret.push_back(user.user);
+    std::unique_lock<std::mutex> lock(onlineMapMutex);
+    for (const auto user : members) {
+        if (onlineMap.find(user.id) != onlineMap.end()) {
+            types::UserData smallUser(user.id, user.name, user.profilepic);
+            ret.push_back(smallUser);
+        }
+    }
     return ret;
 }
 
-void Server::registerOnlineMember(uint64_t channel, const types::UserData &user,
+void Server::registerOnlineUser(const types::UserData &user,
                                   thread::Client *client)
 {
     std::unique_lock<std::mutex> lock(onlineMapMutex);
-    auto list = onlineMap[channel];
-    auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
-        return s.user == user;
-    });
-    if (it == list.end()) {
-        OnlineUser onlineUser(1, user);
+    auto it = onlineMap.find(user.id);
+    if (it == onlineMap.end()) {
+        OnlineUser onlineUser(1);
         onlineUser.clients.push_back(client);
-        list.push_back(onlineUser);
+        onlineMap.insert(std::make_pair(user.id, onlineUser));
     } else {
-        OnlineUser onlineUser = *it;
+        OnlineUser &onlineUser = onlineMap.at(user.id);
         onlineUser.refCount++;
         onlineUser.clients.push_back(client);
-        *it = onlineUser;
     }
-    onlineMap[channel] = list;
 }
 
-void Server::removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client)
+void Server::removeOnlineUser(uint64_t user, thread::Client *client)
 {
     std::unique_lock<std::mutex> lock(onlineMapMutex);
-    auto &list = onlineMap[channel];
-    auto it = std::find_if(list.begin(), list.end(), [&] (const OnlineUser &s) {
-        return s.user.id == user;
-    });
-    if (it == list.end())
-        return;
-    OnlineUser onlineUser = *it;
+    auto it = onlineMap.find(user);
+    if (it == onlineMap.end())
+        return; /* TODO: maybe report an error if debugging? */
+    OnlineUser &onlineUser = onlineMap.at(user);
     onlineUser.refCount--;
     if (onlineUser.refCount <= 0) {
-        list.erase(it);
+        onlineMap.erase(it);
         return;
     }
     auto &clients = onlineUser.clients;
-    clients.erase(std::remove(clients.begin(), clients.end(), client), clients.end());
-    *it = onlineUser;
+    clients.erase(std::remove(clients.begin(), clients.end(), client),
+                  clients.end());
 }
 
-void Server::notifyStatusChange(uint64_t id, thread::Client *client)
+void Server::notifyStatusChange(uint64_t user, thread::Client *client)
 {
-    const auto channels = client->thread.database.getChannelsForUser(id);
+    const auto channels = client->thread.database.getChannelsForUser(user);
     for (auto channel : channels) {
+        const auto members = client->thread.database.getUsersForChannel(
+                    channel.id);
         std::unique_lock<std::mutex> lock(onlineMapMutex);
-        const auto &list = onlineMap.at(channel.id);
-        lock.unlock();
-        for (OnlineUser user : list) {
-            if (user.user.id == id)
+        for (auto member : members) {
+            if (member.id == user)
                 continue;
 
-            const auto listToSend = getOnlineList(channel.id);
+            auto it = onlineMap.find(member.id);
+            if (it == onlineMap.end())
+                continue;
+            const auto onlineUser = onlineMap.at(user);
+
+            const auto listToSend = getOnlineList(channel.id, client);
             types::OnlineListRet ret(listToSend, channel.id);
             network::SerializationPacket packet;
             const auto json = util::Serialization::serialize(ret);
             const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
-            for (auto client : user.clients)
+            for (auto client : onlineUser.clients)
                 client->write(msg);
         }
     }

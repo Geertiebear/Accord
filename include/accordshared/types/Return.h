@@ -85,10 +85,11 @@ class UserData {
 public:
     UserData() { }
     UserData(uint64_t id, const std::string &name,
-             const std::string &profilepic) :
+             const std::vector<char> &profilepic) :
         id(id), name(name), profilepic(profilepic) { }
     uint64_t id;
-    std::string name, profilepic;
+    std::string name;
+    std::vector<char> profilepic;
 
     bool operator== (const UserData &rhs) const
     {

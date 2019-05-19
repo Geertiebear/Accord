@@ -20,10 +20,9 @@ namespace accord {
 struct Arguments;
 
 struct OnlineUser {
-    OnlineUser(int refCount, const types::UserData &user) : refCount(refCount),
-        user(user) {}
+    OnlineUser(int refCount) : refCount(refCount)
+    {}
     int refCount = 0;
-    types::UserData user;
     std::vector<thread::Client*> clients;
 };
 
@@ -37,11 +36,13 @@ public:
     bool isInviteValid(const std::string &invite);
     uint64_t getCommunityForInvite(const std::string &invite);
     void insertInvite(uint64_t communityId, const std::string &invite);
-    std::list<types::UserData> getOnlineList(uint64_t channelId);
-    void registerOnlineMember(uint64_t channel, const types::UserData &user,
+
+    std::list<types::UserData> getOnlineList(uint64_t channelId,
+                                             thread::Client *client);
+    void registerOnlineUser(const types::UserData &user,
                               thread::Client *client);
-    void removeOnlineMember(uint64_t channel, uint64_t user, thread::Client *client);
-    void notifyStatusChange(uint64_t id, thread::Client *client);
+    void removeOnlineUser(uint64_t user, thread::Client *client);
+    void notifyStatusChange(uint64_t user, thread::Client *client);
 private:
     ACCORD_SOCKADDR serverAddr;
     int numThreads;
@@ -63,7 +64,7 @@ private:
     std::vector<std::shared_ptr<thread::Thread>> threads;
     std::map<std::string, uint64_t> inviteMap;
     std::mutex inviteMapMutex;
-    std::map<uint64_t, std::list<OnlineUser>> onlineMap;
+    std::map<uint64_t, OnlineUser> onlineMap;
     std::mutex onlineMapMutex;
 
     static std::vector<network::ReceiveHandler> handlers;

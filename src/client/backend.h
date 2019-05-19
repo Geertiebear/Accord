@@ -160,12 +160,13 @@ class UserData : public QObject {
     Q_PROPERTY(QString name MEMBER name CONSTANT)
 public:
     UserData() { }
-    QString name, profilepic;
+    QString name;
+    QVector<char> profilepic;
 
     UserData(const accord::types::UserData &other)
     {
         name = QString::fromStdString(other.name);
-        profilepic = QString::fromStdString(other.profilepic);
+        profilepic = profilepic.fromStdVector(other.profilepic);
     }
 };
 
