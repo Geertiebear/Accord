@@ -147,7 +147,7 @@ void Server::notifyStatusChange(uint64_t user, thread::Client *client)
             auto it = onlineMap.find(member.id);
             if (it == onlineMap.end())
                 continue;
-            const auto onlineUser = onlineMap.at(user);
+            const auto onlineUser = onlineMap.at(member.id);
             lock.unlock();
 
             const auto listToSend = getOnlineList(channel.id, client);
