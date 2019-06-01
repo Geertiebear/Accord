@@ -265,63 +265,72 @@ bool Database::verify()
         return false;
     if (!tableExists(mysql, "messages"))
         return false;
+    if (!tableExists(mysql, "user_roles"))
+        return false;
+    if (!tableExists(mysql, "roles"))
+        return false;
+    if (!tableExists(mysql, "community_roles"))
+        return false;
+    if (!tableExists(mysql, "channel_roles"))
+        return false;
     return true;
 }
 
 bool Database::initDatabase()
 {
+    bool success = true;
     const std::string users = "CREATE TABLE users (id BIGINT UNSIGNED, "
                                 "name VARCHAR(255), profilepic "
                                 "BLOB, friends INT,"
                                 "communities INT, email VARCHAR(255),"
                                 "password VARCHAR(255), salt VARCHAR(255))";
     if (mysql_real_query(mysql, users.c_str(), users.length()))
-        return false;
+        success = false;
     const std::string communties = "CREATE TABLE communities "
                                    "(id BIGINT UNSIGNED,"
                                    "name VARCHAR(255), profilepic "
                                    "BLOB,"
                                    "members INT, channels INT)";
     if (mysql_real_query(mysql, communties.c_str(), communties.length()))
-        return false;
+        success = false;
     const std::string friends = "CREATE TABLE friends (id BIGINT UNSIGNED, "
                                 "user1 BIGINT UNSIGNED, user2 BIGINT UNSIGNED,"
                                 "status ENUM('pending', 'accepted'))";
     if (mysql_real_query(mysql, friends.c_str(), friends.length()))
-            return false;
+        success = false;
 
     const std::string communityMembers = "CREATE TABLE community_members "
                                             "(id BIGINT UNSIGNED, "
                                             "user BIGINT UNSIGNED)";
     if (mysql_real_query(mysql, communityMembers.c_str(),
                           communityMembers.length()))
-            return false;
+        success = false;
 
     const std::string channels = "CREATE TABLE channels (id BIGINT UNSIGNED, "
                     "community BIGINT UNSIGNED, name VARCHAR(255),"
                     "description VARCHAR(255))";
     if (mysql_real_query(mysql, channels.c_str(), channels.length()))
-        return false;
+        success = false;
 
     const std::string channelMembers = "CREATE TABLE channel_members "
                                        "(id BIGINT UNSIGNED, "
                                        "user BIGINT UNSIGNED)";
     if (mysql_real_query(mysql, channelMembers.c_str(),
                           channelMembers.length()))
-        return false;
+        success = false;
 
     const std::string messages = "CREATE TABLE messages (id BIGINT UNSIGNED, "
                     "channel BIGINT UNSIGNED, sender BIGINT UNSIGNED,"
                     " contents VARCHAR(2000),"
                     "timestamp BIGINT UNSIGNED)";
     if (mysql_real_query(mysql, messages.c_str(), messages.length()))
-        return false;
+        success = false;
 
     /* stores what users have what roles */
     const std::string userRoles = "CREATE TABLE user_roles (id BIGINT UNSIGNED,"
                     " user BIGINT UNSIGNED)";
     if (mysql_real_query(mysql, userRoles.c_str(), userRoles.length()))
-        return false;
+        success = false;
 
     /*
      * Roles have permissions for communities and channels.
@@ -333,22 +342,22 @@ bool Database::initDatabase()
                     " community BIGINT UNSIGNED, name VARCHAR(255),"
                               " colour CHAR(6))";
     if (mysql_real_query(mysql, roles.c_str(), roles.length()))
-        return false;
+        success = false;
 
     const std::string channelRoles = "CREATE TABLE channel_roles (id BIGINT "
                                      "UNSIGNED, channel BIGINT UNSIGNED, "
                                      "permission INT, allow INT)";
     if (mysql_real_query(mysql, channelRoles.c_str(), channelRoles.length()))
-        return false;
+        success = false;
 
     const std::string communityRoles = "CREATE TABLE community_roles (id"
                                        " BIGINT UNSIGNED, permission INT, "
                                        "allow INT, position INT)";
     if (mysql_real_query(mysql, communityRoles.c_str(),
                          communityRoles.length()))
-        return false;
+        success = false;
 
-    return true;
+    return success;
 }
 
 Result Database::query(std::string query) {
