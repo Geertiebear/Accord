@@ -57,6 +57,12 @@ ClientForm {
                             backend.requestInvite(modelData.id);
                         }
                     }
+                    MenuItem {
+                        text: "Community settings"
+                        onClicked: {
+                            communitySettingsPopup.open();
+                        }
+                    }
                 }
 
                 MouseArea {
@@ -117,6 +123,21 @@ ClientForm {
             focus: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
             AddCommunity {
+                width: parent.width
+                height: parent.height
+            }
+        }
+
+        Popup {
+            id: communitySettingsPopup
+            x: Math.round((parent.width - width) / 2)
+            y: Math.round((parent.height - height) / 2)
+            width: parent.width * 0.33
+            height: parent.width * 0.33
+            modal: true
+            focus: true
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+            CommunitySettings {
                 width: parent.width
                 height: parent.height
             }

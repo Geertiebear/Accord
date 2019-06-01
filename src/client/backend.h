@@ -234,6 +234,7 @@ public:
     QVariantMap messagesMap;
     QVariantMap userMap;
     QVariantMap onlineMap;
+    QVariantMap communityRolesMap;
     QVector<quint64> pendingUserRequests;
     QQmlContext *qmlContext;
     std::vector<char> lastRequest;

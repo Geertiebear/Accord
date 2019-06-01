@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     engine.rootContext()->setContextProperty("channelsMap", backend->channelsMap);
     engine.rootContext()->setContextProperty("messagesMap", backend->messagesMap);
     engine.rootContext()->setContextProperty("userMap", backend->userMap);
+    engine.rootContext()->setContextProperty("communityRolesMap", backend->communityRolesMap);
     engine.rootContext()->setContextProperty("screenGeometry", QApplication::desktop()->availableGeometry());
     engine.addImageProvider("communityImageProvider", communityImageProvider);
     qmlRegisterType<CommunitiesTable>("accord.types", 1, 0, "CommuntiesTable");
