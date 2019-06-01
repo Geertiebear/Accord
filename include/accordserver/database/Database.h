@@ -4,11 +4,13 @@
 #include <string>
 #include <mysql.h>
 #include <memory>
+#include <functional>
 #include <boost/optional.hpp>
 
 #include <accordserver/log/Logger.h>
 #include <accordshared/types/Database.h>
 #include <accordshared/types/Request.h>
+#include <accordshared/types/Permissions.h>
 
 namespace accord {
 namespace database {
@@ -52,6 +54,16 @@ static std::enable_if_t<std::is_same<T, std::vector<char>>::value, T> get(
         const char *data, unsigned long length = 0)
 {
     return std::vector<char>(data, data + length);
+}
+
+template<typename T>
+static std::enable_if_t<std::is_same<T, bool>::value, T> get(
+        const char *data, unsigned long length = 0)
+{
+    (void) length;
+    (void) data;
+    //TODO: lol
+    return false;
 }
 
 struct TableUsers {
@@ -259,13 +271,112 @@ struct TableChannelMembers {
     static const std::string tableName;
 };
 
+struct TableUserRoles {
+    uint64_t id;
+    uint64_t user;
+
+    TableUserRoles() = default;
+
+    TableUserRoles(uint64_t id, uint64_t user) : id(id),
+        user(user)
+    { }
+
+    TableUserRoles(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          user(get<uint64_t>(row[1]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 2;
+    static const std::string tableName;
+};
+
+struct TableRoles {
+    uint64_t id;
+    uint64_t community;
+    std::string name;
+    std::string colour;
+
+    TableRoles() = default;
+
+    TableRoles(uint64_t id, uint64_t community, const std::string &name,
+               const std::string &colour) : id(id), community(community),
+        name(name), colour(colour)
+    { }
+
+    TableRoles(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          community(get<uint64_t>(row[1])),
+          name(get<std::string>(row[2])),
+          colour(get<std::string>(row[3]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 4;
+    static const std::string tableName;
+};
+
+
+struct TableChannelRoles {
+    uint64_t id;
+    uint64_t channel;
+    int permission;
+    int allow;
+
+    TableChannelRoles() = default;
+
+    TableChannelRoles(uint64_t id, uint64_t channel, int permission, int allow)
+        : id(id), channel(channel), permission(permission), allow(allow)
+    { }
+
+    TableChannelRoles(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          channel(get<uint64_t>(row[1])),
+          permission(get<int>(row[2])),
+          allow(get<int>(row[3]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 4;
+    static const std::string tableName;
+};
+
+
+struct TableCommunityRoles {
+    uint64_t id;
+    int permission;
+    int allow;
+    int position;
+
+    TableCommunityRoles() = default;
+
+    TableCommunityRoles(uint64_t id, int permission, int allow, int position) :
+        id(id), permission(permission), allow(allow), position(position)
+    { }
+
+    TableCommunityRoles(MYSQL_ROW row, unsigned long *lengths)
+        : id(get<uint64_t>(row[0])),
+          permission(get<int>(row[1])),
+          allow(get<int>(row[2])),
+          position(get<int>(row[3]))
+    { (void) lengths; }
+
+    std::vector<char> insertList(MYSQL *mysql);
+
+    static constexpr unsigned int numFields = 4;
+    static const std::string tableName;
+};
+
 class Result {
 public:
     Result(MYSQL_RES *res) : res(res) { }
     ~Result() {
         mysql_free_result(res);
     }
-
+    /* TODO: error handeling? */
     template<typename T>
     std::vector<T> store()
     {
@@ -281,6 +392,15 @@ public:
         }
         return store;
     }
+
+    void process(std::function<void(MYSQL_ROW, unsigned long*)> func)
+    {
+        unsigned int numRows = mysql_num_rows(res);
+        unsigned long *lengths = mysql_fetch_lengths(res);
+        for (unsigned int i = 0; i < numRows; i++)
+            func(mysql_fetch_row(res), lengths);
+    }
+
     MYSQL_RES *res;
 };
 
@@ -336,23 +456,36 @@ public:
                                                  uint64_t sender,
                                                  const std::string &msg,
                                                  uint64_t timestamp);
+    boost::optional<TableRoles> initRole(uint64_t id, uint64_t community,
+                                         const std::string &name,
+                                         const std::string &colour);
     bool addMember(uint64_t id, uint64_t user);
     bool addChannel(uint64_t id);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
     bool isUserInCommunity(uint64_t userId, uint64_t communityId);
-    bool canUserViewChannel(uint64_t userId, uint64_t channelId);
+    bool isUserInChannel(uint64_t userId, uint64_t channelId);
+    bool hasCommunityPermission(uint64_t user, uint64_t community,
+                                types::CommunityPermissions permission);
+    bool hasChannelPermission(uint64_t user, uint64_t channel,
+                              types::ChannelPermissions permission);
     boost::optional<TableUsers> getUser(const std::string &login);
     boost::optional<TableUsers> getUser(uint64_t id);
     boost::optional<TableChannels> getChannel(uint64_t id);
     boost::optional<TableCommunities> getCommunity(uint64_t id);
     boost::optional<TableMessages> getMessage(uint64_t id);
+    boost::optional<TableCommunities> getCommunityForChannel(uint64_t channel);
     std::vector<TableCommunities> getCommunitiesForUser(uint64_t id);
     std::vector<TableChannels> getChannelsForCommunity(uint64_t id);
     std::vector<TableMessages> getMessagesForChannel(uint64_t id);
     std::vector<TableChannels> getChannelsForUser(uint64_t id);
     std::vector<TableUsers> getUsersForChannel(uint64_t id);
     std::vector<TableUsers> getUsersForCommunity(uint64_t id);
+    std::vector<TableRoles> getRolesForCommunity(uint64_t id);
+    std::vector<TableRoles> getRolesForChannel(uint64_t id);
+    std::vector<types::CommunityPermissions> getCommunityPermissions(uint64_t
+                                                                     role);
+    std::vector<types::ChannelPermissions> getChannelPermissions(uint64_t role);
 
     //helper functions
     static types::CommunitiesTable communityServerToShared(TableCommunities community);

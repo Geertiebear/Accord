@@ -14,6 +14,7 @@ set(SOURCES_SERVER
         src/server/Arguments.cpp
         src/server/Config.cpp
         src/server/Authentication.cpp
+        src/server/PermissionLogic.cpp
         src/server/log/Logger.cpp
         src/server/thread/Thread.cpp
         src/server/util/LibEventUtil.cpp

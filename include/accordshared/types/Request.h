@@ -29,6 +29,8 @@ enum RequestIds {
     SEND_INVITE_REQUEST = 13, //request to be added to community
     INVITE_REQUEST = 14, //request invite generation
     ONLINE_LIST_REQUEST = 15, //get online list for channel
+    COMMUNITY_ROLES_REQUEST = 16,
+    CHANNEL_ROLES_REQUEST = 17,
 };
 
 class Communities {
@@ -168,6 +170,56 @@ public:
     void serialize(Archive &archive)
     {
         archive(id, token);
+    }
+};
+
+class CommunityRoles {
+public:
+    CommunityRoles() { }
+    CommunityRoles(uint64_t id, const std::string &token)
+        : id(id), token(token)
+    { }
+    uint64_t id;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, token);
+    }
+};
+
+class ChannelRoles {
+public:
+    ChannelRoles() { }
+    ChannelRoles(uint64_t id, const std::string &token)
+        : id(id), token(token)
+    { }
+    uint64_t id;
+    std::string token;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, token);
+    }
+};
+
+class AddRole {
+public:
+    AddRole() { }
+    AddRole(uint64_t community, const std::string &token,
+            const std::string &name, const std::string &colour)
+        : community(community), token(token), name(name),
+          colour(colour)
+    {}
+    uint64_t community;
+    std::string token, name, colour;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(community, token, name, colour);
     }
 };
 

@@ -9,6 +9,7 @@
 #include <cereal/types/list.hpp>
 
 #include <accordshared/types/Database.h>
+#include <accordshared/types/Permissions.h>
 
 namespace accord {
 namespace types {
@@ -131,6 +132,56 @@ public:
     void serialize(Archive &archive)
     {
         archive(list, id);
+    }
+};
+
+class Role {
+public:
+    Role() {}
+    Role(uint64_t id, uint64_t community, const std::string &name,
+         const std::string &colour,
+         const std::list<CommunityPermissions> &communityPermissions,
+         const std::list<ChannelPermissions> &channelPermissions) :
+        id(id), community(community), name(name), colour(colour),
+        communityPermissions(communityPermissions),
+        channelPermissions(channelPermissions)
+    { }
+    Role(uint64_t id, uint64_t community, const std::string &name,
+         const std::string &colour,
+         const std::vector<CommunityPermissions> &communityPermissions,
+         const std::vector<ChannelPermissions> &channelPermissions) :
+        id(id), community(community), name(name), colour(colour),
+        communityPermissions(communityPermissions.begin(),
+                             communityPermissions.end()),
+        channelPermissions(channelPermissions.begin(),
+                           channelPermissions.end())
+    { }
+    uint64_t id, community;
+    std::string name, colour;
+    std::list<CommunityPermissions> communityPermissions;
+    std::list<ChannelPermissions> channelPermissions;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(id, community, name, colour,
+                communityPermissions, channelPermissions);
+    }
+};
+
+class RolesRet {
+public:
+    RolesRet() { }
+    RolesRet(const std::list<Role> &roles, uint64_t community)
+        : roles(roles), community(community)
+    { }
+    std::list<Role> roles;
+    uint64_t community;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(roles, community);
     }
 };
 

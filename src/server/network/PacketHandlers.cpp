@@ -3,6 +3,7 @@
 #include <accordserver/log/Logger.h>
 #include <accordserver/Server.h>
 #include <accordserver/Authentication.h>
+#include <accordserver/PermissionLogic.h>
 #include <accordserver/thread/Thread.h>
 #include <accordserver/util/CryptoUtil.h>
 
@@ -34,7 +35,8 @@ util::FunctionMap PacketHandlers::serializationMap = {
     { types::USER_REQUEST, &PacketHandlers::handleUser },
     { types::SEND_INVITE_REQUEST, &PacketHandlers::handleSendInvite },
     { types::INVITE_REQUEST, &PacketHandlers::handleGenInvite },
-    { types::ONLINE_LIST_REQUEST, &PacketHandlers::handleOnlineList }
+    { types::ONLINE_LIST_REQUEST, &PacketHandlers::handleOnlineList },
+    { types::COMMUNITY_ROLES_REQUEST, &PacketHandlers::handleCommunityRoles }
 };
 
 static bool checkLoggedIn(thread::Client *client, const std::string &token)
@@ -310,7 +312,7 @@ bool PacketHandlers::handleMessagesRequest(PacketData *data, const std::vector<c
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    if (!client->thread.database.canUserViewChannel(client->user.id,
+    if (!client->thread.database.isUserInChannel(client->user.id,
                                                     request.channel)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
@@ -507,14 +509,36 @@ bool PacketHandlers::handleOnlineList(PacketData *data,
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    /* TODO: permission and stuff q.q like checking
-     * if they are in the channel */
+    if (!canReadChannel(client->user.id, request.id, client)) {
+        network::ErrorPacket packet;
+        const auto msg = packet.construct(FORBIDDEN_ERR);
+        client->write(msg);
+        return false;
+    }
 
     const auto onlineList = client->server.getOnlineList(request.id, client);
     types::OnlineListRet ret(onlineList, request.id);
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::ONLINE_LIST_REQUEST, json);
+    client->write(msg);
+    return true;
+}
+
+bool PacketHandlers::handleCommunityRoles(PacketData *data,
+                                          const std::vector<char> &body)
+{
+    auto client = static_cast<thread::Client*>(data);
+    const auto request = util::Serialization::deserealize<
+            types::CommunityRoles>(body);
+    if (!checkLoggedIn(client, request.token))
+        return false;
+
+    /* TODO: permissions and stuff */
+    const auto ret = getRolesForCommunity(request.id, client).get();
+    network::SerializationPacket packet;
+    const auto json = util::Serialization::serialize(ret);
+    const auto msg = packet.construct(types::COMMUNITY_ROLES_REQUEST, json);
     client->write(msg);
     return true;
 }

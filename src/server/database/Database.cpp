@@ -1,6 +1,7 @@
 #include <accordserver/database/Database.h>
 #include <accordserver/log/Logger.h>
 #include <accordserver/util/CryptoUtil.h>
+#include <accordshared/types/Permissions.h>
 
 #include <boost/variant.hpp>
 
@@ -14,6 +15,12 @@ const std::string TableMessages::tableName = "messages";
 const std::string TableFriends::tableName = "friends";
 const std::string TableCommunityMembers::tableName = "community_members";
 const std::string TableChannelMembers::tableName = "channel_members";
+const std::string TableUserRoles::tableName = "user_roles";
+const std::string TableRoles::tableName = "roles";
+const std::string TableChannelRoles::tableName = "channel_roles";
+const std::string TableCommunityRoles::tableName = "community_roles";
+
+
 
 using EscpPrintfArg = boost::variant<uint64_t, uint32_t, std::string, char,
         int, std::vector<char>>;
@@ -155,6 +162,30 @@ std::vector<char> TableFriends::insertList(MYSQL *mysql)
                                  id, user1, user2, status);
 }
 
+std::vector<char> TableUserRoles::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul'",
+                                 id, user);
+}
+
+std::vector<char> TableRoles::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul', '%s', '%s'",
+                                 id, community, name, colour);
+}
+
+std::vector<char> TableChannelRoles::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%ul', '%i', '%i'", id,
+                                 channel, permission, allow);
+}
+
+std::vector<char> TableCommunityRoles::insertList(MYSQL *mysql)
+{
+    return escaped_printf_vector(mysql, "'%ul', '%i', '%i', '%i'", id,
+                                 permission, allow, position);
+}
+
 Database::Database(const DatabaseOptions &options) : options(options)
 { }
 
@@ -284,6 +315,37 @@ bool Database::initDatabase()
                     " contents VARCHAR(2000),"
                     "timestamp BIGINT UNSIGNED)";
     if (mysql_real_query(mysql, messages.c_str(), messages.length()))
+        return false;
+
+    /* stores what users have what roles */
+    const std::string userRoles = "CREATE TABLE user_roles (id BIGINT UNSIGNED,"
+                    " user BIGINT UNSIGNED)";
+    if (mysql_real_query(mysql, userRoles.c_str(), userRoles.length()))
+        return false;
+
+    /*
+     * Roles have permissions for communities and channels.
+     * The allow flag is -1, 0, 1 for disallow, default and allow respectively.
+     * channelRoles inherit permissions from @everyone
+     * maybe in the future have a communitiesRoles inherit system as well?
+     */
+    const std::string roles = "CREATE TABLE roles (id BIGINT UNSIGNED,"
+                    " community BIGINT UNSIGNED, name VARCHAR(255),"
+                              " colour CHAR(6))";
+    if (mysql_real_query(mysql, roles.c_str(), roles.length()))
+        return false;
+
+    const std::string channelRoles = "CREATE TABLE channel_roles (id BIGINT "
+                                     "UNSIGNED, channel BIGINT UNSIGNED, "
+                                     "permission INT, allow INT)";
+    if (mysql_real_query(mysql, channelRoles.c_str(), channelRoles.length()))
+        return false;
+
+    const std::string communityRoles = "CREATE TABLE community_roles (id"
+                                       " BIGINT UNSIGNED, permission INT, "
+                                       "allow INT, position INT)";
+    if (mysql_real_query(mysql, communityRoles.c_str(),
+                         communityRoles.length()))
         return false;
 
     return true;
@@ -489,7 +551,7 @@ bool Database::isUserInCommunity(uint64_t userId, uint64_t communityId)
     return true;
 }
 
-bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
+bool Database::isUserInChannel(uint64_t userId, uint64_t channelId)
 {
     const auto statement = escaped_printf(mysql, "SELECT * FROM "
                                                  "community_members WHERE id="
@@ -507,6 +569,54 @@ bool Database::canUserViewChannel(uint64_t userId, uint64_t channelId)
         return true;
     }
     if (res.size() == 0)
+        return false;
+    return true;
+}
+
+bool Database::hasCommunityPermission(uint64_t user, uint64_t community,
+                            types::CommunityPermissions permission)
+{
+    const auto statement = escaped_printf(mysql, "SELECT id FROM "
+                                                 "community_roles INNER JOIN "
+                                                 "roles ON community_roles.id "
+                                                 "= roles.id WHERE user='%ul' "
+                                                 "AND community='%ul' AND "
+                                                 "permission='%ul'", user,
+                                          community,
+                                          static_cast<uint64_t>(permission));
+    std::vector<uint64_t> ids;
+    Result result = query(statement);
+    result.process([&ids](MYSQL_ROW row, unsigned long *lengths) {
+        (void) lengths;
+        auto id = std::stoull(row[0]);
+        ids.push_back(id);
+    });
+
+    if (ids.size() == 0)
+        return false;
+    return true;
+}
+
+bool Database::hasChannelPermission(uint64_t user, uint64_t channel,
+                          types::ChannelPermissions permission)
+{
+    const auto statement = escaped_printf(mysql, "SELECT id FROM "
+                                                 "channel_roles INNER JOIN "
+                                                 "roles ON channel_roles.id "
+                                                 "= roles.id WHERE user='%ul' "
+                                                 "AND channel='%ul' AND "
+                                                 "permission='%ul'", user,
+                                          channel,
+                                          static_cast<uint64_t>(permission));
+    std::vector<uint64_t> ids;
+    Result result = query(statement);
+    result.process([&ids](MYSQL_ROW row, unsigned long *lengths) {
+        (void) lengths;
+        auto id = std::stoull(row[0]);
+        ids.push_back(id);
+    });
+
+    if (ids.size() == 0)
         return false;
     return true;
 }
@@ -593,6 +703,27 @@ boost::optional<TableMessages> Database::getMessage(uint64_t id)
     return res[0];
 }
 
+boost::optional<TableCommunities> Database::getCommunityForChannel(uint64_t
+                                                                   channel)
+{
+    const auto statement = escaped_printf(mysql, "SELECT * FROM communities "
+                                                 "WHERE id IN (SELECT "
+                                                 "channels.community FROM "
+                                                 "channels WHERE id='%ul')",
+                                          channel);
+    Result result = query(statement);
+    const auto res = result.store<TableCommunities>();
+    if (res.size() != 1) {
+        if (res.size() > 1) {
+            log::Logger::log(log::FATAL, "Channel " + std::to_string(channel) +
+                             " has multiple communities!");
+        }
+        return boost::none;
+    }
+    return res[0];
+}
+
+
 std::vector<TableCommunities> Database::getCommunitiesForUser(uint64_t id)
 {
     const auto statement = escaped_printf(mysql, "SELECT * FROM communities "
@@ -654,6 +785,57 @@ std::vector<TableUsers> Database::getUsersForCommunity(uint64_t id)
                                                  "'%ul')", id);
     Result result = query(statement);
     return result.store<TableUsers>();
+}
+
+std::vector<TableRoles> Database::getRolesForCommunity(uint64_t id)
+{
+    const auto statement = escaped_printf(mysql, "SELECT * FROM roles WHERE "
+                                                 "community='%ul'", id);
+    Result result = query(statement);
+    return result.store<TableRoles>();
+}
+
+std::vector<TableRoles> Database::getRolesForChannel(uint64_t id)
+{
+    const auto statement = escaped_printf(mysql, "SELECT * FROM roles WHERE "
+                                                 "id IN (SELECT "
+                                                 "channel_roles.id FROM"
+                                                 " channel_roles WHERE"
+                                                 " channel='%ul'", id);
+    Result result = query(statement);
+    return result.store<TableRoles>();
+}
+
+std::vector<types::CommunityPermissions> Database::getCommunityPermissions(
+        uint64_t role)
+{
+    const auto statement = escaped_printf(mysql, "SELECT permission FROM "
+                                                 "community_roles WHERE id="
+                                                 "'%ul'", role);
+    std::vector<types::CommunityPermissions> ret;
+    Result result = query(statement);
+    result.process([&ret](MYSQL_ROW row, unsigned long *lengths) {
+        (void) lengths;
+        int permission = std::stoi(std::string(row[0]));
+        ret.push_back(static_cast<types::CommunityPermissions>(permission));
+    });
+    return ret;
+}
+
+std::vector<types::ChannelPermissions> Database::getChannelPermissions(
+        uint64_t role)
+{
+    const auto statement = escaped_printf(mysql, "SELECT permission FROM "
+                                                 "channel_roles WHERE id="
+                                                 "'%ul'", role);
+    std::vector<types::ChannelPermissions> ret;
+    Result result = query(statement);
+    result.process([&ret] (MYSQL_ROW row, unsigned long *lengths) {
+        (void) lengths;
+        int permission = std::stoi(std::string(row[0]));
+        ret.push_back(static_cast<types::ChannelPermissions>(permission));
+    });
+    return ret;
 }
 
 types::CommunitiesTable Database::communityServerToShared(TableCommunities community)
