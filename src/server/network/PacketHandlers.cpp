@@ -312,8 +312,8 @@ bool PacketHandlers::handleMessagesRequest(PacketData *data, const std::vector<c
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    if (!client->thread.database.isUserInChannel(client->user.id,
-                                                    request.channel)) {
+    if (!PermissionLogic::canReadChannel(client->user.id, request.channel,
+                                         client)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
         client->write(msg);
@@ -509,7 +509,7 @@ bool PacketHandlers::handleOnlineList(PacketData *data,
     if (!checkLoggedIn(client, request.token))
         return false;
 
-    if (!canReadChannel(client->user.id, request.id, client)) {
+    if (!PermissionLogic::canReadChannel(client->user.id, request.id, client)) {
         network::ErrorPacket packet;
         const auto msg = packet.construct(FORBIDDEN_ERR);
         client->write(msg);
@@ -535,7 +535,8 @@ bool PacketHandlers::handleCommunityRoles(PacketData *data,
         return false;
 
     /* TODO: permissions and stuff */
-    const auto ret = getRolesForCommunity(request.id, client).get();
+    const auto ret = PermissionLogic::getRolesForCommunity(request.id, client)
+            .get();
     network::SerializationPacket packet;
     const auto json = util::Serialization::serialize(ret);
     const auto msg = packet.construct(types::COMMUNITY_ROLES_REQUEST, json);

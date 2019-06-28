@@ -11,6 +11,8 @@
 #include <accordshared/types/Database.h>
 #include <accordshared/types/Request.h>
 #include <accordshared/types/Permissions.h>
+#include <accordshared/types/Return.h>
+
 
 namespace accord {
 namespace database {
@@ -295,26 +297,29 @@ struct TableUserRoles {
 struct TableRoles {
     uint64_t id;
     uint64_t community;
+    int position;
     std::string name;
     std::string colour;
 
     TableRoles() = default;
 
-    TableRoles(uint64_t id, uint64_t community, const std::string &name,
+    TableRoles(uint64_t id, uint64_t community, int position,
+               const std::string &name,
                const std::string &colour) : id(id), community(community),
-        name(name), colour(colour)
+        position(position), name(name), colour(colour)
     { }
 
     TableRoles(MYSQL_ROW row, unsigned long *lengths)
         : id(get<uint64_t>(row[0])),
           community(get<uint64_t>(row[1])),
-          name(get<std::string>(row[2])),
-          colour(get<std::string>(row[3]))
+          position(get<int>(row[2])),
+          name(get<std::string>(row[3])),
+          colour(get<std::string>(row[4]))
     { (void) lengths; }
 
     std::vector<char> insertList(MYSQL *mysql);
 
-    static constexpr unsigned int numFields = 4;
+    static constexpr unsigned int numFields = 5;
     static const std::string tableName;
 };
 
@@ -344,29 +349,26 @@ struct TableChannelRoles {
     static const std::string tableName;
 };
 
-
-struct TableCommunityRoles {
+struct TableCommunityPermissions {
     uint64_t id;
     int permission;
     int allow;
-    int position;
 
-    TableCommunityRoles() = default;
+    TableCommunityPermissions() = default;
 
-    TableCommunityRoles(uint64_t id, int permission, int allow, int position) :
-        id(id), permission(permission), allow(allow), position(position)
+    TableCommunityPermissions(uint64_t id, int permission, int allow)
+        : id(id), permission(permission), allow(allow)
     { }
 
-    TableCommunityRoles(MYSQL_ROW row, unsigned long *lengths)
+    TableCommunityPermissions(MYSQL_ROW row, unsigned long *lengths)
         : id(get<uint64_t>(row[0])),
           permission(get<int>(row[1])),
-          allow(get<int>(row[2])),
-          position(get<int>(row[3]))
+          allow(get<int>(row[2]))
     { (void) lengths; }
 
     std::vector<char> insertList(MYSQL *mysql);
 
-    static constexpr unsigned int numFields = 4;
+    static constexpr unsigned int numFields = 3;
     static const std::string tableName;
 };
 
@@ -457,10 +459,17 @@ public:
                                                  const std::string &msg,
                                                  uint64_t timestamp);
     boost::optional<TableRoles> initRole(uint64_t id, uint64_t community,
+                                         int position,
                                          const std::string &name,
                                          const std::string &colour);
     bool addMember(uint64_t id, uint64_t user);
     bool addChannel(uint64_t id);
+    bool addUserRole(uint64_t user, uint64_t role);
+    bool addCommunityPermission(uint64_t role, types::CommunityPermissions
+                                permission, int allow);
+    bool addChannelPermission(uint64_t role, uint64_t channel,
+                              types::ChannelPermissions
+                              permission, int allow);
     bool sendFriendRequest(uint64_t from, uint64_t to);
     bool acceptFriendRequest(uint64_t id);
     bool isUserInCommunity(uint64_t userId, uint64_t communityId);
@@ -475,6 +484,7 @@ public:
     boost::optional<TableCommunities> getCommunity(uint64_t id);
     boost::optional<TableMessages> getMessage(uint64_t id);
     boost::optional<TableCommunities> getCommunityForChannel(uint64_t channel);
+    boost::optional<TableRoles> getRole(uint64_t id);
     std::vector<TableCommunities> getCommunitiesForUser(uint64_t id);
     std::vector<TableChannels> getChannelsForCommunity(uint64_t id);
     std::vector<TableMessages> getMessagesForChannel(uint64_t id);
@@ -483,9 +493,13 @@ public:
     std::vector<TableUsers> getUsersForCommunity(uint64_t id);
     std::vector<TableRoles> getRolesForCommunity(uint64_t id);
     std::vector<TableRoles> getRolesForChannel(uint64_t id);
-    std::vector<types::CommunityPermissions> getCommunityPermissions(uint64_t
+    std::vector<types::CommunityPermission> getCommunityPermissions(uint64_t
                                                                      role);
-    std::vector<types::ChannelPermissions> getChannelPermissions(uint64_t role);
+    std::vector<types::ChannelPermission> getChannelPermissions(uint64_t role);
+    std::vector<types::CommunityPermission> getCommunityPermissionsForUser(
+            uint64_t user, uint64_t community);
+    std::vector<types::ChannelPermission> getChannelPermissionsForUser(
+            uint64_t id, uint64_t channel);
 
     //helper functions
     static types::CommunitiesTable communityServerToShared(TableCommunities community);

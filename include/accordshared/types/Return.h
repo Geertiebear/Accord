@@ -135,21 +135,55 @@ public:
     }
 };
 
+class CommunityPermission {
+public:
+    CommunityPermission() { }
+    CommunityPermission(CommunityPermissions permission, int allow) :
+        permission(permission), allow(allow)
+    { }
+
+    CommunityPermissions permission;
+    int allow;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(permission, allow);
+    }
+};
+
+class ChannelPermission {
+public:
+    ChannelPermission() { }
+    ChannelPermission(ChannelPermissions permission, int allow) :
+        permission(permission), allow(allow)
+    { }
+
+    ChannelPermissions permission;
+    int allow;
+
+    template<class Archive>
+    void serialize(Archive &archive)
+    {
+        archive(permission, allow);
+    }
+};
+
 class Role {
 public:
     Role() {}
     Role(uint64_t id, uint64_t community, const std::string &name,
          const std::string &colour,
-         const std::list<CommunityPermissions> &communityPermissions,
-         const std::list<ChannelPermissions> &channelPermissions) :
+         const std::list<CommunityPermission> &communityPermissions,
+         const std::list<ChannelPermission> &channelPermissions) :
         id(id), community(community), name(name), colour(colour),
         communityPermissions(communityPermissions),
         channelPermissions(channelPermissions)
     { }
     Role(uint64_t id, uint64_t community, const std::string &name,
          const std::string &colour,
-         const std::vector<CommunityPermissions> &communityPermissions,
-         const std::vector<ChannelPermissions> &channelPermissions) :
+         const std::vector<CommunityPermission> &communityPermissions,
+         const std::vector<ChannelPermission> &channelPermissions) :
         id(id), community(community), name(name), colour(colour),
         communityPermissions(communityPermissions.begin(),
                              communityPermissions.end()),
@@ -158,8 +192,8 @@ public:
     { }
     uint64_t id, community;
     std::string name, colour;
-    std::list<CommunityPermissions> communityPermissions;
-    std::list<ChannelPermissions> channelPermissions;
+    std::list<CommunityPermission> communityPermissions;
+    std::list<ChannelPermission> channelPermissions;
 
     template<class Archive>
     void serialize(Archive &archive)

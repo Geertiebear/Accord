@@ -3,23 +3,52 @@
 
 namespace accord {
 
-bool canReadChannel(uint64_t user, uint64_t channel, thread::Client *client)
+bool PermissionLogic::__canReadChannel(
+            const std::vector<types::CommunityPermission> &communityPermissions,
+            const std::vector<types::ChannelPermission> &channelPermissions)
+{
+    /* TODO: some permissions take precedence over others */
+    for (const auto permission : channelPermissions) {
+        if (permission.permission == types::CHANNEL_READ) {
+            if (permission.allow == 1)
+                return true;
+            else if (permission.allow == -1)
+                return false;
+        }
+    }
+
+    /* the permission for the channel is defaulted, check community
+     * permissions */
+    for (const auto permission : communityPermissions)
+        if (permission.permission == types::READ_CHANNELS)
+            if (permission.allow == 1)
+                return true;
+    return false;
+}
+
+bool PermissionLogic::canReadChannel(uint64_t user,
+                                     uint64_t channel, thread::Client *client)
 {
     if (!client->thread.database.isUserInChannel(user, channel))
         return false;
     auto community = client->thread.database.getCommunityForChannel(channel);
-    if (!client->thread.database.hasCommunityPermission(user,
-                                                        community.get().id,
-                                                        types::READ_CHANNELS))
+    if (!community)
         return false;
-    if (!client->thread.database.hasChannelPermission(user, channel,
-                                                      types::CHANNEL_READ))
+
+    auto communityPermissions = client->thread.database.
+            getCommunityPermissionsForUser(user, boost::get(community).id);
+    if (communityPermissions.empty())
         return false;
-    return true;
+
+    auto channelPermissions = client->thread.database.
+            getChannelPermissionsForUser(user, channel);
+    if (channelPermissions.empty())
+        return false;
+    return __canReadChannel(communityPermissions, channelPermissions);
 }
 
-boost::optional<types::RolesRet> getRolesForCommunity(uint64_t community,
-                                                      thread::Client *client)
+boost::optional<types::RolesRet> PermissionLogic::getRolesForCommunity(
+        uint64_t community, thread::Client *client)
 {
     const auto roles = client->thread.database.getRolesForCommunity(community);
     std::list<types::Role> list;
